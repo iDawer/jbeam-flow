@@ -10,7 +10,7 @@ bl_info = {
 if "bpy" in locals():
     import importlib
 
-    importlib.reload(importJBeam)
+    importlib.reload(jbeam_utils)
     print('Reloaded JBeam plugin')
 else:
     from . import jbeam_utils
@@ -28,8 +28,9 @@ class ImportSomeData(Operator, ImportHelper):
     """Import from BeamNG's JBeam file"""
     bl_idname = "import_test.some_data"  # important since its how bpy.ops.import_test.some_data is constructed
     bl_label = "Import JBeam"
+    bl_options = {'REGISTER', 'UNDO'}
 
-    # ImportHelper mixin class uses this
+# ImportHelper mixin class uses this
     filename_ext = ".jbeam"
 
     filter_glob = StringProperty(
@@ -56,7 +57,15 @@ class ImportSomeData(Operator, ImportHelper):
 
     def execute(self, context):
         from . import jbeam_utils
-        return jbeam_utils.read_some_data(context, self.filepath, self.use_setting)
+        meshes = jbeam_utils.file_to_meshes(self.filepath)
+        print(meshes)
+
+        # add the mesh as an object into the scene with this utility module
+        from bpy_extras import object_utils
+
+        for me in meshes:
+            object_utils.object_data_add(context, me)
+        return {'FINISHED'}
 
     @staticmethod
     def register():
