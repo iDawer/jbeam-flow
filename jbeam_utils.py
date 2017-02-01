@@ -26,14 +26,21 @@ def file_to_meshes(filepath, encoding='utf-8'):
 
 
 class MeshListBuilder(jbeamVisitor):
+    def __init__(self):
+        self._bm = None
+        self._idLayer = None
+
     def visitPart(self, ctx: jbeamParser.PartContext):
         print('part: ' + ctx.name.text)
-        self._bm = bmesh.new()  # each part in separate object
+        bm = bmesh.new()  # each part in separate object
+        self._bm = bm
+        self._idLayer = bm.verts.layers.string.new('jbeamNodeId')
+
         self.visitChildren(ctx)
 
-        self._bm.verts.ensure_lookup_table()
-        mesh = bpy.data.meshes.new(str.strip(ctx.name.text, '"'))
-        self._bm.to_mesh(mesh)
+        bm.verts.ensure_lookup_table()
+        mesh = bpy.data.meshes.new(ctx.name.text.strip('"'))
+        bm.to_mesh(mesh)
         mesh.update()
         return mesh
 
@@ -49,5 +56,6 @@ class MeshListBuilder(jbeamVisitor):
 
     def visitJNodeObj(self, ctx: jbeamParser.JNodeObjContext):
         print(ctx.getText())
-        self._bm.verts.new((float(ctx.posX.text), float(ctx.posY.text), float(ctx.posZ.text)))
+        vert = self._bm.verts.new((float(ctx.posX.text), float(ctx.posY.text), float(ctx.posZ.text)))
+        vert[self._idLayer] = ctx.id.text.strip('"').encode()  # set JNode id
         return
