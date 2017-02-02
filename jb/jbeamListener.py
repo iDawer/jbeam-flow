@@ -35,21 +35,30 @@ class jbeamListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#NodesObj.
-    def enterNodesObj(self, ctx:jbeamParser.NodesObjContext):
+    # Enter a parse tree produced by jbeamParser#SecNodes.
+    def enterSecNodes(self, ctx:jbeamParser.SecNodesContext):
         pass
 
-    # Exit a parse tree produced by jbeamParser#NodesObj.
-    def exitNodesObj(self, ctx:jbeamParser.NodesObjContext):
+    # Exit a parse tree produced by jbeamParser#SecNodes.
+    def exitSecNodes(self, ctx:jbeamParser.SecNodesContext):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#UnknownSection.
-    def enterUnknownSection(self, ctx:jbeamParser.UnknownSectionContext):
+    # Enter a parse tree produced by jbeamParser#SecBeams.
+    def enterSecBeams(self, ctx:jbeamParser.SecBeamsContext):
         pass
 
-    # Exit a parse tree produced by jbeamParser#UnknownSection.
-    def exitUnknownSection(self, ctx:jbeamParser.UnknownSectionContext):
+    # Exit a parse tree produced by jbeamParser#SecBeams.
+    def exitSecBeams(self, ctx:jbeamParser.SecBeamsContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#SecUnknown.
+    def enterSecUnknown(self, ctx:jbeamParser.SecUnknownContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#SecUnknown.
+    def exitSecUnknown(self, ctx:jbeamParser.SecUnknownContext):
         pass
 
 
@@ -185,6 +194,42 @@ class jbeamListener(ParseTreeListener):
 
     # Exit a parse tree produced by jbeamParser#PropUnknown.
     def exitPropUnknown(self, ctx:jbeamParser.PropUnknownContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#arrayOfBeams.
+    def enterArrayOfBeams(self, ctx:jbeamParser.ArrayOfBeamsContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#arrayOfBeams.
+    def exitArrayOfBeams(self, ctx:jbeamParser.ArrayOfBeamsContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#tableHeader.
+    def enterTableHeader(self, ctx:jbeamParser.TableHeaderContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#tableHeader.
+    def exitTableHeader(self, ctx:jbeamParser.TableHeaderContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#beam.
+    def enterBeam(self, ctx:jbeamParser.BeamContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#beam.
+    def exitBeam(self, ctx:jbeamParser.BeamContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#beamProps.
+    def enterBeamProps(self, ctx:jbeamParser.BeamPropsContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#beamProps.
+    def exitBeamProps(self, ctx:jbeamParser.BeamPropsContext):
         pass
 
 

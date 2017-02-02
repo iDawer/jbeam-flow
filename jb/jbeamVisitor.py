@@ -24,13 +24,18 @@ class jbeamVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#NodesObj.
-    def visitNodesObj(self, ctx:jbeamParser.NodesObjContext):
+    # Visit a parse tree produced by jbeamParser#SecNodes.
+    def visitSecNodes(self, ctx:jbeamParser.SecNodesContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#UnknownSection.
-    def visitUnknownSection(self, ctx:jbeamParser.UnknownSectionContext):
+    # Visit a parse tree produced by jbeamParser#SecBeams.
+    def visitSecBeams(self, ctx:jbeamParser.SecBeamsContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#SecUnknown.
+    def visitSecUnknown(self, ctx:jbeamParser.SecUnknownContext):
         return self.visitChildren(ctx)
 
 
@@ -106,6 +111,26 @@ class jbeamVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by jbeamParser#PropUnknown.
     def visitPropUnknown(self, ctx:jbeamParser.PropUnknownContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#arrayOfBeams.
+    def visitArrayOfBeams(self, ctx:jbeamParser.ArrayOfBeamsContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#tableHeader.
+    def visitTableHeader(self, ctx:jbeamParser.TableHeaderContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#beam.
+    def visitBeam(self, ctx:jbeamParser.BeamContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#beamProps.
+    def visitBeamProps(self, ctx:jbeamParser.BeamPropsContext):
         return self.visitChildren(ctx)
 
 
