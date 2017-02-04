@@ -30,6 +30,7 @@ class MeshListBuilder(jbeamVisitor):
         self._bm = None
         self._idLayer = None
         self._vertsCache = None
+        self._beamLayer = None
 
     def visitPart(self, ctx: jbeamParser.PartContext):
         print('part: ' + ctx.name.text)
@@ -37,6 +38,7 @@ class MeshListBuilder(jbeamVisitor):
         self._bm = bm
         self._idLayer = bm.verts.layers.string.new('jbeamNodeId')
         self._vertsCache = {}
+        self._beamLayer = bm.edges.layers.int.new('jbeam')
 
         self.visitChildren(ctx)
 
@@ -61,7 +63,7 @@ class MeshListBuilder(jbeamVisitor):
         self.visitChildren(ctx)
         self._bm.verts.ensure_lookup_table()
 
-    def visitJNodeObj(self, ctx: jbeamParser.JNodeObjContext):
+    def visitJnode(self, ctx: jbeamParser.JnodeContext):
         vert = self._bm.verts.new((float(ctx.posX.text), float(ctx.posY.text), float(ctx.posZ.text)))
         id = ctx.id.text.strip('"')
         vert[self._idLayer] = id.encode()  # set JNode id
@@ -78,7 +80,16 @@ class MeshListBuilder(jbeamVisitor):
         v1, v2 = self._vertsCache.get(id1), self._vertsCache.get(id2)
         if v1 and v2:
             try:
-                self._bm.edges.new((v1, v2))  # throws on duplicates
+                edge = self._bm.edges.new((v1, v2))  # throws on duplicates
+                edge[self._beamLayer] = 1
             except ValueError as err:
                 print(err, ' ', id1, ' ', id2)  # ToDo handle duplicates
-        # return self.visitChildren(ctx)
+
+    def visitColtri(self, ctx: jbeamParser.ColtriContext):
+        id1 = ctx.id1.text.strip('"')
+        id2 = ctx.id2.text.strip('"')
+        id3 = ctx.id3.text.strip('"')
+        v_cache = self._vertsCache
+        v1, v2, v3 = v_cache.get(id1), v_cache.get(id2), v_cache.get(id3)
+        if v1 and v2 and v3:
+            self._bm.faces.new((v1, v2, v3))

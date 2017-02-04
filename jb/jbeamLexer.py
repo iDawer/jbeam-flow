@@ -9,8 +9,8 @@ def serializedATN():
         buf.write("\u00a1\b\1\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7")
         buf.write("\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t\13\4\f\t\f\4\r\t\r")
         buf.write("\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22\4\23")
-        buf.write("\t\23\4\24\t\24\3\2\3\2\3\3\3\3\3\3\3\3\3\3\3\4\3\4\3")
-        buf.write("\4\3\4\3\4\3\5\3\5\3\5\3\5\3\5\3\5\3\6\3\6\3\7\3\7\3\b")
+        buf.write("\t\23\4\24\t\24\3\2\3\2\3\2\3\2\3\2\3\3\3\3\3\3\3\3\3")
+        buf.write("\3\3\4\3\4\3\4\3\4\3\4\3\4\3\5\3\5\3\6\3\6\3\7\3\7\3\b")
         buf.write("\3\b\3\t\3\t\3\n\3\n\3\13\3\13\3\13\7\13I\n\13\f\13\16")
         buf.write("\13L\13\13\3\13\3\13\3\f\3\f\3\f\5\fS\n\f\3\r\3\r\3\r")
         buf.write("\3\r\3\r\3\r\3\16\3\16\3\17\5\17^\n\17\3\17\3\17\3\17")
@@ -28,16 +28,16 @@ def serializedATN():
         buf.write("\3\2\2\2\2\7\3\2\2\2\2\t\3\2\2\2\2\13\3\2\2\2\2\r\3\2")
         buf.write("\2\2\2\17\3\2\2\2\2\21\3\2\2\2\2\23\3\2\2\2\2\25\3\2\2")
         buf.write("\2\2\35\3\2\2\2\2#\3\2\2\2\2%\3\2\2\2\2\'\3\2\2\2\3)\3")
-        buf.write("\2\2\2\5+\3\2\2\2\7\60\3\2\2\2\t\65\3\2\2\2\13;\3\2\2")
-        buf.write("\2\r=\3\2\2\2\17?\3\2\2\2\21A\3\2\2\2\23C\3\2\2\2\25E")
-        buf.write("\3\2\2\2\27O\3\2\2\2\31T\3\2\2\2\33Z\3\2\2\2\35o\3\2\2")
-        buf.write("\2\37y\3\2\2\2!{\3\2\2\2#\u0081\3\2\2\2%\u008f\3\2\2\2")
-        buf.write("\'\u009b\3\2\2\2)*\7<\2\2*\4\3\2\2\2+,\7p\2\2,-\7w\2\2")
-        buf.write("-.\7n\2\2./\7n\2\2/\6\3\2\2\2\60\61\7v\2\2\61\62\7t\2")
-        buf.write("\2\62\63\7w\2\2\63\64\7g\2\2\64\b\3\2\2\2\65\66\7h\2\2")
-        buf.write("\66\67\7c\2\2\678\7n\2\289\7u\2\29:\7g\2\2:\n\3\2\2\2")
-        buf.write(";<\7}\2\2<\f\3\2\2\2=>\7\177\2\2>\16\3\2\2\2?@\7]\2\2")
-        buf.write("@\20\3\2\2\2AB\7_\2\2B\22\3\2\2\2CD\7$\2\2D\24\3\2\2\2")
+        buf.write("\2\2\2\5.\3\2\2\2\7\63\3\2\2\2\t9\3\2\2\2\13;\3\2\2\2")
+        buf.write("\r=\3\2\2\2\17?\3\2\2\2\21A\3\2\2\2\23C\3\2\2\2\25E\3")
+        buf.write("\2\2\2\27O\3\2\2\2\31T\3\2\2\2\33Z\3\2\2\2\35o\3\2\2\2")
+        buf.write("\37y\3\2\2\2!{\3\2\2\2#\u0081\3\2\2\2%\u008f\3\2\2\2\'")
+        buf.write("\u009b\3\2\2\2)*\7p\2\2*+\7w\2\2+,\7n\2\2,-\7n\2\2-\4")
+        buf.write("\3\2\2\2./\7v\2\2/\60\7t\2\2\60\61\7w\2\2\61\62\7g\2\2")
+        buf.write("\62\6\3\2\2\2\63\64\7h\2\2\64\65\7c\2\2\65\66\7n\2\2\66")
+        buf.write("\67\7u\2\2\678\7g\2\28\b\3\2\2\29:\7}\2\2:\n\3\2\2\2;")
+        buf.write("<\7\177\2\2<\f\3\2\2\2=>\7]\2\2>\16\3\2\2\2?@\7_\2\2@")
+        buf.write("\20\3\2\2\2AB\7$\2\2B\22\3\2\2\2CD\7<\2\2D\24\3\2\2\2")
         buf.write("EJ\7$\2\2FI\5\27\f\2GI\n\2\2\2HF\3\2\2\2HG\3\2\2\2IL\3")
         buf.write("\2\2\2JH\3\2\2\2JK\3\2\2\2KM\3\2\2\2LJ\3\2\2\2MN\7$\2")
         buf.write("\2N\26\3\2\2\2OR\7^\2\2PS\t\3\2\2QS\5\31\r\2RP\3\2\2\2")
@@ -76,15 +76,15 @@ class jbeamLexer(Lexer):
     decisionsToDFA = [ DFA(ds, i) for i, ds in enumerate(atn.decisionToState) ]
 
 
-    T__0 = 1
-    T__1 = 2
-    T__2 = 3
-    T__3 = 4
-    LCURLY = 5
-    RCURLY = 6
-    LBRACK = 7
-    RBRACK = 8
-    QUOT = 9
+    NULL = 1
+    TRUE = 2
+    FALSE = 3
+    LCURLY = 4
+    RCURLY = 5
+    LBRACK = 6
+    RBRACK = 7
+    QUOT = 8
+    COLON = 9
     STRING = 10
     NUMBER = 11
     COMMENT_BLOCK = 12
@@ -94,16 +94,18 @@ class jbeamLexer(Lexer):
     modeNames = [ "DEFAULT_MODE" ]
 
     literalNames = [ "<INVALID>",
-            "':'", "'null'", "'true'", "'false'", "'{'", "'}'", "'['", "']'", 
-            "'\"'" ]
+            "'null'", "'true'", "'false'", "'{'", "'}'", "'['", "']'", "'\"'", 
+            "':'" ]
 
     symbolicNames = [ "<INVALID>",
-            "LCURLY", "RCURLY", "LBRACK", "RBRACK", "QUOT", "STRING", "NUMBER", 
-            "COMMENT_BLOCK", "COMMENT_LINE", "WS" ]
+            "NULL", "TRUE", "FALSE", "LCURLY", "RCURLY", "LBRACK", "RBRACK", 
+            "QUOT", "COLON", "STRING", "NUMBER", "COMMENT_BLOCK", "COMMENT_LINE", 
+            "WS" ]
 
-    ruleNames = [ "T__0", "T__1", "T__2", "T__3", "LCURLY", "RCURLY", "LBRACK", 
-                  "RBRACK", "QUOT", "STRING", "ESC", "UNICODE", "HEX", "NUMBER", 
-                  "INT", "EXP", "COMMENT_BLOCK", "COMMENT_LINE", "WS" ]
+    ruleNames = [ "NULL", "TRUE", "FALSE", "LCURLY", "RCURLY", "LBRACK", 
+                  "RBRACK", "QUOT", "COLON", "STRING", "ESC", "UNICODE", 
+                  "HEX", "NUMBER", "INT", "EXP", "COMMENT_BLOCK", "COMMENT_LINE", 
+                  "WS" ]
 
     grammarFileName = "jbeam.g4"
 

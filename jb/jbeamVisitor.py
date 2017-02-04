@@ -34,6 +34,11 @@ class jbeamVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by jbeamParser#SecColtris.
+    def visitSecColtris(self, ctx:jbeamParser.SecColtrisContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by jbeamParser#SecUnknown.
     def visitSecUnknown(self, ctx:jbeamParser.SecUnknownContext):
         return self.visitChildren(ctx)
@@ -44,18 +49,8 @@ class jbeamVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#JNodesTableHeader.
-    def visitJNodesTableHeader(self, ctx:jbeamParser.JNodesTableHeaderContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by jbeamParser#JNodeObj.
-    def visitJNodeObj(self, ctx:jbeamParser.JNodeObjContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by jbeamParser#JnodeSharedProps.
-    def visitJnodeSharedProps(self, ctx:jbeamParser.JnodeSharedPropsContext):
+    # Visit a parse tree produced by jbeamParser#jnode.
+    def visitJnode(self, ctx:jbeamParser.JnodeContext):
         return self.visitChildren(ctx)
 
 
@@ -131,6 +126,21 @@ class jbeamVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by jbeamParser#beamProps.
     def visitBeamProps(self, ctx:jbeamParser.BeamPropsContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#arrayOfColtris.
+    def visitArrayOfColtris(self, ctx:jbeamParser.ArrayOfColtrisContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#coltri.
+    def visitColtri(self, ctx:jbeamParser.ColtriContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#coltriProps.
+    def visitColtriProps(self, ctx:jbeamParser.ColtriPropsContext):
         return self.visitChildren(ctx)
 
 

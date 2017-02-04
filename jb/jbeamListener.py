@@ -53,6 +53,15 @@ class jbeamListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by jbeamParser#SecColtris.
+    def enterSecColtris(self, ctx:jbeamParser.SecColtrisContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#SecColtris.
+    def exitSecColtris(self, ctx:jbeamParser.SecColtrisContext):
+        pass
+
+
     # Enter a parse tree produced by jbeamParser#SecUnknown.
     def enterSecUnknown(self, ctx:jbeamParser.SecUnknownContext):
         pass
@@ -71,30 +80,12 @@ class jbeamListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#JNodesTableHeader.
-    def enterJNodesTableHeader(self, ctx:jbeamParser.JNodesTableHeaderContext):
+    # Enter a parse tree produced by jbeamParser#jnode.
+    def enterJnode(self, ctx:jbeamParser.JnodeContext):
         pass
 
-    # Exit a parse tree produced by jbeamParser#JNodesTableHeader.
-    def exitJNodesTableHeader(self, ctx:jbeamParser.JNodesTableHeaderContext):
-        pass
-
-
-    # Enter a parse tree produced by jbeamParser#JNodeObj.
-    def enterJNodeObj(self, ctx:jbeamParser.JNodeObjContext):
-        pass
-
-    # Exit a parse tree produced by jbeamParser#JNodeObj.
-    def exitJNodeObj(self, ctx:jbeamParser.JNodeObjContext):
-        pass
-
-
-    # Enter a parse tree produced by jbeamParser#JnodeSharedProps.
-    def enterJnodeSharedProps(self, ctx:jbeamParser.JnodeSharedPropsContext):
-        pass
-
-    # Exit a parse tree produced by jbeamParser#JnodeSharedProps.
-    def exitJnodeSharedProps(self, ctx:jbeamParser.JnodeSharedPropsContext):
+    # Exit a parse tree produced by jbeamParser#jnode.
+    def exitJnode(self, ctx:jbeamParser.JnodeContext):
         pass
 
 
@@ -230,6 +221,33 @@ class jbeamListener(ParseTreeListener):
 
     # Exit a parse tree produced by jbeamParser#beamProps.
     def exitBeamProps(self, ctx:jbeamParser.BeamPropsContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#arrayOfColtris.
+    def enterArrayOfColtris(self, ctx:jbeamParser.ArrayOfColtrisContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#arrayOfColtris.
+    def exitArrayOfColtris(self, ctx:jbeamParser.ArrayOfColtrisContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#coltri.
+    def enterColtri(self, ctx:jbeamParser.ColtriContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#coltri.
+    def exitColtri(self, ctx:jbeamParser.ColtriContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#coltriProps.
+    def enterColtriProps(self, ctx:jbeamParser.ColtriPropsContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#coltriProps.
+    def exitColtriProps(self, ctx:jbeamParser.ColtriPropsContext):
         pass
 
 
