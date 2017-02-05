@@ -34,6 +34,11 @@ class jbeamVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by jbeamParser#SecHydros.
+    def visitSecHydros(self, ctx:jbeamParser.SecHydrosContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by jbeamParser#SecColtris.
     def visitSecColtris(self, ctx:jbeamParser.SecColtrisContext):
         return self.visitChildren(ctx)

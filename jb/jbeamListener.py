@@ -53,6 +53,15 @@ class jbeamListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by jbeamParser#SecHydros.
+    def enterSecHydros(self, ctx:jbeamParser.SecHydrosContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#SecHydros.
+    def exitSecHydros(self, ctx:jbeamParser.SecHydrosContext):
+        pass
+
+
     # Enter a parse tree produced by jbeamParser#SecColtris.
     def enterSecColtris(self, ctx:jbeamParser.SecColtrisContext):
         pass
