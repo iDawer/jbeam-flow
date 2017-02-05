@@ -35,7 +35,3 @@ def register():
 def unregister():
     bpy.utils.unregister_module(__name__)
     print("UNREGISTERED  JBeam plugin")
-
-
-if __name__ == "__main__":
-    register()

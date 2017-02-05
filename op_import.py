@@ -1,13 +1,13 @@
 import bpy
-from bpy_extras.io_utils import ImportHelper
 from bpy.props import StringProperty, BoolProperty, EnumProperty
 from bpy.types import Operator
+from bpy_extras.io_utils import ImportHelper
 
 
-class ImportSomeData(Operator, ImportHelper):
+class ImportJBeam(Operator, ImportHelper):
     """Import from BeamNG's JBeam file"""
-    bl_idname = "import_test.some_data"  # important since its how bpy.ops.import_test.some_data is constructed
-    bl_label = "Import JBeam"
+    bl_idname = "import_mesh.jbeam"  # important since its how bpy.ops.import_test.some_data is constructed
+    bl_label = "Import JBeam (.jbeam)"
     bl_options = {'REGISTER', 'UNDO'}
 
     # ImportHelper mixin class uses this
@@ -19,28 +19,27 @@ class ImportSomeData(Operator, ImportHelper):
         maxlen=255,  # Max internal buffer length, longer would be clamped.
     )
 
-    # List of operator properties, the attributes will be assigned
-    # to the class instance from the operator settings before calling.
-    use_setting = BoolProperty(
-        name="Example Boolean",
-        description="Example Tooltip",
-        default=True,
-    )
-
-    type = EnumProperty(
-        name="Example Enum",
-        description="Choose between two items",
-        items=(('OPT_A', "First Option", "Description one"),
-               ('OPT_B', "Second Option", "Description two")),
-        default='OPT_A',
-    )
+    # # List of operator properties, the attributes will be assigned
+    # # to the class instance from the operator settings before calling.
+    # use_setting = BoolProperty(
+    #     name="Example Boolean",
+    #     description="Example Tooltip",
+    #     default=True,
+    # )
+    #
+    # type = EnumProperty(
+    #     name="Example Enum",
+    #     description="Choose between two items",
+    #     items=(('OPT_A', "First Option", "Description one"),
+    #            ('OPT_B', "Second Option", "Description two")),
+    #     default='OPT_A',
+    # )
 
     def execute(self, context):
         from . import jbeam_utils
         meshes = jbeam_utils.file_to_meshes(self.filepath)
         print(meshes)
 
-        # add the mesh as an object into the scene with this utility module
         from bpy_extras import object_utils
 
         for me in meshes:
@@ -56,6 +55,5 @@ class ImportSomeData(Operator, ImportHelper):
         bpy.types.INFO_MT_file_import.remove(menu_func_draw)
 
 
-# Only needed if you want to add into a dynamic menu
 def menu_func_draw(self, context):
-    self.layout.operator(ImportSomeData.bl_idname, text="JBeam (.jbeam)")
+    self.layout.operator(ImportJBeam.bl_idname)
