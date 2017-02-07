@@ -2,6 +2,7 @@ import bpy
 from bpy.props import StringProperty, BoolProperty, EnumProperty
 from bpy.types import Operator
 from bpy_extras.io_utils import ImportHelper
+import cProfile
 
 
 class ImportJBeam(Operator, ImportHelper):
@@ -36,6 +37,8 @@ class ImportJBeam(Operator, ImportHelper):
     # )
 
     def execute(self, context):
+        # profiler = cProfile.Profile()
+        # profiler.enable()
         from . import jbeam_utils
         meshes = jbeam_utils.file_to_meshes(self.filepath)
         print(meshes)
@@ -44,6 +47,12 @@ class ImportJBeam(Operator, ImportHelper):
 
         for me in meshes:
             object_utils.object_data_add(context, me)
+
+        # profiler.disable()
+        # profiler.dump_stats(r'C:\Users\Dawer\AppData\Roaming\Blender '
+        #                     r'Foundation\Blender\2.78\scripts\addons\BlenderJBeam\profile\ImportJBeam.pstat')
+        # profiler.clear()
+
         return {'FINISHED'}
 
     @staticmethod

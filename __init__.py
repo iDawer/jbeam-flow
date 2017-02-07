@@ -10,12 +10,14 @@ bl_info = {
 if "bpy" in locals():
     import importlib
 
+    importlib.reload(jb)
     importlib.reload(jbeam_utils)
     importlib.reload(op_import)
     print('Reloaded JBeam plugin')
 else:
     import bpy
     from . import (
+        jb,
         jbeam_utils,
         op_import
     )

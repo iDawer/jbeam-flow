@@ -24,6 +24,16 @@ class jbeamVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by jbeamParser#SecSlotType.
+    def visitSecSlotType(self, ctx:jbeamParser.SecSlotTypeContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#SecSlots.
+    def visitSecSlots(self, ctx:jbeamParser.SecSlotsContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by jbeamParser#SecNodes.
     def visitSecNodes(self, ctx:jbeamParser.SecNodesContext):
         return self.visitChildren(ctx)
@@ -46,6 +56,21 @@ class jbeamVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by jbeamParser#SecUnknown.
     def visitSecUnknown(self, ctx:jbeamParser.SecUnknownContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#arrayOfSlots.
+    def visitArrayOfSlots(self, ctx:jbeamParser.ArrayOfSlotsContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#slot.
+    def visitSlot(self, ctx:jbeamParser.SlotContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#slotProps.
+    def visitSlotProps(self, ctx:jbeamParser.SlotPropsContext):
         return self.visitChildren(ctx)
 
 
@@ -111,6 +136,16 @@ class jbeamVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by jbeamParser#PropUnknown.
     def visitPropUnknown(self, ctx:jbeamParser.PropUnknownContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#PropSingleGroup.
+    def visitPropSingleGroup(self, ctx:jbeamParser.PropSingleGroupContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#PropManyGroups.
+    def visitPropManyGroups(self, ctx:jbeamParser.PropManyGroupsContext):
         return self.visitChildren(ctx)
 
 
@@ -191,6 +226,11 @@ class jbeamVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by jbeamParser#FalseVal.
     def visitFalseVal(self, ctx:jbeamParser.FalseValContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#genericString.
+    def visitGenericString(self, ctx:jbeamParser.GenericStringContext):
         return self.visitChildren(ctx)
 
 

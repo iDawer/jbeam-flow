@@ -5,115 +5,140 @@ from io import StringIO
 
 def serializedATN():
     with StringIO() as buf:
-        buf.write("\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3\20")
-        buf.write("\u0102\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7")
+        buf.write("\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3\37")
+        buf.write("\u012f\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7")
         buf.write("\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t\13\4\f\t\f\4\r\t\r\4\16")
         buf.write("\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22\4\23\t\23")
-        buf.write("\4\24\t\24\4\25\t\25\3\2\3\2\7\2-\n\2\f\2\16\2\60\13\2")
-        buf.write("\3\2\3\2\3\2\3\3\3\3\3\3\3\3\3\4\3\4\7\4;\n\4\f\4\16\4")
-        buf.write(">\13\4\3\4\3\4\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5")
-        buf.write("\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\5\5U\n\5\3\6\3\6")
-        buf.write("\3\6\3\6\7\6[\n\6\f\6\16\6^\13\6\3\6\3\6\3\7\3\7\3\7\3")
-        buf.write("\7\3\7\3\7\5\7h\n\7\3\7\3\7\3\b\3\b\7\bn\n\b\f\b\16\b")
-        buf.write("q\13\b\3\b\3\b\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t")
-        buf.write("\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3")
-        buf.write("\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t")
-        buf.write("\3\t\3\t\5\t\u009c\n\t\3\n\3\n\3\n\3\n\7\n\u00a2\n\n\f")
-        buf.write("\n\16\n\u00a5\13\n\3\n\3\n\3\13\3\13\7\13\u00ab\n\13\f")
-        buf.write("\13\16\13\u00ae\13\13\3\13\3\13\3\f\3\f\3\f\3\f\5\f\u00b6")
-        buf.write("\n\f\3\f\3\f\3\r\3\r\7\r\u00bc\n\r\f\r\16\r\u00bf\13\r")
-        buf.write("\3\r\3\r\3\16\3\16\3\16\3\16\7\16\u00c7\n\16\f\16\16\16")
-        buf.write("\u00ca\13\16\3\16\3\16\3\17\3\17\3\17\3\17\3\17\5\17\u00d3")
-        buf.write("\n\17\3\17\3\17\3\20\3\20\7\20\u00d9\n\20\f\20\16\20\u00dc")
-        buf.write("\13\20\3\20\3\20\3\21\3\21\7\21\u00e2\n\21\f\21\16\21")
-        buf.write("\u00e5\13\21\3\21\3\21\3\22\3\22\7\22\u00eb\n\22\f\22")
-        buf.write("\16\22\u00ee\13\22\3\22\3\22\3\23\3\23\3\23\3\23\3\24")
-        buf.write("\3\24\3\24\3\24\3\24\3\24\5\24\u00fc\n\24\3\25\3\25\5")
-        buf.write("\25\u0100\n\25\3\25\2\2\26\2\4\6\b\n\f\16\20\22\24\26")
-        buf.write("\30\32\34\36 \"$&(\2\2\u0111\2*\3\2\2\2\4\64\3\2\2\2\6")
-        buf.write("8\3\2\2\2\bT\3\2\2\2\nV\3\2\2\2\fa\3\2\2\2\16k\3\2\2\2")
-        buf.write("\20\u009b\3\2\2\2\22\u009d\3\2\2\2\24\u00a8\3\2\2\2\26")
-        buf.write("\u00b1\3\2\2\2\30\u00b9\3\2\2\2\32\u00c2\3\2\2\2\34\u00cd")
-        buf.write("\3\2\2\2\36\u00d6\3\2\2\2 \u00df\3\2\2\2\"\u00e8\3\2\2")
-        buf.write("\2$\u00f1\3\2\2\2&\u00fb\3\2\2\2(\u00ff\3\2\2\2*.\7\6")
-        buf.write("\2\2+-\5\4\3\2,+\3\2\2\2-\60\3\2\2\2.,\3\2\2\2./\3\2\2")
-        buf.write("\2/\61\3\2\2\2\60.\3\2\2\2\61\62\7\7\2\2\62\63\7\2\2\3")
-        buf.write("\63\3\3\2\2\2\64\65\7\f\2\2\65\66\7\13\2\2\66\67\5\6\4")
-        buf.write("\2\67\5\3\2\2\28<\7\6\2\29;\5\b\5\2:9\3\2\2\2;>\3\2\2")
-        buf.write("\2<:\3\2\2\2<=\3\2\2\2=?\3\2\2\2><\3\2\2\2?@\7\7\2\2@")
-        buf.write("\7\3\2\2\2AB\6\5\2\3BC\7\f\2\2CD\7\13\2\2DU\5\n\6\2EF")
-        buf.write("\6\5\3\3FG\7\f\2\2GH\7\13\2\2HU\5\22\n\2IJ\6\5\4\3JK\7")
-        buf.write("\f\2\2KL\7\13\2\2LU\5\22\n\2MN\6\5\5\3NO\7\f\2\2OP\7\13")
-        buf.write("\2\2PU\5\32\16\2QR\7\f\2\2RS\7\13\2\2SU\5&\24\2TA\3\2")
-        buf.write("\2\2TE\3\2\2\2TI\3\2\2\2TM\3\2\2\2TQ\3\2\2\2U\t\3\2\2")
-        buf.write("\2VW\7\b\2\2W\\\5\24\13\2X[\5\f\7\2Y[\5\16\b\2ZX\3\2\2")
-        buf.write("\2ZY\3\2\2\2[^\3\2\2\2\\Z\3\2\2\2\\]\3\2\2\2]_\3\2\2\2")
-        buf.write("^\\\3\2\2\2_`\7\t\2\2`\13\3\2\2\2ab\7\b\2\2bc\7\f\2\2")
-        buf.write("cd\7\r\2\2de\7\r\2\2eg\7\r\2\2fh\5\16\b\2gf\3\2\2\2gh")
-        buf.write("\3\2\2\2hi\3\2\2\2ij\7\t\2\2j\r\3\2\2\2ko\7\6\2\2ln\5")
-        buf.write("\20\t\2ml\3\2\2\2nq\3\2\2\2om\3\2\2\2op\3\2\2\2pr\3\2")
-        buf.write("\2\2qo\3\2\2\2rs\7\7\2\2s\17\3\2\2\2tu\6\t\6\3uv\7\f\2")
-        buf.write("\2vw\7\13\2\2w\u009c\7\r\2\2xy\6\t\7\3yz\7\f\2\2z{\7\13")
-        buf.write("\2\2{\u009c\5(\25\2|}\6\t\b\3}~\7\f\2\2~\177\7\13\2\2")
-        buf.write("\177\u009c\5(\25\2\u0080\u0081\6\t\t\3\u0081\u0082\7\f")
-        buf.write("\2\2\u0082\u0083\7\13\2\2\u0083\u009c\7\f\2\2\u0084\u0085")
-        buf.write("\6\t\n\3\u0085\u0086\7\f\2\2\u0086\u0087\7\13\2\2\u0087")
-        buf.write("\u009c\7\r\2\2\u0088\u0089\6\t\13\3\u0089\u008a\7\f\2")
-        buf.write("\2\u008a\u008b\7\13\2\2\u008b\u009c\7\f\2\2\u008c\u008d")
-        buf.write("\6\t\f\3\u008d\u008e\7\f\2\2\u008e\u008f\7\13\2\2\u008f")
-        buf.write("\u009c\5(\25\2\u0090\u0091\6\t\r\3\u0091\u0092\7\f\2\2")
-        buf.write("\u0092\u0093\7\13\2\2\u0093\u009c\7\r\2\2\u0094\u0095")
-        buf.write("\6\t\16\3\u0095\u0096\7\f\2\2\u0096\u0097\7\13\2\2\u0097")
-        buf.write("\u009c\7\r\2\2\u0098\u0099\7\f\2\2\u0099\u009a\7\13\2")
-        buf.write("\2\u009a\u009c\5&\24\2\u009bt\3\2\2\2\u009bx\3\2\2\2\u009b")
-        buf.write("|\3\2\2\2\u009b\u0080\3\2\2\2\u009b\u0084\3\2\2\2\u009b")
-        buf.write("\u0088\3\2\2\2\u009b\u008c\3\2\2\2\u009b\u0090\3\2\2\2")
-        buf.write("\u009b\u0094\3\2\2\2\u009b\u0098\3\2\2\2\u009c\21\3\2")
-        buf.write("\2\2\u009d\u009e\7\b\2\2\u009e\u00a3\5\24\13\2\u009f\u00a2")
-        buf.write("\5\26\f\2\u00a0\u00a2\5\30\r\2\u00a1\u009f\3\2\2\2\u00a1")
-        buf.write("\u00a0\3\2\2\2\u00a2\u00a5\3\2\2\2\u00a3\u00a1\3\2\2\2")
-        buf.write("\u00a3\u00a4\3\2\2\2\u00a4\u00a6\3\2\2\2\u00a5\u00a3\3")
-        buf.write("\2\2\2\u00a6\u00a7\7\t\2\2\u00a7\23\3\2\2\2\u00a8\u00ac")
-        buf.write("\7\b\2\2\u00a9\u00ab\7\f\2\2\u00aa\u00a9\3\2\2\2\u00ab")
-        buf.write("\u00ae\3\2\2\2\u00ac\u00aa\3\2\2\2\u00ac\u00ad\3\2\2\2")
-        buf.write("\u00ad\u00af\3\2\2\2\u00ae\u00ac\3\2\2\2\u00af\u00b0\7")
-        buf.write("\t\2\2\u00b0\25\3\2\2\2\u00b1\u00b2\7\b\2\2\u00b2\u00b3")
-        buf.write("\7\f\2\2\u00b3\u00b5\7\f\2\2\u00b4\u00b6\5\30\r\2\u00b5")
-        buf.write("\u00b4\3\2\2\2\u00b5\u00b6\3\2\2\2\u00b6\u00b7\3\2\2\2")
-        buf.write("\u00b7\u00b8\7\t\2\2\u00b8\27\3\2\2\2\u00b9\u00bd\7\6")
-        buf.write("\2\2\u00ba\u00bc\5$\23\2\u00bb\u00ba\3\2\2\2\u00bc\u00bf")
-        buf.write("\3\2\2\2\u00bd\u00bb\3\2\2\2\u00bd\u00be\3\2\2\2\u00be")
-        buf.write("\u00c0\3\2\2\2\u00bf\u00bd\3\2\2\2\u00c0\u00c1\7\7\2\2")
-        buf.write("\u00c1\31\3\2\2\2\u00c2\u00c3\7\b\2\2\u00c3\u00c8\5\24")
-        buf.write("\13\2\u00c4\u00c7\5\34\17\2\u00c5\u00c7\5\36\20\2\u00c6")
-        buf.write("\u00c4\3\2\2\2\u00c6\u00c5\3\2\2\2\u00c7\u00ca\3\2\2\2")
-        buf.write("\u00c8\u00c6\3\2\2\2\u00c8\u00c9\3\2\2\2\u00c9\u00cb\3")
-        buf.write("\2\2\2\u00ca\u00c8\3\2\2\2\u00cb\u00cc\7\t\2\2\u00cc\33")
-        buf.write("\3\2\2\2\u00cd\u00ce\7\b\2\2\u00ce\u00cf\7\f\2\2\u00cf")
-        buf.write("\u00d0\7\f\2\2\u00d0\u00d2\7\f\2\2\u00d1\u00d3\5\36\20")
-        buf.write("\2\u00d2\u00d1\3\2\2\2\u00d2\u00d3\3\2\2\2\u00d3\u00d4")
-        buf.write("\3\2\2\2\u00d4\u00d5\7\t\2\2\u00d5\35\3\2\2\2\u00d6\u00da")
-        buf.write("\7\6\2\2\u00d7\u00d9\5$\23\2\u00d8\u00d7\3\2\2\2\u00d9")
-        buf.write("\u00dc\3\2\2\2\u00da\u00d8\3\2\2\2\u00da\u00db\3\2\2\2")
-        buf.write("\u00db\u00dd\3\2\2\2\u00dc\u00da\3\2\2\2\u00dd\u00de\7")
-        buf.write("\7\2\2\u00de\37\3\2\2\2\u00df\u00e3\7\6\2\2\u00e0\u00e2")
-        buf.write("\5$\23\2\u00e1\u00e0\3\2\2\2\u00e2\u00e5\3\2\2\2\u00e3")
-        buf.write("\u00e1\3\2\2\2\u00e3\u00e4\3\2\2\2\u00e4\u00e6\3\2\2\2")
-        buf.write("\u00e5\u00e3\3\2\2\2\u00e6\u00e7\7\7\2\2\u00e7!\3\2\2")
-        buf.write("\2\u00e8\u00ec\7\b\2\2\u00e9\u00eb\5&\24\2\u00ea\u00e9")
-        buf.write("\3\2\2\2\u00eb\u00ee\3\2\2\2\u00ec\u00ea\3\2\2\2\u00ec")
-        buf.write("\u00ed\3\2\2\2\u00ed\u00ef\3\2\2\2\u00ee\u00ec\3\2\2\2")
-        buf.write("\u00ef\u00f0\7\t\2\2\u00f0#\3\2\2\2\u00f1\u00f2\7\f\2")
-        buf.write("\2\u00f2\u00f3\7\13\2\2\u00f3\u00f4\5&\24\2\u00f4%\3\2")
-        buf.write("\2\2\u00f5\u00fc\7\f\2\2\u00f6\u00fc\7\r\2\2\u00f7\u00fc")
-        buf.write("\5 \21\2\u00f8\u00fc\5\"\22\2\u00f9\u00fc\5(\25\2\u00fa")
-        buf.write("\u00fc\7\3\2\2\u00fb\u00f5\3\2\2\2\u00fb\u00f6\3\2\2\2")
-        buf.write("\u00fb\u00f7\3\2\2\2\u00fb\u00f8\3\2\2\2\u00fb\u00f9\3")
-        buf.write("\2\2\2\u00fb\u00fa\3\2\2\2\u00fc\'\3\2\2\2\u00fd\u0100")
-        buf.write("\7\4\2\2\u00fe\u0100\7\5\2\2\u00ff\u00fd\3\2\2\2\u00ff")
-        buf.write("\u00fe\3\2\2\2\u0100)\3\2\2\2\27.<TZ\\go\u009b\u00a1\u00a3")
-        buf.write("\u00ac\u00b5\u00bd\u00c6\u00c8\u00d2\u00da\u00e3\u00ec")
-        buf.write("\u00fb\u00ff")
+        buf.write("\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30\4\31")
+        buf.write("\t\31\4\32\t\32\3\2\3\2\7\2\67\n\2\f\2\16\2:\13\2\3\2")
+        buf.write("\3\2\3\2\3\3\3\3\3\3\3\3\3\4\3\4\7\4E\n\4\f\4\16\4H\13")
+        buf.write("\4\3\4\3\4\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5")
+        buf.write("\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\5\5a\n\5\3\6")
+        buf.write("\3\6\3\6\7\6f\n\6\f\6\16\6i\13\6\3\6\3\6\3\7\3\7\3\7\3")
+        buf.write("\7\3\7\5\7r\n\7\3\7\3\7\3\b\3\b\7\bx\n\b\f\b\16\b{\13")
+        buf.write("\b\3\b\3\b\3\t\3\t\3\t\3\t\7\t\u0083\n\t\f\t\16\t\u0086")
+        buf.write("\13\t\3\t\3\t\3\n\3\n\3\n\3\n\3\n\3\n\5\n\u0090\n\n\3")
+        buf.write("\n\3\n\3\13\3\13\7\13\u0096\n\13\f\13\16\13\u0099\13\13")
+        buf.write("\3\13\3\13\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f")
+        buf.write("\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3")
+        buf.write("\f\3\f\3\f\3\f\3\f\3\f\5\f\u00bb\n\f\3\r\3\r\3\r\7\r\u00c0")
+        buf.write("\n\r\f\r\16\r\u00c3\13\r\3\r\5\r\u00c6\n\r\3\16\3\16\3")
+        buf.write("\16\3\16\7\16\u00cc\n\16\f\16\16\16\u00cf\13\16\3\16\3")
+        buf.write("\16\3\17\3\17\7\17\u00d5\n\17\f\17\16\17\u00d8\13\17\3")
+        buf.write("\17\3\17\3\20\3\20\3\20\3\20\5\20\u00e0\n\20\3\20\3\20")
+        buf.write("\3\21\3\21\7\21\u00e6\n\21\f\21\16\21\u00e9\13\21\3\21")
+        buf.write("\3\21\3\22\3\22\3\22\3\22\7\22\u00f1\n\22\f\22\16\22\u00f4")
+        buf.write("\13\22\3\22\3\22\3\23\3\23\3\23\3\23\3\23\5\23\u00fd\n")
+        buf.write("\23\3\23\3\23\3\24\3\24\7\24\u0103\n\24\f\24\16\24\u0106")
+        buf.write("\13\24\3\24\3\24\3\25\3\25\7\25\u010c\n\25\f\25\16\25")
+        buf.write("\u010f\13\25\3\25\3\25\3\26\3\26\7\26\u0115\n\26\f\26")
+        buf.write("\16\26\u0118\13\26\3\26\3\26\3\27\3\27\3\27\3\27\3\30")
+        buf.write("\3\30\3\30\3\30\3\30\3\30\5\30\u0126\n\30\3\31\3\31\5")
+        buf.write("\31\u012a\n\31\3\32\3\32\3\32\3\32\2\2\33\2\4\6\b\n\f")
+        buf.write("\16\20\22\24\26\30\32\34\36 \"$&(*,.\60\62\2\3\4\2\5\21")
+        buf.write("\33\33\u0140\2\64\3\2\2\2\4>\3\2\2\2\6B\3\2\2\2\b`\3\2")
+        buf.write("\2\2\nb\3\2\2\2\fl\3\2\2\2\16u\3\2\2\2\20~\3\2\2\2\22")
+        buf.write("\u0089\3\2\2\2\24\u0093\3\2\2\2\26\u00ba\3\2\2\2\30\u00c5")
+        buf.write("\3\2\2\2\32\u00c7\3\2\2\2\34\u00d2\3\2\2\2\36\u00db\3")
+        buf.write("\2\2\2 \u00e3\3\2\2\2\"\u00ec\3\2\2\2$\u00f7\3\2\2\2&")
+        buf.write("\u0100\3\2\2\2(\u0109\3\2\2\2*\u0112\3\2\2\2,\u011b\3")
+        buf.write("\2\2\2.\u0125\3\2\2\2\60\u0129\3\2\2\2\62\u012b\3\2\2")
+        buf.write("\2\648\7\25\2\2\65\67\5\4\3\2\66\65\3\2\2\2\67:\3\2\2")
+        buf.write("\28\66\3\2\2\289\3\2\2\29;\3\2\2\2:8\3\2\2\2;<\7\26\2")
+        buf.write("\2<=\7\2\2\3=\3\3\2\2\2>?\5\62\32\2?@\7\32\2\2@A\5\6\4")
+        buf.write("\2A\5\3\2\2\2BF\7\25\2\2CE\5\b\5\2DC\3\2\2\2EH\3\2\2\2")
+        buf.write("FD\3\2\2\2FG\3\2\2\2GI\3\2\2\2HF\3\2\2\2IJ\7\26\2\2J\7")
+        buf.write("\3\2\2\2KL\7\3\2\2LM\7\32\2\2Ma\5\62\32\2NO\7\4\2\2OP")
+        buf.write("\7\32\2\2Pa\5\n\6\2QR\7\5\2\2RS\7\32\2\2Sa\5\20\t\2TU")
+        buf.write("\7\6\2\2UV\7\32\2\2Va\5\32\16\2WX\7\7\2\2XY\7\32\2\2Y")
+        buf.write("a\5\32\16\2Z[\7\b\2\2[\\\7\32\2\2\\a\5\"\22\2]^\7\33\2")
+        buf.write("\2^_\7\32\2\2_a\5.\30\2`K\3\2\2\2`N\3\2\2\2`Q\3\2\2\2")
+        buf.write("`T\3\2\2\2`W\3\2\2\2`Z\3\2\2\2`]\3\2\2\2a\t\3\2\2\2bc")
+        buf.write("\7\27\2\2cg\5\34\17\2df\5\f\7\2ed\3\2\2\2fi\3\2\2\2ge")
+        buf.write("\3\2\2\2gh\3\2\2\2hj\3\2\2\2ig\3\2\2\2jk\7\30\2\2k\13")
+        buf.write("\3\2\2\2lm\7\27\2\2mn\5\62\32\2no\5\62\32\2oq\5\62\32")
+        buf.write("\2pr\5\16\b\2qp\3\2\2\2qr\3\2\2\2rs\3\2\2\2st\7\30\2\2")
+        buf.write("t\r\3\2\2\2uy\7\25\2\2vx\5,\27\2wv\3\2\2\2x{\3\2\2\2y")
+        buf.write("w\3\2\2\2yz\3\2\2\2z|\3\2\2\2{y\3\2\2\2|}\7\26\2\2}\17")
+        buf.write("\3\2\2\2~\177\7\27\2\2\177\u0084\5\34\17\2\u0080\u0083")
+        buf.write("\5\22\n\2\u0081\u0083\5\24\13\2\u0082\u0080\3\2\2\2\u0082")
+        buf.write("\u0081\3\2\2\2\u0083\u0086\3\2\2\2\u0084\u0082\3\2\2\2")
+        buf.write("\u0084\u0085\3\2\2\2\u0085\u0087\3\2\2\2\u0086\u0084\3")
+        buf.write("\2\2\2\u0087\u0088\7\30\2\2\u0088\21\3\2\2\2\u0089\u008a")
+        buf.write("\7\27\2\2\u008a\u008b\5\62\32\2\u008b\u008c\7\34\2\2\u008c")
+        buf.write("\u008d\7\34\2\2\u008d\u008f\7\34\2\2\u008e\u0090\5\24")
+        buf.write("\13\2\u008f\u008e\3\2\2\2\u008f\u0090\3\2\2\2\u0090\u0091")
+        buf.write("\3\2\2\2\u0091\u0092\7\30\2\2\u0092\23\3\2\2\2\u0093\u0097")
+        buf.write("\7\25\2\2\u0094\u0096\5\26\f\2\u0095\u0094\3\2\2\2\u0096")
+        buf.write("\u0099\3\2\2\2\u0097\u0095\3\2\2\2\u0097\u0098\3\2\2\2")
+        buf.write("\u0098\u009a\3\2\2\2\u0099\u0097\3\2\2\2\u009a\u009b\7")
+        buf.write("\26\2\2\u009b\25\3\2\2\2\u009c\u009d\7\t\2\2\u009d\u009e")
+        buf.write("\7\32\2\2\u009e\u00bb\7\34\2\2\u009f\u00a0\7\n\2\2\u00a0")
+        buf.write("\u00a1\7\32\2\2\u00a1\u00bb\5\60\31\2\u00a2\u00a3\7\13")
+        buf.write("\2\2\u00a3\u00a4\7\32\2\2\u00a4\u00bb\5\60\31\2\u00a5")
+        buf.write("\u00a6\7\f\2\2\u00a6\u00a7\7\32\2\2\u00a7\u00bb\5\30\r")
+        buf.write("\2\u00a8\u00a9\7\r\2\2\u00a9\u00aa\7\32\2\2\u00aa\u00bb")
+        buf.write("\7\34\2\2\u00ab\u00ac\7\16\2\2\u00ac\u00ad\7\32\2\2\u00ad")
+        buf.write("\u00bb\5\62\32\2\u00ae\u00af\7\17\2\2\u00af\u00b0\7\32")
+        buf.write("\2\2\u00b0\u00bb\5\60\31\2\u00b1\u00b2\7\20\2\2\u00b2")
+        buf.write("\u00b3\7\32\2\2\u00b3\u00bb\7\34\2\2\u00b4\u00b5\7\21")
+        buf.write("\2\2\u00b5\u00b6\7\32\2\2\u00b6\u00bb\7\34\2\2\u00b7\u00b8")
+        buf.write("\7\33\2\2\u00b8\u00b9\7\32\2\2\u00b9\u00bb\5.\30\2\u00ba")
+        buf.write("\u009c\3\2\2\2\u00ba\u009f\3\2\2\2\u00ba\u00a2\3\2\2\2")
+        buf.write("\u00ba\u00a5\3\2\2\2\u00ba\u00a8\3\2\2\2\u00ba\u00ab\3")
+        buf.write("\2\2\2\u00ba\u00ae\3\2\2\2\u00ba\u00b1\3\2\2\2\u00ba\u00b4")
+        buf.write("\3\2\2\2\u00ba\u00b7\3\2\2\2\u00bb\27\3\2\2\2\u00bc\u00c6")
+        buf.write("\5\62\32\2\u00bd\u00c1\7\27\2\2\u00be\u00c0\5\62\32\2")
+        buf.write("\u00bf\u00be\3\2\2\2\u00c0\u00c3\3\2\2\2\u00c1\u00bf\3")
+        buf.write("\2\2\2\u00c1\u00c2\3\2\2\2\u00c2\u00c4\3\2\2\2\u00c3\u00c1")
+        buf.write("\3\2\2\2\u00c4\u00c6\7\30\2\2\u00c5\u00bc\3\2\2\2\u00c5")
+        buf.write("\u00bd\3\2\2\2\u00c6\31\3\2\2\2\u00c7\u00c8\7\27\2\2\u00c8")
+        buf.write("\u00cd\5\34\17\2\u00c9\u00cc\5\36\20\2\u00ca\u00cc\5 ")
+        buf.write("\21\2\u00cb\u00c9\3\2\2\2\u00cb\u00ca\3\2\2\2\u00cc\u00cf")
+        buf.write("\3\2\2\2\u00cd\u00cb\3\2\2\2\u00cd\u00ce\3\2\2\2\u00ce")
+        buf.write("\u00d0\3\2\2\2\u00cf\u00cd\3\2\2\2\u00d0\u00d1\7\30\2")
+        buf.write("\2\u00d1\33\3\2\2\2\u00d2\u00d6\7\27\2\2\u00d3\u00d5\5")
+        buf.write("\62\32\2\u00d4\u00d3\3\2\2\2\u00d5\u00d8\3\2\2\2\u00d6")
+        buf.write("\u00d4\3\2\2\2\u00d6\u00d7\3\2\2\2\u00d7\u00d9\3\2\2\2")
+        buf.write("\u00d8\u00d6\3\2\2\2\u00d9\u00da\7\30\2\2\u00da\35\3\2")
+        buf.write("\2\2\u00db\u00dc\7\27\2\2\u00dc\u00dd\5\62\32\2\u00dd")
+        buf.write("\u00df\5\62\32\2\u00de\u00e0\5 \21\2\u00df\u00de\3\2\2")
+        buf.write("\2\u00df\u00e0\3\2\2\2\u00e0\u00e1\3\2\2\2\u00e1\u00e2")
+        buf.write("\7\30\2\2\u00e2\37\3\2\2\2\u00e3\u00e7\7\25\2\2\u00e4")
+        buf.write("\u00e6\5,\27\2\u00e5\u00e4\3\2\2\2\u00e6\u00e9\3\2\2\2")
+        buf.write("\u00e7\u00e5\3\2\2\2\u00e7\u00e8\3\2\2\2\u00e8\u00ea\3")
+        buf.write("\2\2\2\u00e9\u00e7\3\2\2\2\u00ea\u00eb\7\26\2\2\u00eb")
+        buf.write("!\3\2\2\2\u00ec\u00ed\7\27\2\2\u00ed\u00f2\5\34\17\2\u00ee")
+        buf.write("\u00f1\5$\23\2\u00ef\u00f1\5&\24\2\u00f0\u00ee\3\2\2\2")
+        buf.write("\u00f0\u00ef\3\2\2\2\u00f1\u00f4\3\2\2\2\u00f2\u00f0\3")
+        buf.write("\2\2\2\u00f2\u00f3\3\2\2\2\u00f3\u00f5\3\2\2\2\u00f4\u00f2")
+        buf.write("\3\2\2\2\u00f5\u00f6\7\30\2\2\u00f6#\3\2\2\2\u00f7\u00f8")
+        buf.write("\7\27\2\2\u00f8\u00f9\5\62\32\2\u00f9\u00fa\5\62\32\2")
+        buf.write("\u00fa\u00fc\5\62\32\2\u00fb\u00fd\5&\24\2\u00fc\u00fb")
+        buf.write("\3\2\2\2\u00fc\u00fd\3\2\2\2\u00fd\u00fe\3\2\2\2\u00fe")
+        buf.write("\u00ff\7\30\2\2\u00ff%\3\2\2\2\u0100\u0104\7\25\2\2\u0101")
+        buf.write("\u0103\5,\27\2\u0102\u0101\3\2\2\2\u0103\u0106\3\2\2\2")
+        buf.write("\u0104\u0102\3\2\2\2\u0104\u0105\3\2\2\2\u0105\u0107\3")
+        buf.write("\2\2\2\u0106\u0104\3\2\2\2\u0107\u0108\7\26\2\2\u0108")
+        buf.write("\'\3\2\2\2\u0109\u010d\7\25\2\2\u010a\u010c\5,\27\2\u010b")
+        buf.write("\u010a\3\2\2\2\u010c\u010f\3\2\2\2\u010d\u010b\3\2\2\2")
+        buf.write("\u010d\u010e\3\2\2\2\u010e\u0110\3\2\2\2\u010f\u010d\3")
+        buf.write("\2\2\2\u0110\u0111\7\26\2\2\u0111)\3\2\2\2\u0112\u0116")
+        buf.write("\7\27\2\2\u0113\u0115\5.\30\2\u0114\u0113\3\2\2\2\u0115")
+        buf.write("\u0118\3\2\2\2\u0116\u0114\3\2\2\2\u0116\u0117\3\2\2\2")
+        buf.write("\u0117\u0119\3\2\2\2\u0118\u0116\3\2\2\2\u0119\u011a\7")
+        buf.write("\30\2\2\u011a+\3\2\2\2\u011b\u011c\5\62\32\2\u011c\u011d")
+        buf.write("\7\32\2\2\u011d\u011e\5.\30\2\u011e-\3\2\2\2\u011f\u0126")
+        buf.write("\5\62\32\2\u0120\u0126\7\34\2\2\u0121\u0126\5(\25\2\u0122")
+        buf.write("\u0126\5*\26\2\u0123\u0126\5\60\31\2\u0124\u0126\7\22")
+        buf.write("\2\2\u0125\u011f\3\2\2\2\u0125\u0120\3\2\2\2\u0125\u0121")
+        buf.write("\3\2\2\2\u0125\u0122\3\2\2\2\u0125\u0123\3\2\2\2\u0125")
+        buf.write("\u0124\3\2\2\2\u0126/\3\2\2\2\u0127\u012a\7\23\2\2\u0128")
+        buf.write("\u012a\7\24\2\2\u0129\u0127\3\2\2\2\u0129\u0128\3\2\2")
+        buf.write("\2\u012a\61\3\2\2\2\u012b\u012c\t\2\2\2\u012c\u012d\b")
+        buf.write("\32\1\2\u012d\63\3\2\2\2\348F`gqy\u0082\u0084\u008f\u0097")
+        buf.write("\u00ba\u00c1\u00c5\u00cb\u00cd\u00d6\u00df\u00e7\u00f0")
+        buf.write("\u00f2\u00fc\u0104\u010d\u0116\u0125\u0129")
         return buf.getvalue()
 
 
@@ -127,54 +152,85 @@ class jbeamParser ( Parser ):
 
     sharedContextCache = PredictionContextCache()
 
-    literalNames = [ "<INVALID>", "'null'", "'true'", "'false'", "'{'", 
-                     "'}'", "'['", "']'", "'\"'", "':'" ]
+    literalNames = [ "<INVALID>", "'\"slotType\"'", "'\"slots\"'", "'\"nodes\"'", 
+                     "'\"beams\"'", "'\"hydros\"'", "'\"triangles\"'", "'\"nodeWeight\"'", 
+                     "'\"selfCollision\"'", "'\"collision\"'", "'\"group\"'", 
+                     "'\"frictionCoef\"'", "'\"nodeMaterial\"'", "'\"fixed\"'", 
+                     "'\"surfaceCoef\"'", "'\"volumeCoef\"'", "'null'", 
+                     "'true'", "'false'", "'{'", "'}'", "'['", "']'", "'\"'", 
+                     "':'" ]
 
-    symbolicNames = [ "<INVALID>", "NULL", "TRUE", "FALSE", "LCURLY", "RCURLY", 
-                      "LBRACK", "RBRACK", "QUOT", "COLON", "STRING", "NUMBER", 
-                      "COMMENT_BLOCK", "COMMENT_LINE", "WS" ]
+    symbolicNames = [ "<INVALID>", "Str_slotType", "Str_slots", "Str_nodes", 
+                      "Str_beams", "Str_hydros", "Str_triangles", "Str_nodeWeight", 
+                      "Str_selfCollision", "Str_collision", "Str_group", 
+                      "Str_frictionCoef", "Str_nodeMaterial", "Str_fixed", 
+                      "Str_surfaceCoef", "Str_volumeCoef", "NULL", "TRUE", 
+                      "FALSE", "LCURLY", "RCURLY", "LBRACK", "RBRACK", "QUOT", 
+                      "COLON", "STRING", "NUMBER", "COMMENT_BLOCK", "COMMENT_LINE", 
+                      "WS" ]
 
     RULE_jbeam = 0
     RULE_part = 1
     RULE_partObj = 2
     RULE_section = 3
-    RULE_arrayOfJnodes = 4
-    RULE_jnode = 5
-    RULE_jnodeProps = 6
-    RULE_jnodeProp = 7
-    RULE_arrayOfBeams = 8
-    RULE_tableHeader = 9
-    RULE_beam = 10
-    RULE_beamProps = 11
-    RULE_arrayOfColtris = 12
-    RULE_coltri = 13
-    RULE_coltriProps = 14
-    RULE_obj = 15
-    RULE_array = 16
-    RULE_keyVal = 17
-    RULE_value = 18
-    RULE_boolean = 19
+    RULE_arrayOfSlots = 4
+    RULE_slot = 5
+    RULE_slotProps = 6
+    RULE_arrayOfJnodes = 7
+    RULE_jnode = 8
+    RULE_jnodeProps = 9
+    RULE_jnodeProp = 10
+    RULE_nodeGroupProp = 11
+    RULE_arrayOfBeams = 12
+    RULE_tableHeader = 13
+    RULE_beam = 14
+    RULE_beamProps = 15
+    RULE_arrayOfColtris = 16
+    RULE_coltri = 17
+    RULE_coltriProps = 18
+    RULE_obj = 19
+    RULE_array = 20
+    RULE_keyVal = 21
+    RULE_value = 22
+    RULE_boolean = 23
+    RULE_genericString = 24
 
-    ruleNames =  [ "jbeam", "part", "partObj", "section", "arrayOfJnodes", 
-                   "jnode", "jnodeProps", "jnodeProp", "arrayOfBeams", "tableHeader", 
+    ruleNames =  [ "jbeam", "part", "partObj", "section", "arrayOfSlots", 
+                   "slot", "slotProps", "arrayOfJnodes", "jnode", "jnodeProps", 
+                   "jnodeProp", "nodeGroupProp", "arrayOfBeams", "tableHeader", 
                    "beam", "beamProps", "arrayOfColtris", "coltri", "coltriProps", 
-                   "obj", "array", "keyVal", "value", "boolean" ]
+                   "obj", "array", "keyVal", "value", "boolean", "genericString" ]
 
     EOF = Token.EOF
-    NULL=1
-    TRUE=2
-    FALSE=3
-    LCURLY=4
-    RCURLY=5
-    LBRACK=6
-    RBRACK=7
-    QUOT=8
-    COLON=9
-    STRING=10
-    NUMBER=11
-    COMMENT_BLOCK=12
-    COMMENT_LINE=13
-    WS=14
+    Str_slotType=1
+    Str_slots=2
+    Str_nodes=3
+    Str_beams=4
+    Str_hydros=5
+    Str_triangles=6
+    Str_nodeWeight=7
+    Str_selfCollision=8
+    Str_collision=9
+    Str_group=10
+    Str_frictionCoef=11
+    Str_nodeMaterial=12
+    Str_fixed=13
+    Str_surfaceCoef=14
+    Str_volumeCoef=15
+    NULL=16
+    TRUE=17
+    FALSE=18
+    LCURLY=19
+    RCURLY=20
+    LBRACK=21
+    RBRACK=22
+    QUOT=23
+    COLON=24
+    STRING=25
+    NUMBER=26
+    COMMENT_BLOCK=27
+    COMMENT_LINE=28
+    WS=29
 
     def __init__(self, input:TokenStream):
         super().__init__(input)
@@ -227,21 +283,21 @@ class jbeamParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 40
+            self.state = 50
             self.match(jbeamParser.LCURLY)
-            self.state = 44
+            self.state = 54
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==jbeamParser.STRING:
-                self.state = 41
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << jbeamParser.Str_nodes) | (1 << jbeamParser.Str_beams) | (1 << jbeamParser.Str_hydros) | (1 << jbeamParser.Str_triangles) | (1 << jbeamParser.Str_nodeWeight) | (1 << jbeamParser.Str_selfCollision) | (1 << jbeamParser.Str_collision) | (1 << jbeamParser.Str_group) | (1 << jbeamParser.Str_frictionCoef) | (1 << jbeamParser.Str_nodeMaterial) | (1 << jbeamParser.Str_fixed) | (1 << jbeamParser.Str_surfaceCoef) | (1 << jbeamParser.Str_volumeCoef) | (1 << jbeamParser.STRING))) != 0):
+                self.state = 51
                 self.part()
-                self.state = 46
+                self.state = 56
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 47
+            self.state = 57
             self.match(jbeamParser.RCURLY)
-            self.state = 48
+            self.state = 58
             self.match(jbeamParser.EOF)
         except RecognitionException as re:
             localctx.exception = re
@@ -256,14 +312,15 @@ class jbeamParser ( Parser ):
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.name = None # Token
+            self.name = None # GenericStringContext
 
         def partObj(self):
             return self.getTypedRuleContext(jbeamParser.PartObjContext,0)
 
 
-        def STRING(self):
-            return self.getToken(jbeamParser.STRING, 0)
+        def genericString(self):
+            return self.getTypedRuleContext(jbeamParser.GenericStringContext,0)
+
 
         def getRuleIndex(self):
             return jbeamParser.RULE_part
@@ -291,11 +348,11 @@ class jbeamParser ( Parser ):
         self.enterRule(localctx, 2, self.RULE_part)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 50
-            localctx.name = self.match(jbeamParser.STRING)
-            self.state = 51
+            self.state = 60
+            localctx.name = self.genericString()
+            self.state = 61
             self.match(jbeamParser.COLON)
-            self.state = 52
+            self.state = 62
             self.partObj()
         except RecognitionException as re:
             localctx.exception = re
@@ -342,22 +399,22 @@ class jbeamParser ( Parser ):
 
         localctx = jbeamParser.PartObjContext(self, self._ctx, self.state)
         self.enterRule(localctx, 4, self.RULE_partObj)
+        self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 54
+            self.state = 64
             self.match(jbeamParser.LCURLY)
-            self.state = 58
+            self.state = 68
             self._errHandler.sync(self)
-            _alt = self._interp.adaptivePredict(self._input,1,self._ctx)
-            while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
-                if _alt==1:
-                    self.state = 55
-                    self.section() 
-                self.state = 60
+            _la = self._input.LA(1)
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << jbeamParser.Str_slotType) | (1 << jbeamParser.Str_slots) | (1 << jbeamParser.Str_nodes) | (1 << jbeamParser.Str_beams) | (1 << jbeamParser.Str_hydros) | (1 << jbeamParser.Str_triangles) | (1 << jbeamParser.STRING))) != 0):
+                self.state = 65
+                self.section()
+                self.state = 70
                 self._errHandler.sync(self)
-                _alt = self._interp.adaptivePredict(self._input,1,self._ctx)
+                _la = self._input.LA(1)
 
-            self.state = 61
+            self.state = 71
             self.match(jbeamParser.RCURLY)
         except RecognitionException as re:
             localctx.exception = re
@@ -393,8 +450,8 @@ class jbeamParser ( Parser ):
         def arrayOfBeams(self):
             return self.getTypedRuleContext(jbeamParser.ArrayOfBeamsContext,0)
 
-        def STRING(self):
-            return self.getToken(jbeamParser.STRING, 0)
+        def Str_hydros(self):
+            return self.getToken(jbeamParser.Str_hydros, 0)
 
         def enterRule(self, listener:ParseTreeListener):
             if hasattr( listener, "enterSecHydros" ):
@@ -421,8 +478,8 @@ class jbeamParser ( Parser ):
         def arrayOfColtris(self):
             return self.getTypedRuleContext(jbeamParser.ArrayOfColtrisContext,0)
 
-        def STRING(self):
-            return self.getToken(jbeamParser.STRING, 0)
+        def Str_triangles(self):
+            return self.getToken(jbeamParser.Str_triangles, 0)
 
         def enterRule(self, listener:ParseTreeListener):
             if hasattr( listener, "enterSecColtris" ):
@@ -439,6 +496,35 @@ class jbeamParser ( Parser ):
                 return visitor.visitChildren(self)
 
 
+    class SecSlotTypeContext(SectionContext):
+
+        def __init__(self, parser, ctx:ParserRuleContext): # actually a jbeamParser.SectionContext
+            super().__init__(parser)
+            self.name = None # Token
+            self.val = None # GenericStringContext
+            self.copyFrom(ctx)
+
+        def Str_slotType(self):
+            return self.getToken(jbeamParser.Str_slotType, 0)
+        def genericString(self):
+            return self.getTypedRuleContext(jbeamParser.GenericStringContext,0)
+
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterSecSlotType" ):
+                listener.enterSecSlotType(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitSecSlotType" ):
+                listener.exitSecSlotType(self)
+
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitSecSlotType" ):
+                return visitor.visitSecSlotType(self)
+            else:
+                return visitor.visitChildren(self)
+
+
     class SecNodesContext(SectionContext):
 
         def __init__(self, parser, ctx:ParserRuleContext): # actually a jbeamParser.SectionContext
@@ -449,8 +535,8 @@ class jbeamParser ( Parser ):
         def arrayOfJnodes(self):
             return self.getTypedRuleContext(jbeamParser.ArrayOfJnodesContext,0)
 
-        def STRING(self):
-            return self.getToken(jbeamParser.STRING, 0)
+        def Str_nodes(self):
+            return self.getToken(jbeamParser.Str_nodes, 0)
 
         def enterRule(self, listener:ParseTreeListener):
             if hasattr( listener, "enterSecNodes" ):
@@ -477,8 +563,8 @@ class jbeamParser ( Parser ):
         def arrayOfBeams(self):
             return self.getTypedRuleContext(jbeamParser.ArrayOfBeamsContext,0)
 
-        def STRING(self):
-            return self.getToken(jbeamParser.STRING, 0)
+        def Str_beams(self):
+            return self.getToken(jbeamParser.Str_beams, 0)
 
         def enterRule(self, listener:ParseTreeListener):
             if hasattr( listener, "enterSecBeams" ):
@@ -523,87 +609,319 @@ class jbeamParser ( Parser ):
                 return visitor.visitChildren(self)
 
 
+    class SecSlotsContext(SectionContext):
+
+        def __init__(self, parser, ctx:ParserRuleContext): # actually a jbeamParser.SectionContext
+            super().__init__(parser)
+            self.name = None # Token
+            self.copyFrom(ctx)
+
+        def arrayOfSlots(self):
+            return self.getTypedRuleContext(jbeamParser.ArrayOfSlotsContext,0)
+
+        def Str_slots(self):
+            return self.getToken(jbeamParser.Str_slots, 0)
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterSecSlots" ):
+                listener.enterSecSlots(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitSecSlots" ):
+                listener.exitSecSlots(self)
+
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitSecSlots" ):
+                return visitor.visitSecSlots(self)
+            else:
+                return visitor.visitChildren(self)
+
+
 
     def section(self):
 
         localctx = jbeamParser.SectionContext(self, self._ctx, self.state)
         self.enterRule(localctx, 6, self.RULE_section)
         try:
-            self.state = 82
+            self.state = 94
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,2,self._ctx)
-            if la_ == 1:
-                localctx = jbeamParser.SecNodesContext(self, localctx)
+            token = self._input.LA(1)
+            if token in [jbeamParser.Str_slotType]:
+                localctx = jbeamParser.SecSlotTypeContext(self, localctx)
                 self.enterOuterAlt(localctx, 1)
-                self.state = 63
-                if not localctx.start.text == '"nodes"':
-                    from antlr4.error.Errors import FailedPredicateException
-                    raise FailedPredicateException(self, "$start.text == '\"nodes\"'")
-                self.state = 64
-                localctx.name = self.match(jbeamParser.STRING)
-                self.state = 65
-                self.match(jbeamParser.COLON)
-                self.state = 66
-                self.arrayOfJnodes()
-                pass
-
-            elif la_ == 2:
-                localctx = jbeamParser.SecBeamsContext(self, localctx)
-                self.enterOuterAlt(localctx, 2)
-                self.state = 67
-                if not localctx.start.text == '"beams"':
-                    from antlr4.error.Errors import FailedPredicateException
-                    raise FailedPredicateException(self, "$start.text == '\"beams\"'")
-                self.state = 68
-                localctx.name = self.match(jbeamParser.STRING)
-                self.state = 69
-                self.match(jbeamParser.COLON)
-                self.state = 70
-                self.arrayOfBeams()
-                pass
-
-            elif la_ == 3:
-                localctx = jbeamParser.SecHydrosContext(self, localctx)
-                self.enterOuterAlt(localctx, 3)
-                self.state = 71
-                if not localctx.start.text == '"hydros"':
-                    from antlr4.error.Errors import FailedPredicateException
-                    raise FailedPredicateException(self, "$start.text == '\"hydros\"'")
-                self.state = 72
-                localctx.name = self.match(jbeamParser.STRING)
                 self.state = 73
-                self.match(jbeamParser.COLON)
+                localctx.name = self.match(jbeamParser.Str_slotType)
                 self.state = 74
-                self.arrayOfBeams()
-                pass
-
-            elif la_ == 4:
-                localctx = jbeamParser.SecColtrisContext(self, localctx)
-                self.enterOuterAlt(localctx, 4)
+                self.match(jbeamParser.COLON)
                 self.state = 75
-                if not localctx.start.text == '"triangles"':
-                    from antlr4.error.Errors import FailedPredicateException
-                    raise FailedPredicateException(self, "$start.text == '\"triangles\"'")
+                localctx.val = self.genericString()
+                pass
+            elif token in [jbeamParser.Str_slots]:
+                localctx = jbeamParser.SecSlotsContext(self, localctx)
+                self.enterOuterAlt(localctx, 2)
                 self.state = 76
-                localctx.name = self.match(jbeamParser.STRING)
+                localctx.name = self.match(jbeamParser.Str_slots)
                 self.state = 77
                 self.match(jbeamParser.COLON)
                 self.state = 78
-                self.arrayOfColtris()
+                self.arrayOfSlots()
                 pass
-
-            elif la_ == 5:
-                localctx = jbeamParser.SecUnknownContext(self, localctx)
-                self.enterOuterAlt(localctx, 5)
+            elif token in [jbeamParser.Str_nodes]:
+                localctx = jbeamParser.SecNodesContext(self, localctx)
+                self.enterOuterAlt(localctx, 3)
                 self.state = 79
-                localctx.name = self.match(jbeamParser.STRING)
+                localctx.name = self.match(jbeamParser.Str_nodes)
                 self.state = 80
                 self.match(jbeamParser.COLON)
                 self.state = 81
+                self.arrayOfJnodes()
+                pass
+            elif token in [jbeamParser.Str_beams]:
+                localctx = jbeamParser.SecBeamsContext(self, localctx)
+                self.enterOuterAlt(localctx, 4)
+                self.state = 82
+                localctx.name = self.match(jbeamParser.Str_beams)
+                self.state = 83
+                self.match(jbeamParser.COLON)
+                self.state = 84
+                self.arrayOfBeams()
+                pass
+            elif token in [jbeamParser.Str_hydros]:
+                localctx = jbeamParser.SecHydrosContext(self, localctx)
+                self.enterOuterAlt(localctx, 5)
+                self.state = 85
+                localctx.name = self.match(jbeamParser.Str_hydros)
+                self.state = 86
+                self.match(jbeamParser.COLON)
+                self.state = 87
+                self.arrayOfBeams()
+                pass
+            elif token in [jbeamParser.Str_triangles]:
+                localctx = jbeamParser.SecColtrisContext(self, localctx)
+                self.enterOuterAlt(localctx, 6)
+                self.state = 88
+                localctx.name = self.match(jbeamParser.Str_triangles)
+                self.state = 89
+                self.match(jbeamParser.COLON)
+                self.state = 90
+                self.arrayOfColtris()
+                pass
+            elif token in [jbeamParser.STRING]:
+                localctx = jbeamParser.SecUnknownContext(self, localctx)
+                self.enterOuterAlt(localctx, 7)
+                self.state = 91
+                localctx.name = self.match(jbeamParser.STRING)
+                self.state = 92
+                self.match(jbeamParser.COLON)
+                self.state = 93
                 self.value()
                 pass
+            else:
+                raise NoViableAltException(self)
+
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+    class ArrayOfSlotsContext(ParserRuleContext):
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+        def tableHeader(self):
+            return self.getTypedRuleContext(jbeamParser.TableHeaderContext,0)
 
 
+        def slot(self, i:int=None):
+            if i is None:
+                return self.getTypedRuleContexts(jbeamParser.SlotContext)
+            else:
+                return self.getTypedRuleContext(jbeamParser.SlotContext,i)
+
+
+        def getRuleIndex(self):
+            return jbeamParser.RULE_arrayOfSlots
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterArrayOfSlots" ):
+                listener.enterArrayOfSlots(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitArrayOfSlots" ):
+                listener.exitArrayOfSlots(self)
+
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitArrayOfSlots" ):
+                return visitor.visitArrayOfSlots(self)
+            else:
+                return visitor.visitChildren(self)
+
+
+
+
+    def arrayOfSlots(self):
+
+        localctx = jbeamParser.ArrayOfSlotsContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 8, self.RULE_arrayOfSlots)
+        self._la = 0 # Token type
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 96
+            self.match(jbeamParser.LBRACK)
+            self.state = 97
+            self.tableHeader()
+            self.state = 101
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            while _la==jbeamParser.LBRACK:
+                self.state = 98
+                self.slot()
+                self.state = 103
+                self._errHandler.sync(self)
+                _la = self._input.LA(1)
+
+            self.state = 104
+            self.match(jbeamParser.RBRACK)
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+    class SlotContext(ParserRuleContext):
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+            self.stype = None # GenericStringContext
+            self.default = None # GenericStringContext
+            self.description = None # GenericStringContext
+
+        def genericString(self, i:int=None):
+            if i is None:
+                return self.getTypedRuleContexts(jbeamParser.GenericStringContext)
+            else:
+                return self.getTypedRuleContext(jbeamParser.GenericStringContext,i)
+
+
+        def slotProps(self):
+            return self.getTypedRuleContext(jbeamParser.SlotPropsContext,0)
+
+
+        def getRuleIndex(self):
+            return jbeamParser.RULE_slot
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterSlot" ):
+                listener.enterSlot(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitSlot" ):
+                listener.exitSlot(self)
+
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitSlot" ):
+                return visitor.visitSlot(self)
+            else:
+                return visitor.visitChildren(self)
+
+
+
+
+    def slot(self):
+
+        localctx = jbeamParser.SlotContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 10, self.RULE_slot)
+        self._la = 0 # Token type
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 106
+            self.match(jbeamParser.LBRACK)
+            self.state = 107
+            localctx.stype = self.genericString()
+            self.state = 108
+            localctx.default = self.genericString()
+            self.state = 109
+            localctx.description = self.genericString()
+            self.state = 111
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            if _la==jbeamParser.LCURLY:
+                self.state = 110
+                self.slotProps()
+
+
+            self.state = 113
+            self.match(jbeamParser.RBRACK)
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+    class SlotPropsContext(ParserRuleContext):
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+        def keyVal(self, i:int=None):
+            if i is None:
+                return self.getTypedRuleContexts(jbeamParser.KeyValContext)
+            else:
+                return self.getTypedRuleContext(jbeamParser.KeyValContext,i)
+
+
+        def getRuleIndex(self):
+            return jbeamParser.RULE_slotProps
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterSlotProps" ):
+                listener.enterSlotProps(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitSlotProps" ):
+                listener.exitSlotProps(self)
+
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitSlotProps" ):
+                return visitor.visitSlotProps(self)
+            else:
+                return visitor.visitChildren(self)
+
+
+
+
+    def slotProps(self):
+
+        localctx = jbeamParser.SlotPropsContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 12, self.RULE_slotProps)
+        self._la = 0 # Token type
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 115
+            self.match(jbeamParser.LCURLY)
+            self.state = 119
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << jbeamParser.Str_nodes) | (1 << jbeamParser.Str_beams) | (1 << jbeamParser.Str_hydros) | (1 << jbeamParser.Str_triangles) | (1 << jbeamParser.Str_nodeWeight) | (1 << jbeamParser.Str_selfCollision) | (1 << jbeamParser.Str_collision) | (1 << jbeamParser.Str_group) | (1 << jbeamParser.Str_frictionCoef) | (1 << jbeamParser.Str_nodeMaterial) | (1 << jbeamParser.Str_fixed) | (1 << jbeamParser.Str_surfaceCoef) | (1 << jbeamParser.Str_volumeCoef) | (1 << jbeamParser.STRING))) != 0):
+                self.state = 116
+                self.keyVal()
+                self.state = 121
+                self._errHandler.sync(self)
+                _la = self._input.LA(1)
+
+            self.state = 122
+            self.match(jbeamParser.RCURLY)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -659,37 +977,37 @@ class jbeamParser ( Parser ):
     def arrayOfJnodes(self):
 
         localctx = jbeamParser.ArrayOfJnodesContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 8, self.RULE_arrayOfJnodes)
+        self.enterRule(localctx, 14, self.RULE_arrayOfJnodes)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 84
+            self.state = 124
             self.match(jbeamParser.LBRACK)
-            self.state = 85
+            self.state = 125
             self.tableHeader()
-            self.state = 90
+            self.state = 130
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la==jbeamParser.LCURLY or _la==jbeamParser.LBRACK:
-                self.state = 88
+                self.state = 128
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
                 if token in [jbeamParser.LBRACK]:
-                    self.state = 86
+                    self.state = 126
                     self.jnode()
                     pass
                 elif token in [jbeamParser.LCURLY]:
-                    self.state = 87
+                    self.state = 127
                     self.jnodeProps()
                     pass
                 else:
                     raise NoViableAltException(self)
 
-                self.state = 92
+                self.state = 132
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 93
+            self.state = 133
             self.match(jbeamParser.RBRACK)
         except RecognitionException as re:
             localctx.exception = re
@@ -704,13 +1022,14 @@ class jbeamParser ( Parser ):
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.id = None # Token
+            self.id1 = None # GenericStringContext
             self.posX = None # Token
             self.posY = None # Token
             self.posZ = None # Token
 
-        def STRING(self):
-            return self.getToken(jbeamParser.STRING, 0)
+        def genericString(self):
+            return self.getTypedRuleContext(jbeamParser.GenericStringContext,0)
+
 
         def NUMBER(self, i:int=None):
             if i is None:
@@ -745,29 +1064,29 @@ class jbeamParser ( Parser ):
     def jnode(self):
 
         localctx = jbeamParser.JnodeContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 10, self.RULE_jnode)
+        self.enterRule(localctx, 16, self.RULE_jnode)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 95
+            self.state = 135
             self.match(jbeamParser.LBRACK)
-            self.state = 96
-            localctx.id = self.match(jbeamParser.STRING)
-            self.state = 97
+            self.state = 136
+            localctx.id1 = self.genericString()
+            self.state = 137
             localctx.posX = self.match(jbeamParser.NUMBER)
-            self.state = 98
+            self.state = 138
             localctx.posY = self.match(jbeamParser.NUMBER)
-            self.state = 99
+            self.state = 139
             localctx.posZ = self.match(jbeamParser.NUMBER)
-            self.state = 101
+            self.state = 141
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==jbeamParser.LCURLY:
-                self.state = 100
+                self.state = 140
                 self.jnodeProps()
 
 
-            self.state = 103
+            self.state = 143
             self.match(jbeamParser.RBRACK)
         except RecognitionException as re:
             localctx.exception = re
@@ -813,23 +1132,23 @@ class jbeamParser ( Parser ):
     def jnodeProps(self):
 
         localctx = jbeamParser.JnodePropsContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 12, self.RULE_jnodeProps)
+        self.enterRule(localctx, 18, self.RULE_jnodeProps)
+        self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 105
+            self.state = 145
             self.match(jbeamParser.LCURLY)
-            self.state = 109
+            self.state = 149
             self._errHandler.sync(self)
-            _alt = self._interp.adaptivePredict(self._input,6,self._ctx)
-            while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
-                if _alt==1:
-                    self.state = 106
-                    self.jnodeProp() 
-                self.state = 111
+            _la = self._input.LA(1)
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << jbeamParser.Str_nodeWeight) | (1 << jbeamParser.Str_selfCollision) | (1 << jbeamParser.Str_collision) | (1 << jbeamParser.Str_group) | (1 << jbeamParser.Str_frictionCoef) | (1 << jbeamParser.Str_nodeMaterial) | (1 << jbeamParser.Str_fixed) | (1 << jbeamParser.Str_surfaceCoef) | (1 << jbeamParser.Str_volumeCoef) | (1 << jbeamParser.STRING))) != 0):
+                self.state = 146
+                self.jnodeProp()
+                self.state = 151
                 self._errHandler.sync(self)
-                _alt = self._interp.adaptivePredict(self._input,6,self._ctx)
+                _la = self._input.LA(1)
 
-            self.state = 112
+            self.state = 152
             self.match(jbeamParser.RCURLY)
         except RecognitionException as re:
             localctx.exception = re
@@ -859,11 +1178,12 @@ class jbeamParser ( Parser ):
 
         def __init__(self, parser, ctx:ParserRuleContext): # actually a jbeamParser.JnodePropContext
             super().__init__(parser)
+            self.name = None # Token
             self.val = None # BooleanContext
             self.copyFrom(ctx)
 
-        def STRING(self):
-            return self.getToken(jbeamParser.STRING, 0)
+        def Str_collision(self):
+            return self.getToken(jbeamParser.Str_collision, 0)
         def boolean(self):
             return self.getTypedRuleContext(jbeamParser.BooleanContext,0)
 
@@ -887,14 +1207,15 @@ class jbeamParser ( Parser ):
 
         def __init__(self, parser, ctx:ParserRuleContext): # actually a jbeamParser.JnodePropContext
             super().__init__(parser)
-            self.val = None # Token
+            self.name = None # Token
+            self.val = None # GenericStringContext
             self.copyFrom(ctx)
 
-        def STRING(self, i:int=None):
-            if i is None:
-                return self.getTokens(jbeamParser.STRING)
-            else:
-                return self.getToken(jbeamParser.STRING, i)
+        def Str_nodeMaterial(self):
+            return self.getToken(jbeamParser.Str_nodeMaterial, 0)
+        def genericString(self):
+            return self.getTypedRuleContext(jbeamParser.GenericStringContext,0)
+
 
         def enterRule(self, listener:ParseTreeListener):
             if hasattr( listener, "enterPropNodeMaterial" ):
@@ -915,14 +1236,15 @@ class jbeamParser ( Parser ):
 
         def __init__(self, parser, ctx:ParserRuleContext): # actually a jbeamParser.JnodePropContext
             super().__init__(parser)
-            self.val = None # Token
+            self.name = None # Token
+            self.val = None # NodeGroupPropContext
             self.copyFrom(ctx)
 
-        def STRING(self, i:int=None):
-            if i is None:
-                return self.getTokens(jbeamParser.STRING)
-            else:
-                return self.getToken(jbeamParser.STRING, i)
+        def Str_group(self):
+            return self.getToken(jbeamParser.Str_group, 0)
+        def nodeGroupProp(self):
+            return self.getTypedRuleContext(jbeamParser.NodeGroupPropContext,0)
+
 
         def enterRule(self, listener:ParseTreeListener):
             if hasattr( listener, "enterPropGroup" ):
@@ -943,11 +1265,12 @@ class jbeamParser ( Parser ):
 
         def __init__(self, parser, ctx:ParserRuleContext): # actually a jbeamParser.JnodePropContext
             super().__init__(parser)
+            self.name = None # Token
             self.val = None # BooleanContext
             self.copyFrom(ctx)
 
-        def STRING(self):
-            return self.getToken(jbeamParser.STRING, 0)
+        def Str_fixed(self):
+            return self.getToken(jbeamParser.Str_fixed, 0)
         def boolean(self):
             return self.getTypedRuleContext(jbeamParser.BooleanContext,0)
 
@@ -971,11 +1294,12 @@ class jbeamParser ( Parser ):
 
         def __init__(self, parser, ctx:ParserRuleContext): # actually a jbeamParser.JnodePropContext
             super().__init__(parser)
+            self.name = None # Token
             self.val = None # Token
             self.copyFrom(ctx)
 
-        def STRING(self):
-            return self.getToken(jbeamParser.STRING, 0)
+        def Str_volumeCoef(self):
+            return self.getToken(jbeamParser.Str_volumeCoef, 0)
         def NUMBER(self):
             return self.getToken(jbeamParser.NUMBER, 0)
 
@@ -998,11 +1322,12 @@ class jbeamParser ( Parser ):
 
         def __init__(self, parser, ctx:ParserRuleContext): # actually a jbeamParser.JnodePropContext
             super().__init__(parser)
+            self.name = None # Token
             self.val = None # Token
             self.copyFrom(ctx)
 
-        def STRING(self):
-            return self.getToken(jbeamParser.STRING, 0)
+        def Str_nodeWeight(self):
+            return self.getToken(jbeamParser.Str_nodeWeight, 0)
         def NUMBER(self):
             return self.getToken(jbeamParser.NUMBER, 0)
 
@@ -1025,11 +1350,12 @@ class jbeamParser ( Parser ):
 
         def __init__(self, parser, ctx:ParserRuleContext): # actually a jbeamParser.JnodePropContext
             super().__init__(parser)
+            self.name = None # Token
             self.val = None # Token
             self.copyFrom(ctx)
 
-        def STRING(self):
-            return self.getToken(jbeamParser.STRING, 0)
+        def Str_surfaceCoef(self):
+            return self.getToken(jbeamParser.Str_surfaceCoef, 0)
         def NUMBER(self):
             return self.getToken(jbeamParser.NUMBER, 0)
 
@@ -1052,11 +1378,12 @@ class jbeamParser ( Parser ):
 
         def __init__(self, parser, ctx:ParserRuleContext): # actually a jbeamParser.JnodePropContext
             super().__init__(parser)
+            self.name = None # Token
             self.val = None # BooleanContext
             self.copyFrom(ctx)
 
-        def STRING(self):
-            return self.getToken(jbeamParser.STRING, 0)
+        def Str_selfCollision(self):
+            return self.getToken(jbeamParser.Str_selfCollision, 0)
         def boolean(self):
             return self.getTypedRuleContext(jbeamParser.BooleanContext,0)
 
@@ -1080,11 +1407,12 @@ class jbeamParser ( Parser ):
 
         def __init__(self, parser, ctx:ParserRuleContext): # actually a jbeamParser.JnodePropContext
             super().__init__(parser)
+            self.name = None # Token
             self.val = None # Token
             self.copyFrom(ctx)
 
-        def STRING(self):
-            return self.getToken(jbeamParser.STRING, 0)
+        def Str_frictionCoef(self):
+            return self.getToken(jbeamParser.Str_frictionCoef, 0)
         def NUMBER(self):
             return self.getToken(jbeamParser.NUMBER, 0)
 
@@ -1107,6 +1435,7 @@ class jbeamParser ( Parser ):
 
         def __init__(self, parser, ctx:ParserRuleContext): # actually a jbeamParser.JnodePropContext
             super().__init__(parser)
+            self.name = None # Token
             self.val = None # ValueContext
             self.copyFrom(ctx)
 
@@ -1135,157 +1464,227 @@ class jbeamParser ( Parser ):
     def jnodeProp(self):
 
         localctx = jbeamParser.JnodePropContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 14, self.RULE_jnodeProp)
+        self.enterRule(localctx, 20, self.RULE_jnodeProp)
         try:
-            self.state = 153
+            self.state = 184
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,7,self._ctx)
-            if la_ == 1:
+            token = self._input.LA(1)
+            if token in [jbeamParser.Str_nodeWeight]:
                 localctx = jbeamParser.PropNodeWeightContext(self, localctx)
                 self.enterOuterAlt(localctx, 1)
-                self.state = 114
-                if not localctx.start.text == '"nodeWeight"':
-                    from antlr4.error.Errors import FailedPredicateException
-                    raise FailedPredicateException(self, "$start.text == '\"nodeWeight\"'")
-                self.state = 115
-                self.match(jbeamParser.STRING)
-                self.state = 116
+                self.state = 154
+                localctx.name = self.match(jbeamParser.Str_nodeWeight)
+                self.state = 155
                 self.match(jbeamParser.COLON)
-                self.state = 117
+                self.state = 156
                 localctx.val = self.match(jbeamParser.NUMBER)
                 pass
-
-            elif la_ == 2:
+            elif token in [jbeamParser.Str_selfCollision]:
                 localctx = jbeamParser.PropSelfCollisionContext(self, localctx)
                 self.enterOuterAlt(localctx, 2)
-                self.state = 118
-                if not localctx.start.text == '"selfCollision"':
-                    from antlr4.error.Errors import FailedPredicateException
-                    raise FailedPredicateException(self, "$start.text == '\"selfCollision\"'")
-                self.state = 119
-                self.match(jbeamParser.STRING)
-                self.state = 120
+                self.state = 157
+                localctx.name = self.match(jbeamParser.Str_selfCollision)
+                self.state = 158
                 self.match(jbeamParser.COLON)
-                self.state = 121
+                self.state = 159
                 localctx.val = self.boolean()
                 pass
-
-            elif la_ == 3:
+            elif token in [jbeamParser.Str_collision]:
                 localctx = jbeamParser.PropCollisionContext(self, localctx)
                 self.enterOuterAlt(localctx, 3)
-                self.state = 122
-                if not localctx.start.text == '"collision"':
-                    from antlr4.error.Errors import FailedPredicateException
-                    raise FailedPredicateException(self, "$start.text == '\"collision\"'")
-                self.state = 123
-                self.match(jbeamParser.STRING)
-                self.state = 124
+                self.state = 160
+                localctx.name = self.match(jbeamParser.Str_collision)
+                self.state = 161
                 self.match(jbeamParser.COLON)
-                self.state = 125
+                self.state = 162
                 localctx.val = self.boolean()
                 pass
-
-            elif la_ == 4:
+            elif token in [jbeamParser.Str_group]:
                 localctx = jbeamParser.PropGroupContext(self, localctx)
                 self.enterOuterAlt(localctx, 4)
-                self.state = 126
-                if not localctx.start.text == '"group"':
-                    from antlr4.error.Errors import FailedPredicateException
-                    raise FailedPredicateException(self, "$start.text == '\"group\"'")
-                self.state = 127
-                self.match(jbeamParser.STRING)
-                self.state = 128
+                self.state = 163
+                localctx.name = self.match(jbeamParser.Str_group)
+                self.state = 164
                 self.match(jbeamParser.COLON)
-                self.state = 129
-                localctx.val = self.match(jbeamParser.STRING)
+                self.state = 165
+                localctx.val = self.nodeGroupProp()
                 pass
-
-            elif la_ == 5:
+            elif token in [jbeamParser.Str_frictionCoef]:
                 localctx = jbeamParser.PropFrictionCoefContext(self, localctx)
                 self.enterOuterAlt(localctx, 5)
-                self.state = 130
-                if not localctx.start.text == '"frictionCoef"':
-                    from antlr4.error.Errors import FailedPredicateException
-                    raise FailedPredicateException(self, "$start.text == '\"frictionCoef\"'")
-                self.state = 131
-                self.match(jbeamParser.STRING)
-                self.state = 132
+                self.state = 166
+                localctx.name = self.match(jbeamParser.Str_frictionCoef)
+                self.state = 167
                 self.match(jbeamParser.COLON)
-                self.state = 133
+                self.state = 168
                 localctx.val = self.match(jbeamParser.NUMBER)
                 pass
-
-            elif la_ == 6:
+            elif token in [jbeamParser.Str_nodeMaterial]:
                 localctx = jbeamParser.PropNodeMaterialContext(self, localctx)
                 self.enterOuterAlt(localctx, 6)
-                self.state = 134
-                if not localctx.start.text == '"nodeMaterial"':
-                    from antlr4.error.Errors import FailedPredicateException
-                    raise FailedPredicateException(self, "$start.text == '\"nodeMaterial\"'")
-                self.state = 135
-                self.match(jbeamParser.STRING)
-                self.state = 136
+                self.state = 169
+                localctx.name = self.match(jbeamParser.Str_nodeMaterial)
+                self.state = 170
                 self.match(jbeamParser.COLON)
-                self.state = 137
-                localctx.val = self.match(jbeamParser.STRING)
+                self.state = 171
+                localctx.val = self.genericString()
                 pass
-
-            elif la_ == 7:
+            elif token in [jbeamParser.Str_fixed]:
                 localctx = jbeamParser.PropFixedContext(self, localctx)
                 self.enterOuterAlt(localctx, 7)
-                self.state = 138
-                if not localctx.start.text == '"fixed"':
-                    from antlr4.error.Errors import FailedPredicateException
-                    raise FailedPredicateException(self, "$start.text == '\"fixed\"'")
-                self.state = 139
-                self.match(jbeamParser.STRING)
-                self.state = 140
+                self.state = 172
+                localctx.name = self.match(jbeamParser.Str_fixed)
+                self.state = 173
                 self.match(jbeamParser.COLON)
-                self.state = 141
+                self.state = 174
                 localctx.val = self.boolean()
                 pass
-
-            elif la_ == 8:
+            elif token in [jbeamParser.Str_surfaceCoef]:
                 localctx = jbeamParser.PropSurfaceCoefContext(self, localctx)
                 self.enterOuterAlt(localctx, 8)
-                self.state = 142
-                if not localctx.start.text == '"surfaceCoef"':
-                    from antlr4.error.Errors import FailedPredicateException
-                    raise FailedPredicateException(self, "$start.text == '\"surfaceCoef\"'")
-                self.state = 143
-                self.match(jbeamParser.STRING)
-                self.state = 144
+                self.state = 175
+                localctx.name = self.match(jbeamParser.Str_surfaceCoef)
+                self.state = 176
                 self.match(jbeamParser.COLON)
-                self.state = 145
+                self.state = 177
                 localctx.val = self.match(jbeamParser.NUMBER)
                 pass
-
-            elif la_ == 9:
+            elif token in [jbeamParser.Str_volumeCoef]:
                 localctx = jbeamParser.PropVolumeCoefContext(self, localctx)
                 self.enterOuterAlt(localctx, 9)
-                self.state = 146
-                if not localctx.start.text == '"volumeCoef"':
-                    from antlr4.error.Errors import FailedPredicateException
-                    raise FailedPredicateException(self, "$start.text == '\"volumeCoef\"'")
-                self.state = 147
-                self.match(jbeamParser.STRING)
-                self.state = 148
+                self.state = 178
+                localctx.name = self.match(jbeamParser.Str_volumeCoef)
+                self.state = 179
                 self.match(jbeamParser.COLON)
-                self.state = 149
+                self.state = 180
                 localctx.val = self.match(jbeamParser.NUMBER)
                 pass
-
-            elif la_ == 10:
+            elif token in [jbeamParser.STRING]:
                 localctx = jbeamParser.PropUnknownContext(self, localctx)
                 self.enterOuterAlt(localctx, 10)
-                self.state = 150
-                self.match(jbeamParser.STRING)
-                self.state = 151
+                self.state = 181
+                localctx.name = self.match(jbeamParser.STRING)
+                self.state = 182
                 self.match(jbeamParser.COLON)
-                self.state = 152
+                self.state = 183
                 localctx.val = self.value()
                 pass
+            else:
+                raise NoViableAltException(self)
 
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+    class NodeGroupPropContext(ParserRuleContext):
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+
+        def getRuleIndex(self):
+            return jbeamParser.RULE_nodeGroupProp
+
+     
+        def copyFrom(self, ctx:ParserRuleContext):
+            super().copyFrom(ctx)
+
+
+
+    class PropManyGroupsContext(NodeGroupPropContext):
+
+        def __init__(self, parser, ctx:ParserRuleContext): # actually a jbeamParser.NodeGroupPropContext
+            super().__init__(parser)
+            self.copyFrom(ctx)
+
+        def genericString(self, i:int=None):
+            if i is None:
+                return self.getTypedRuleContexts(jbeamParser.GenericStringContext)
+            else:
+                return self.getTypedRuleContext(jbeamParser.GenericStringContext,i)
+
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterPropManyGroups" ):
+                listener.enterPropManyGroups(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitPropManyGroups" ):
+                listener.exitPropManyGroups(self)
+
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitPropManyGroups" ):
+                return visitor.visitPropManyGroups(self)
+            else:
+                return visitor.visitChildren(self)
+
+
+    class PropSingleGroupContext(NodeGroupPropContext):
+
+        def __init__(self, parser, ctx:ParserRuleContext): # actually a jbeamParser.NodeGroupPropContext
+            super().__init__(parser)
+            self.copyFrom(ctx)
+
+        def genericString(self):
+            return self.getTypedRuleContext(jbeamParser.GenericStringContext,0)
+
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterPropSingleGroup" ):
+                listener.enterPropSingleGroup(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitPropSingleGroup" ):
+                listener.exitPropSingleGroup(self)
+
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitPropSingleGroup" ):
+                return visitor.visitPropSingleGroup(self)
+            else:
+                return visitor.visitChildren(self)
+
+
+
+    def nodeGroupProp(self):
+
+        localctx = jbeamParser.NodeGroupPropContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 22, self.RULE_nodeGroupProp)
+        self._la = 0 # Token type
+        try:
+            self.state = 195
+            self._errHandler.sync(self)
+            token = self._input.LA(1)
+            if token in [jbeamParser.Str_nodes, jbeamParser.Str_beams, jbeamParser.Str_hydros, jbeamParser.Str_triangles, jbeamParser.Str_nodeWeight, jbeamParser.Str_selfCollision, jbeamParser.Str_collision, jbeamParser.Str_group, jbeamParser.Str_frictionCoef, jbeamParser.Str_nodeMaterial, jbeamParser.Str_fixed, jbeamParser.Str_surfaceCoef, jbeamParser.Str_volumeCoef, jbeamParser.STRING]:
+                localctx = jbeamParser.PropSingleGroupContext(self, localctx)
+                self.enterOuterAlt(localctx, 1)
+                self.state = 186
+                self.genericString()
+                pass
+            elif token in [jbeamParser.LBRACK]:
+                localctx = jbeamParser.PropManyGroupsContext(self, localctx)
+                self.enterOuterAlt(localctx, 2)
+                self.state = 187
+                self.match(jbeamParser.LBRACK)
+                self.state = 191
+                self._errHandler.sync(self)
+                _la = self._input.LA(1)
+                while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << jbeamParser.Str_nodes) | (1 << jbeamParser.Str_beams) | (1 << jbeamParser.Str_hydros) | (1 << jbeamParser.Str_triangles) | (1 << jbeamParser.Str_nodeWeight) | (1 << jbeamParser.Str_selfCollision) | (1 << jbeamParser.Str_collision) | (1 << jbeamParser.Str_group) | (1 << jbeamParser.Str_frictionCoef) | (1 << jbeamParser.Str_nodeMaterial) | (1 << jbeamParser.Str_fixed) | (1 << jbeamParser.Str_surfaceCoef) | (1 << jbeamParser.Str_volumeCoef) | (1 << jbeamParser.STRING))) != 0):
+                    self.state = 188
+                    self.genericString()
+                    self.state = 193
+                    self._errHandler.sync(self)
+                    _la = self._input.LA(1)
+
+                self.state = 194
+                self.match(jbeamParser.RBRACK)
+                pass
+            else:
+                raise NoViableAltException(self)
 
         except RecognitionException as re:
             localctx.exception = re
@@ -1342,37 +1741,37 @@ class jbeamParser ( Parser ):
     def arrayOfBeams(self):
 
         localctx = jbeamParser.ArrayOfBeamsContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 16, self.RULE_arrayOfBeams)
+        self.enterRule(localctx, 24, self.RULE_arrayOfBeams)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 155
+            self.state = 197
             self.match(jbeamParser.LBRACK)
-            self.state = 156
+            self.state = 198
             self.tableHeader()
-            self.state = 161
+            self.state = 203
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la==jbeamParser.LCURLY or _la==jbeamParser.LBRACK:
-                self.state = 159
+                self.state = 201
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
                 if token in [jbeamParser.LBRACK]:
-                    self.state = 157
+                    self.state = 199
                     self.beam()
                     pass
                 elif token in [jbeamParser.LCURLY]:
-                    self.state = 158
+                    self.state = 200
                     self.beamProps()
                     pass
                 else:
                     raise NoViableAltException(self)
 
-                self.state = 163
+                self.state = 205
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 164
+            self.state = 206
             self.match(jbeamParser.RBRACK)
         except RecognitionException as re:
             localctx.exception = re
@@ -1388,11 +1787,12 @@ class jbeamParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-        def STRING(self, i:int=None):
+        def genericString(self, i:int=None):
             if i is None:
-                return self.getTokens(jbeamParser.STRING)
+                return self.getTypedRuleContexts(jbeamParser.GenericStringContext)
             else:
-                return self.getToken(jbeamParser.STRING, i)
+                return self.getTypedRuleContext(jbeamParser.GenericStringContext,i)
+
 
         def getRuleIndex(self):
             return jbeamParser.RULE_tableHeader
@@ -1417,23 +1817,23 @@ class jbeamParser ( Parser ):
     def tableHeader(self):
 
         localctx = jbeamParser.TableHeaderContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 18, self.RULE_tableHeader)
+        self.enterRule(localctx, 26, self.RULE_tableHeader)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 166
+            self.state = 208
             self.match(jbeamParser.LBRACK)
-            self.state = 170
+            self.state = 212
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==jbeamParser.STRING:
-                self.state = 167
-                self.match(jbeamParser.STRING)
-                self.state = 172
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << jbeamParser.Str_nodes) | (1 << jbeamParser.Str_beams) | (1 << jbeamParser.Str_hydros) | (1 << jbeamParser.Str_triangles) | (1 << jbeamParser.Str_nodeWeight) | (1 << jbeamParser.Str_selfCollision) | (1 << jbeamParser.Str_collision) | (1 << jbeamParser.Str_group) | (1 << jbeamParser.Str_frictionCoef) | (1 << jbeamParser.Str_nodeMaterial) | (1 << jbeamParser.Str_fixed) | (1 << jbeamParser.Str_surfaceCoef) | (1 << jbeamParser.Str_volumeCoef) | (1 << jbeamParser.STRING))) != 0):
+                self.state = 209
+                self.genericString()
+                self.state = 214
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 173
+            self.state = 215
             self.match(jbeamParser.RBRACK)
         except RecognitionException as re:
             localctx.exception = re
@@ -1448,14 +1848,15 @@ class jbeamParser ( Parser ):
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.id1 = None # Token
-            self.id2 = None # Token
+            self.id1 = None # GenericStringContext
+            self.id2 = None # GenericStringContext
 
-        def STRING(self, i:int=None):
+        def genericString(self, i:int=None):
             if i is None:
-                return self.getTokens(jbeamParser.STRING)
+                return self.getTypedRuleContexts(jbeamParser.GenericStringContext)
             else:
-                return self.getToken(jbeamParser.STRING, i)
+                return self.getTypedRuleContext(jbeamParser.GenericStringContext,i)
+
 
         def beamProps(self):
             return self.getTypedRuleContext(jbeamParser.BeamPropsContext,0)
@@ -1484,25 +1885,25 @@ class jbeamParser ( Parser ):
     def beam(self):
 
         localctx = jbeamParser.BeamContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 20, self.RULE_beam)
+        self.enterRule(localctx, 28, self.RULE_beam)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 175
+            self.state = 217
             self.match(jbeamParser.LBRACK)
-            self.state = 176
-            localctx.id1 = self.match(jbeamParser.STRING)
-            self.state = 177
-            localctx.id2 = self.match(jbeamParser.STRING)
-            self.state = 179
+            self.state = 218
+            localctx.id1 = self.genericString()
+            self.state = 219
+            localctx.id2 = self.genericString()
+            self.state = 221
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==jbeamParser.LCURLY:
-                self.state = 178
+                self.state = 220
                 self.beamProps()
 
 
-            self.state = 181
+            self.state = 223
             self.match(jbeamParser.RBRACK)
         except RecognitionException as re:
             localctx.exception = re
@@ -1548,23 +1949,23 @@ class jbeamParser ( Parser ):
     def beamProps(self):
 
         localctx = jbeamParser.BeamPropsContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 22, self.RULE_beamProps)
+        self.enterRule(localctx, 30, self.RULE_beamProps)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 183
+            self.state = 225
             self.match(jbeamParser.LCURLY)
-            self.state = 187
+            self.state = 229
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==jbeamParser.STRING:
-                self.state = 184
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << jbeamParser.Str_nodes) | (1 << jbeamParser.Str_beams) | (1 << jbeamParser.Str_hydros) | (1 << jbeamParser.Str_triangles) | (1 << jbeamParser.Str_nodeWeight) | (1 << jbeamParser.Str_selfCollision) | (1 << jbeamParser.Str_collision) | (1 << jbeamParser.Str_group) | (1 << jbeamParser.Str_frictionCoef) | (1 << jbeamParser.Str_nodeMaterial) | (1 << jbeamParser.Str_fixed) | (1 << jbeamParser.Str_surfaceCoef) | (1 << jbeamParser.Str_volumeCoef) | (1 << jbeamParser.STRING))) != 0):
+                self.state = 226
                 self.keyVal()
-                self.state = 189
+                self.state = 231
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 190
+            self.state = 232
             self.match(jbeamParser.RCURLY)
         except RecognitionException as re:
             localctx.exception = re
@@ -1621,37 +2022,37 @@ class jbeamParser ( Parser ):
     def arrayOfColtris(self):
 
         localctx = jbeamParser.ArrayOfColtrisContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 24, self.RULE_arrayOfColtris)
+        self.enterRule(localctx, 32, self.RULE_arrayOfColtris)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 192
+            self.state = 234
             self.match(jbeamParser.LBRACK)
-            self.state = 193
+            self.state = 235
             self.tableHeader()
-            self.state = 198
+            self.state = 240
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la==jbeamParser.LCURLY or _la==jbeamParser.LBRACK:
-                self.state = 196
+                self.state = 238
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
                 if token in [jbeamParser.LBRACK]:
-                    self.state = 194
+                    self.state = 236
                     self.coltri()
                     pass
                 elif token in [jbeamParser.LCURLY]:
-                    self.state = 195
+                    self.state = 237
                     self.coltriProps()
                     pass
                 else:
                     raise NoViableAltException(self)
 
-                self.state = 200
+                self.state = 242
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 201
+            self.state = 243
             self.match(jbeamParser.RBRACK)
         except RecognitionException as re:
             localctx.exception = re
@@ -1666,15 +2067,16 @@ class jbeamParser ( Parser ):
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.id1 = None # Token
-            self.id2 = None # Token
-            self.id3 = None # Token
+            self.id1 = None # GenericStringContext
+            self.id2 = None # GenericStringContext
+            self.id3 = None # GenericStringContext
 
-        def STRING(self, i:int=None):
+        def genericString(self, i:int=None):
             if i is None:
-                return self.getTokens(jbeamParser.STRING)
+                return self.getTypedRuleContexts(jbeamParser.GenericStringContext)
             else:
-                return self.getToken(jbeamParser.STRING, i)
+                return self.getTypedRuleContext(jbeamParser.GenericStringContext,i)
+
 
         def coltriProps(self):
             return self.getTypedRuleContext(jbeamParser.ColtriPropsContext,0)
@@ -1703,27 +2105,27 @@ class jbeamParser ( Parser ):
     def coltri(self):
 
         localctx = jbeamParser.ColtriContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 26, self.RULE_coltri)
+        self.enterRule(localctx, 34, self.RULE_coltri)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 203
+            self.state = 245
             self.match(jbeamParser.LBRACK)
-            self.state = 204
-            localctx.id1 = self.match(jbeamParser.STRING)
-            self.state = 205
-            localctx.id2 = self.match(jbeamParser.STRING)
-            self.state = 206
-            localctx.id3 = self.match(jbeamParser.STRING)
-            self.state = 208
+            self.state = 246
+            localctx.id1 = self.genericString()
+            self.state = 247
+            localctx.id2 = self.genericString()
+            self.state = 248
+            localctx.id3 = self.genericString()
+            self.state = 250
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==jbeamParser.LCURLY:
-                self.state = 207
+                self.state = 249
                 self.coltriProps()
 
 
-            self.state = 210
+            self.state = 252
             self.match(jbeamParser.RBRACK)
         except RecognitionException as re:
             localctx.exception = re
@@ -1769,23 +2171,23 @@ class jbeamParser ( Parser ):
     def coltriProps(self):
 
         localctx = jbeamParser.ColtriPropsContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 28, self.RULE_coltriProps)
+        self.enterRule(localctx, 36, self.RULE_coltriProps)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 212
+            self.state = 254
             self.match(jbeamParser.LCURLY)
-            self.state = 216
+            self.state = 258
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==jbeamParser.STRING:
-                self.state = 213
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << jbeamParser.Str_nodes) | (1 << jbeamParser.Str_beams) | (1 << jbeamParser.Str_hydros) | (1 << jbeamParser.Str_triangles) | (1 << jbeamParser.Str_nodeWeight) | (1 << jbeamParser.Str_selfCollision) | (1 << jbeamParser.Str_collision) | (1 << jbeamParser.Str_group) | (1 << jbeamParser.Str_frictionCoef) | (1 << jbeamParser.Str_nodeMaterial) | (1 << jbeamParser.Str_fixed) | (1 << jbeamParser.Str_surfaceCoef) | (1 << jbeamParser.Str_volumeCoef) | (1 << jbeamParser.STRING))) != 0):
+                self.state = 255
                 self.keyVal()
-                self.state = 218
+                self.state = 260
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 219
+            self.state = 261
             self.match(jbeamParser.RCURLY)
         except RecognitionException as re:
             localctx.exception = re
@@ -1831,23 +2233,23 @@ class jbeamParser ( Parser ):
     def obj(self):
 
         localctx = jbeamParser.ObjContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 30, self.RULE_obj)
+        self.enterRule(localctx, 38, self.RULE_obj)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 221
+            self.state = 263
             self.match(jbeamParser.LCURLY)
-            self.state = 225
+            self.state = 267
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==jbeamParser.STRING:
-                self.state = 222
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << jbeamParser.Str_nodes) | (1 << jbeamParser.Str_beams) | (1 << jbeamParser.Str_hydros) | (1 << jbeamParser.Str_triangles) | (1 << jbeamParser.Str_nodeWeight) | (1 << jbeamParser.Str_selfCollision) | (1 << jbeamParser.Str_collision) | (1 << jbeamParser.Str_group) | (1 << jbeamParser.Str_frictionCoef) | (1 << jbeamParser.Str_nodeMaterial) | (1 << jbeamParser.Str_fixed) | (1 << jbeamParser.Str_surfaceCoef) | (1 << jbeamParser.Str_volumeCoef) | (1 << jbeamParser.STRING))) != 0):
+                self.state = 264
                 self.keyVal()
-                self.state = 227
+                self.state = 269
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 228
+            self.state = 270
             self.match(jbeamParser.RCURLY)
         except RecognitionException as re:
             localctx.exception = re
@@ -1893,23 +2295,23 @@ class jbeamParser ( Parser ):
     def array(self):
 
         localctx = jbeamParser.ArrayContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 32, self.RULE_array)
+        self.enterRule(localctx, 40, self.RULE_array)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 230
+            self.state = 272
             self.match(jbeamParser.LBRACK)
-            self.state = 234
+            self.state = 276
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << jbeamParser.NULL) | (1 << jbeamParser.TRUE) | (1 << jbeamParser.FALSE) | (1 << jbeamParser.LCURLY) | (1 << jbeamParser.LBRACK) | (1 << jbeamParser.STRING) | (1 << jbeamParser.NUMBER))) != 0):
-                self.state = 231
+            while (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << jbeamParser.Str_nodes) | (1 << jbeamParser.Str_beams) | (1 << jbeamParser.Str_hydros) | (1 << jbeamParser.Str_triangles) | (1 << jbeamParser.Str_nodeWeight) | (1 << jbeamParser.Str_selfCollision) | (1 << jbeamParser.Str_collision) | (1 << jbeamParser.Str_group) | (1 << jbeamParser.Str_frictionCoef) | (1 << jbeamParser.Str_nodeMaterial) | (1 << jbeamParser.Str_fixed) | (1 << jbeamParser.Str_surfaceCoef) | (1 << jbeamParser.Str_volumeCoef) | (1 << jbeamParser.NULL) | (1 << jbeamParser.TRUE) | (1 << jbeamParser.FALSE) | (1 << jbeamParser.LCURLY) | (1 << jbeamParser.LBRACK) | (1 << jbeamParser.STRING) | (1 << jbeamParser.NUMBER))) != 0):
+                self.state = 273
                 self.value()
-                self.state = 236
+                self.state = 278
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 237
+            self.state = 279
             self.match(jbeamParser.RBRACK)
         except RecognitionException as re:
             localctx.exception = re
@@ -1924,11 +2326,12 @@ class jbeamParser ( Parser ):
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.key = None # Token
+            self.key = None # GenericStringContext
             self.val = None # ValueContext
 
-        def STRING(self):
-            return self.getToken(jbeamParser.STRING, 0)
+        def genericString(self):
+            return self.getTypedRuleContext(jbeamParser.GenericStringContext,0)
+
 
         def value(self):
             return self.getTypedRuleContext(jbeamParser.ValueContext,0)
@@ -1957,14 +2360,14 @@ class jbeamParser ( Parser ):
     def keyVal(self):
 
         localctx = jbeamParser.KeyValContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 34, self.RULE_keyVal)
+        self.enterRule(localctx, 42, self.RULE_keyVal)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 239
-            localctx.key = self.match(jbeamParser.STRING)
-            self.state = 240
+            self.state = 281
+            localctx.key = self.genericString()
+            self.state = 282
             self.match(jbeamParser.COLON)
-            self.state = 241
+            self.state = 283
             localctx.val = self.value()
         except RecognitionException as re:
             localctx.exception = re
@@ -2021,8 +2424,9 @@ class jbeamParser ( Parser ):
             super().__init__(parser)
             self.copyFrom(ctx)
 
-        def STRING(self):
-            return self.getToken(jbeamParser.STRING, 0)
+        def genericString(self):
+            return self.getTypedRuleContext(jbeamParser.GenericStringContext,0)
+
 
         def enterRule(self, listener:ParseTreeListener):
             if hasattr( listener, "enterString" ):
@@ -2097,45 +2501,45 @@ class jbeamParser ( Parser ):
     def value(self):
 
         localctx = jbeamParser.ValueContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 36, self.RULE_value)
+        self.enterRule(localctx, 44, self.RULE_value)
         try:
-            self.state = 249
+            self.state = 291
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [jbeamParser.STRING]:
+            if token in [jbeamParser.Str_nodes, jbeamParser.Str_beams, jbeamParser.Str_hydros, jbeamParser.Str_triangles, jbeamParser.Str_nodeWeight, jbeamParser.Str_selfCollision, jbeamParser.Str_collision, jbeamParser.Str_group, jbeamParser.Str_frictionCoef, jbeamParser.Str_nodeMaterial, jbeamParser.Str_fixed, jbeamParser.Str_surfaceCoef, jbeamParser.Str_volumeCoef, jbeamParser.STRING]:
                 localctx = jbeamParser.StringContext(self, localctx)
                 self.enterOuterAlt(localctx, 1)
-                self.state = 243
-                self.match(jbeamParser.STRING)
+                self.state = 285
+                self.genericString()
                 pass
             elif token in [jbeamParser.NUMBER]:
                 localctx = jbeamParser.AtomContext(self, localctx)
                 self.enterOuterAlt(localctx, 2)
-                self.state = 244
+                self.state = 286
                 self.match(jbeamParser.NUMBER)
                 pass
             elif token in [jbeamParser.LCURLY]:
                 localctx = jbeamParser.ObjectValueContext(self, localctx)
                 self.enterOuterAlt(localctx, 3)
-                self.state = 245
+                self.state = 287
                 self.obj()
                 pass
             elif token in [jbeamParser.LBRACK]:
                 localctx = jbeamParser.ArrayValueContext(self, localctx)
                 self.enterOuterAlt(localctx, 4)
-                self.state = 246
+                self.state = 288
                 self.array()
                 pass
             elif token in [jbeamParser.TRUE, jbeamParser.FALSE]:
                 localctx = jbeamParser.AtomContext(self, localctx)
                 self.enterOuterAlt(localctx, 5)
-                self.state = 247
+                self.state = 289
                 self.boolean()
                 pass
             elif token in [jbeamParser.NULL]:
                 localctx = jbeamParser.AtomContext(self, localctx)
                 self.enterOuterAlt(localctx, 6)
-                self.state = 248
+                self.state = 290
                 self.match(jbeamParser.NULL)
                 pass
             else:
@@ -2219,21 +2623,21 @@ class jbeamParser ( Parser ):
     def boolean(self):
 
         localctx = jbeamParser.BooleanContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 38, self.RULE_boolean)
+        self.enterRule(localctx, 46, self.RULE_boolean)
         try:
-            self.state = 253
+            self.state = 295
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [jbeamParser.TRUE]:
                 localctx = jbeamParser.TrueValContext(self, localctx)
                 self.enterOuterAlt(localctx, 1)
-                self.state = 251
+                self.state = 293
                 localctx.val = self.match(jbeamParser.TRUE)
                 pass
             elif token in [jbeamParser.FALSE]:
                 localctx = jbeamParser.FalseValContext(self, localctx)
                 self.enterOuterAlt(localctx, 2)
-                self.state = 252
+                self.state = 294
                 localctx.val = self.match(jbeamParser.FALSE)
                 pass
             else:
@@ -2247,72 +2651,100 @@ class jbeamParser ( Parser ):
             self.exitRule()
         return localctx
 
+    class GenericStringContext(ParserRuleContext):
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+            self.string_item = None
+            self.val = None # Token
+
+        def Str_nodes(self):
+            return self.getToken(jbeamParser.Str_nodes, 0)
+
+        def Str_beams(self):
+            return self.getToken(jbeamParser.Str_beams, 0)
+
+        def Str_hydros(self):
+            return self.getToken(jbeamParser.Str_hydros, 0)
+
+        def Str_triangles(self):
+            return self.getToken(jbeamParser.Str_triangles, 0)
+
+        def Str_nodeWeight(self):
+            return self.getToken(jbeamParser.Str_nodeWeight, 0)
+
+        def Str_selfCollision(self):
+            return self.getToken(jbeamParser.Str_selfCollision, 0)
+
+        def Str_collision(self):
+            return self.getToken(jbeamParser.Str_collision, 0)
+
+        def Str_group(self):
+            return self.getToken(jbeamParser.Str_group, 0)
+
+        def Str_frictionCoef(self):
+            return self.getToken(jbeamParser.Str_frictionCoef, 0)
+
+        def Str_nodeMaterial(self):
+            return self.getToken(jbeamParser.Str_nodeMaterial, 0)
+
+        def Str_fixed(self):
+            return self.getToken(jbeamParser.Str_fixed, 0)
+
+        def Str_surfaceCoef(self):
+            return self.getToken(jbeamParser.Str_surfaceCoef, 0)
+
+        def Str_volumeCoef(self):
+            return self.getToken(jbeamParser.Str_volumeCoef, 0)
+
+        def STRING(self):
+            return self.getToken(jbeamParser.STRING, 0)
+
+        def getRuleIndex(self):
+            return jbeamParser.RULE_genericString
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterGenericString" ):
+                listener.enterGenericString(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitGenericString" ):
+                listener.exitGenericString(self)
+
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitGenericString" ):
+                return visitor.visitGenericString(self)
+            else:
+                return visitor.visitChildren(self)
 
 
-    def sempred(self, localctx:RuleContext, ruleIndex:int, predIndex:int):
-        if self._predicates == None:
-            self._predicates = dict()
-        self._predicates[3] = self.section_sempred
-        self._predicates[7] = self.jnodeProp_sempred
-        pred = self._predicates.get(ruleIndex, None)
-        if pred is None:
-            raise Exception("No predicate with index:" + str(ruleIndex))
-        else:
-            return pred(localctx, predIndex)
 
-    def section_sempred(self, localctx:SectionContext, predIndex:int):
-            if predIndex == 0:
-                return localctx.start.text == '"nodes"'
-         
 
-            if predIndex == 1:
-                return localctx.start.text == '"beams"'
-         
+    def genericString(self):
 
-            if predIndex == 2:
-                return localctx.start.text == '"hydros"'
-         
+        localctx = jbeamParser.GenericStringContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 48, self.RULE_genericString)
+        self._la = 0 # Token type
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 297
+            localctx.val = self._input.LT(1)
+            _la = self._input.LA(1)
+            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << jbeamParser.Str_nodes) | (1 << jbeamParser.Str_beams) | (1 << jbeamParser.Str_hydros) | (1 << jbeamParser.Str_triangles) | (1 << jbeamParser.Str_nodeWeight) | (1 << jbeamParser.Str_selfCollision) | (1 << jbeamParser.Str_collision) | (1 << jbeamParser.Str_group) | (1 << jbeamParser.Str_frictionCoef) | (1 << jbeamParser.Str_nodeMaterial) | (1 << jbeamParser.Str_fixed) | (1 << jbeamParser.Str_surfaceCoef) | (1 << jbeamParser.Str_volumeCoef) | (1 << jbeamParser.STRING))) != 0)):
+                localctx.val = self._errHandler.recoverInline(self)
+            else:
+                self._errHandler.reportMatch(self)
+                self.consume()
+            localctx.string_item = (None if localctx.val is None else localctx.val.text).strip('"')
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
 
-            if predIndex == 3:
-                return localctx.start.text == '"triangles"'
-         
-
-    def jnodeProp_sempred(self, localctx:JnodePropContext, predIndex:int):
-            if predIndex == 4:
-                return localctx.start.text == '"nodeWeight"'
-         
-
-            if predIndex == 5:
-                return localctx.start.text == '"selfCollision"'
-         
-
-            if predIndex == 6:
-                return localctx.start.text == '"collision"'
-         
-
-            if predIndex == 7:
-                return localctx.start.text == '"group"'
-         
-
-            if predIndex == 8:
-                return localctx.start.text == '"frictionCoef"'
-         
-
-            if predIndex == 9:
-                return localctx.start.text == '"nodeMaterial"'
-         
-
-            if predIndex == 10:
-                return localctx.start.text == '"fixed"'
-         
-
-            if predIndex == 11:
-                return localctx.start.text == '"surfaceCoef"'
-         
-
-            if predIndex == 12:
-                return localctx.start.text == '"volumeCoef"'
-         
 
 
 

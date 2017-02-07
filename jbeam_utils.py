@@ -1,11 +1,7 @@
-import sys
 import bpy
 import bmesh
-from antlr4 import *
-from .jb.jbeamLexer import jbeamLexer
-from .jb.jbeamParser import jbeamParser
-from .jb.jbeamVisitor import jbeamVisitor
-import pdb
+from antlr4 import *  # ToDo: get rid of the global antlr4 lib
+from .jb import jbeamLexer, jbeamParser, jbeamVisitor
 
 
 def file_to_meshes(filepath, encoding='utf-8'):
@@ -20,9 +16,9 @@ def file_to_meshes(filepath, encoding='utf-8'):
     # print(tree.getText())
     print('jbeam_utils.file_to_meshes(...): parse tree ok')
 
-    meshList = MeshListBuilder().visit(tree)
+    mesh_list = MeshListBuilder().visit(tree)
     print('jbeam_utils.file_to_meshes(...): meshes ok')
-    return meshList
+    return mesh_list
 
 
 class MeshListBuilder(jbeamVisitor):
@@ -33,7 +29,7 @@ class MeshListBuilder(jbeamVisitor):
         self._beamLayer = None
 
     def visitPart(self, ctx: jbeamParser.PartContext):
-        print('part: ' + ctx.name.text)
+        print('part: ' + ctx.name.string_item)
         bm = bmesh.new()  # each part in separate object
         self._bm = bm
         self._idLayer = bm.verts.layers.string.new('jbeamNodeId')
@@ -43,20 +39,20 @@ class MeshListBuilder(jbeamVisitor):
         self.visitChildren(ctx)
 
         bm.verts.ensure_lookup_table()
-        mesh = bpy.data.meshes.new(ctx.name.text.strip('"'))
+        mesh = bpy.data.meshes.new(ctx.name.string_item)
         bm.to_mesh(mesh)
         mesh.update()
         return mesh
 
     # Aggregates meshes for further visit(...) return
-    def aggregateResult(self, aggregate, nextResult):
-        if nextResult is None:
+    def aggregateResult(self, aggregate, next_result):
+        if next_result is None:
             return aggregate
 
         if aggregate is None:
-            aggregate = [nextResult]
+            aggregate = [next_result]
         else:
-            aggregate.append(nextResult)
+            aggregate.append(next_result)
         return aggregate
 
     def visitSecNodes(self, ctx: jbeamParser.SecNodesContext):
@@ -65,9 +61,9 @@ class MeshListBuilder(jbeamVisitor):
 
     def visitJnode(self, ctx: jbeamParser.JnodeContext):
         vert = self._bm.verts.new((float(ctx.posX.text), float(ctx.posY.text), float(ctx.posZ.text)))
-        id = ctx.id.text.strip('"')
-        vert[self._idLayer] = id.encode()  # set JNode id
-        self._vertsCache[id] = vert
+        _id = ctx.id1.string_item
+        vert[self._idLayer] = _id.encode()  # set JNode id
+        self._vertsCache[_id] = vert
         return
 
     def visitSecBeams(self, ctx: jbeamParser.SecBeamsContext):
@@ -75,8 +71,8 @@ class MeshListBuilder(jbeamVisitor):
         self._bm.edges.ensure_lookup_table()
 
     def visitBeam(self, ctx: jbeamParser.BeamContext):
-        id1 = ctx.id1.text.strip('"')
-        id2 = ctx.id2.text.strip('"')
+        id1 = ctx.id1.string_item
+        id2 = ctx.id2.string_item
         v1, v2 = self._vertsCache.get(id1), self._vertsCache.get(id2)
         if v1 and v2:
             try:
@@ -86,10 +82,14 @@ class MeshListBuilder(jbeamVisitor):
                 print(err, ' ', id1, ' ', id2)  # ToDo handle duplicates
 
     def visitColtri(self, ctx: jbeamParser.ColtriContext):
-        id1 = ctx.id1.text.strip('"')
-        id2 = ctx.id2.text.strip('"')
-        id3 = ctx.id3.text.strip('"')
+        id1 = ctx.id1.string_item
+        id2 = ctx.id2.string_item
+        id3 = ctx.id3.string_item
         v_cache = self._vertsCache
         v1, v2, v3 = v_cache.get(id1), v_cache.get(id2), v_cache.get(id3)
         if v1 and v2 and v3:
-            self._bm.faces.new((v1, v2, v3))
+            try:
+                self._bm.faces.new((v1, v2, v3))
+            except ValueError as err:
+                print(err, ' ', id1, ' ', id2, ' ', id3)  # ToDo handle duplicates
+

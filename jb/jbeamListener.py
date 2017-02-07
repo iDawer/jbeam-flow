@@ -35,6 +35,24 @@ class jbeamListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by jbeamParser#SecSlotType.
+    def enterSecSlotType(self, ctx:jbeamParser.SecSlotTypeContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#SecSlotType.
+    def exitSecSlotType(self, ctx:jbeamParser.SecSlotTypeContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#SecSlots.
+    def enterSecSlots(self, ctx:jbeamParser.SecSlotsContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#SecSlots.
+    def exitSecSlots(self, ctx:jbeamParser.SecSlotsContext):
+        pass
+
+
     # Enter a parse tree produced by jbeamParser#SecNodes.
     def enterSecNodes(self, ctx:jbeamParser.SecNodesContext):
         pass
@@ -77,6 +95,33 @@ class jbeamListener(ParseTreeListener):
 
     # Exit a parse tree produced by jbeamParser#SecUnknown.
     def exitSecUnknown(self, ctx:jbeamParser.SecUnknownContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#arrayOfSlots.
+    def enterArrayOfSlots(self, ctx:jbeamParser.ArrayOfSlotsContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#arrayOfSlots.
+    def exitArrayOfSlots(self, ctx:jbeamParser.ArrayOfSlotsContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#slot.
+    def enterSlot(self, ctx:jbeamParser.SlotContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#slot.
+    def exitSlot(self, ctx:jbeamParser.SlotContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#slotProps.
+    def enterSlotProps(self, ctx:jbeamParser.SlotPropsContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#slotProps.
+    def exitSlotProps(self, ctx:jbeamParser.SlotPropsContext):
         pass
 
 
@@ -194,6 +239,24 @@ class jbeamListener(ParseTreeListener):
 
     # Exit a parse tree produced by jbeamParser#PropUnknown.
     def exitPropUnknown(self, ctx:jbeamParser.PropUnknownContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#PropSingleGroup.
+    def enterPropSingleGroup(self, ctx:jbeamParser.PropSingleGroupContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#PropSingleGroup.
+    def exitPropSingleGroup(self, ctx:jbeamParser.PropSingleGroupContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#PropManyGroups.
+    def enterPropManyGroups(self, ctx:jbeamParser.PropManyGroupsContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#PropManyGroups.
+    def exitPropManyGroups(self, ctx:jbeamParser.PropManyGroupsContext):
         pass
 
 
@@ -338,6 +401,15 @@ class jbeamListener(ParseTreeListener):
 
     # Exit a parse tree produced by jbeamParser#FalseVal.
     def exitFalseVal(self, ctx:jbeamParser.FalseValContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#genericString.
+    def enterGenericString(self, ctx:jbeamParser.GenericStringContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#genericString.
+    def exitGenericString(self, ctx:jbeamParser.GenericStringContext):
         pass
 
 
