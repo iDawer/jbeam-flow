@@ -4,20 +4,15 @@ from antlr4 import *  # ToDo: get rid of the global antlr4 lib
 from .jb import jbeamLexer, jbeamParser, jbeamVisitor
 
 
-def file_to_meshes(filepath, encoding='utf-8'):
-    print('jbeam_utils.file_to_meshes(...): start')
+def data_to_meshes(data: str):
+    data_stream = InputStream(data)
 
-    f_stream = FileStream(filepath, encoding)
-
-    lexer = jbeamLexer(f_stream)
+    lexer = jbeamLexer(data_stream)
     stream = CommonTokenStream(lexer)
     parser = jbeamParser(stream)
     tree = parser.jbeam()
-    # print(tree.getText())
-    print('jbeam_utils.file_to_meshes(...): parse tree ok')
 
     mesh_list = MeshListBuilder().visit(tree)
-    print('jbeam_utils.file_to_meshes(...): meshes ok')
     return mesh_list
 
 
@@ -92,4 +87,3 @@ class MeshListBuilder(jbeamVisitor):
                 self._bm.faces.new((v1, v2, v3))
             except ValueError as err:
                 print(err, ' ', id1, ' ', id2, ' ', id3)  # ToDo handle duplicates
-
