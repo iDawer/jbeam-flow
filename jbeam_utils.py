@@ -87,3 +87,18 @@ class MeshListBuilder(jbeamVisitor):
                 self._bm.faces.new((v1, v2, v3))
             except ValueError as err:
                 print(err, ' ', id1, ' ', id2, ' ', id3)  # ToDo handle duplicates
+
+
+class NodeCollector(jbeamVisitor):
+    def __init__(self, part_name: str):
+        super().__init__()
+        self.part_name = part_name
+        self.nodes = {}
+
+    def visitPart(self, ctx: jbeamParser.PartContext):
+        if ctx.name.string_item == self.part_name:
+            return self.visitChildren(ctx)
+
+    def visitJnode(self, node_ctx: jbeamParser.JnodeContext):
+        self.nodes[node_ctx.id1.string_item] = node_ctx
+
