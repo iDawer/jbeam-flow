@@ -48,6 +48,7 @@ class ImportJBeam(Operator, ImportHelper):
 
         # resulting group and text names can be different
         group = bpy.data.groups.new(text_block.name)
+        group['jbeam_textblock'] = text_block.name
         obj_base = None
         for me in meshes:
             obj_base = object_utils.object_data_add(context, me)

@@ -37,6 +37,8 @@ class MeshListBuilder(jbeamVisitor):
         mesh = bpy.data.meshes.new(ctx.name.string_item)
         bm.to_mesh(mesh)
         mesh.update()
+        # Save part name explicitly, due Blender avoids name collision by appending '.001'
+        mesh['jbeam_part'] = ctx.name.string_item
         return mesh
 
     # Aggregates meshes for further visit(...) return

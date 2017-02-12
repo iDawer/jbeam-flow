@@ -14,17 +14,35 @@ use_profile = False
 
 class SyncMeshToText(Operator):
     bl_idname = "mesh.sync_to_jbeam"
-    bl_label = "JBeam live"
+    bl_label = "Sync mesh to jbeam"
     bl_options = {'REGISTER', 'UNDO'}
 
     running = False
 
     def execute(self, context):
-        if context.mode != 'EDIT_MESH':
-            self.report({'WARNING'}, 'only Edit mode')
+        obj = context.active_object
+        if obj.data.is_editmode:
+            bm = bmesh.from_edit_mesh(obj.data)
+        else:
+            bm = bmesh.new()
+            bm.from_mesh(obj.data)
+
+        # ToDo handle multiple groups.
+        # Find first corresponding jbeam name stored in the group's custom property 'jbeam_textblock'.
+        # Remember that group['jbeam_textblock'] == Text.name
+        text_dblock_name = next(
+            (jb for jb in (group.get('jbeam_textblock') for group in obj.users_group) if jb is not None), None)
+        if text_dblock_name is None:
+            self.report({'ERROR_INVALID_INPUT'}, 'Corresponding jbeam group is not found')
             return {'CANCELLED'}
 
-        text_datablock = bpy.data.texts['van_cargobase_mod.jbeam']
+        part_name = obj.data.get('jbeam_part')
+        if part_name is None:
+            self.report({'ERROR_INVALID_INPUT'},
+                        "Missing property: {0} has no custom property 'jbeam_part'".format(obj.data))
+            return {'CANCELLED'}
+
+        text_datablock = bpy.data.texts[text_dblock_name]
         data = text_datablock.as_string()
         data_stream = InputStream(data)
 
@@ -34,10 +52,9 @@ class SyncMeshToText(Operator):
         tree = parser.jbeam()
         rewriter = TokenStreamRewriter(stream)
 
-        collector = jbeam_utils.NodeCollector('van_cargobase_mod')
+        collector = jbeam_utils.NodeCollector(part_name)
         collector.visit(tree)
 
-        bm = bmesh.from_edit_mesh(context.active_object.data)
         id_lyr = bm.verts.layers.string['jbeamNodeId']
         for vert in bm.verts:
             _id = vert[id_lyr].decode()
@@ -63,45 +80,45 @@ class SyncMeshToText(Operator):
             import cProfile, time
             profiler = cProfile.Profile()
             profiler.enable()
-            result = None
             try:
                 result = self._execute(context)
             except:
                 raise  # bubble up to the UI
+            else:
+                return result
             finally:
                 profiler.disable()
                 profiler.dump_stats(
                     r'C:\\Users\\Dawer\\AppData\\Roaming\\Blender '
                     r'Foundation\\Blender\\2.78\\scripts\\addons\\BlenderJBeam\\profile\\LiveEditor{0}.pstat'.format(
                         str(time.time())))
-                return result
 
 
-    # def modal(self, context, event):
-    #     print('\r', time.time(), end='')
-    #     if context.active_object.is_updated:
-    #         print('\nis_updated')
-    #
-    #     if LiveEditor.running:
-    #         return {"PASS_THROUGH"}
-    #     else:
-    #         return {"CANCELLED"}
+                # def modal(self, context, event):
+                #     print('\r', time.time(), end='')
+                #     if context.active_object.is_updated:
+                #         print('\nis_updated')
+                #
+                #     if LiveEditor.running:
+                #         return {"PASS_THROUGH"}
+                #     else:
+                #         return {"CANCELLED"}
 
-    # def invoke(self, context, event):
-    #     print('invoke')
-    #     if LiveEditor.running:
-    #         LiveEditor.running = False
-    #         return {"CANCELLED"}
-    #     else:
-    #         LiveEditor.running = True
-    #         # context.window_manager.modal_handler_add(self)
-    #         return {'RUNNING_MODAL'}
+                # def invoke(self, context, event):
+                #     print('invoke')
+                #     if LiveEditor.running:
+                #         LiveEditor.running = False
+                #         return {"CANCELLED"}
+                #     else:
+                #         LiveEditor.running = True
+                #         # context.window_manager.modal_handler_add(self)
+                #         return {'RUNNING_MODAL'}
 
-    # @staticmethod
-    # def register():
-    #     bpy.types.INFO_MT_file_import.append(menu_func_draw)
-    #
-    # @staticmethod
-    # def unregister():
-    #     bpy.types.INFO_MT_file_import.remove(menu_func_draw)
-    #
+                # @staticmethod
+                # def register():
+                #     bpy.types.INFO_MT_file_import.append(menu_func_draw)
+                #
+                # @staticmethod
+                # def unregister():
+                #     bpy.types.INFO_MT_file_import.remove(menu_func_draw)
+                #
