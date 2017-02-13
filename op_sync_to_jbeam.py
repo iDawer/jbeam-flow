@@ -44,12 +44,9 @@ class SyncMeshToText(Operator):
 
         text_datablock = bpy.data.texts[text_dblock_name]
         data = text_datablock.as_string()
-        data_stream = InputStream(data)
 
-        lexer = jbeamLexer(data_stream)
-        stream = CommonTokenStream(lexer)
-        parser = jbeamParser(stream)
-        tree = parser.jbeam()
+        tree = jbeam_utils.get_parse_tree(data, text_dblock_name)
+        stream = tree.parser.getTokenStream()
         rewriter = TokenStreamRewriter(stream)
 
         collector = jbeam_utils.NodeCollector(part_name)
@@ -58,13 +55,19 @@ class SyncMeshToText(Operator):
         id_lyr = bm.verts.layers.string['jbeamNodeId']
         for vert in bm.verts:
             _id = vert[id_lyr].decode()
+            if len(_id) == 0:  # ignore if no id set
+                continue
             x = round(vert.co.x, 3)
             y = round(vert.co.y, 3)
             z = round(vert.co.z, 3)
-            node = collector.nodes[_id]
+            node = collector.nodes.pop(_id)
             rewriter.replaceSingleToken(node.posX, str(x))
             rewriter.replaceSingleToken(node.posY, str(y))
             rewriter.replaceSingleToken(node.posZ, str(z))
+
+        # rest nodes are not in the mesh, delete them
+        for _id, node in collector.nodes.items():
+            rewriter.delete(rewriter.DEFAULT_PROGRAM_NAME, node.start.tokenIndex, node.stop.tokenIndex)
 
         new_str = rewriter.getText()
         text_datablock.clear()
@@ -122,3 +125,4 @@ class SyncMeshToText(Operator):
                 # def unregister():
                 #     bpy.types.INFO_MT_file_import.remove(menu_func_draw)
                 #
+

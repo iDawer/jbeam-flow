@@ -104,3 +104,22 @@ class NodeCollector(jbeamVisitor):
     def visitJnode(self, node_ctx: jbeamParser.JnodeContext):
         self.nodes[node_ctx.id1.string_item] = node_ctx
 
+
+jbeam_parse_tree_cache = {}
+
+
+def get_parse_tree(data: str, name: str):
+    # try already cached
+    tree = jbeam_parse_tree_cache.get(name)
+    if tree is not None:
+        return tree
+
+    data_stream = InputStream(data)
+    lexer = jbeamLexer(data_stream)
+    stream = CommonTokenStream(lexer)
+    parser = jbeamParser(stream)
+    tree = parser.jbeam()
+    jbeam_parse_tree_cache[name] = tree
+    return tree
+
+
