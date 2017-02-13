@@ -1,6 +1,7 @@
 import bpy
 import bmesh
 from antlr4 import *  # ToDo: get rid of the global antlr4 lib
+from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from .jb import jbeamLexer, jbeamParser, jbeamVisitor
 
 
@@ -96,6 +97,7 @@ class NodeCollector(jbeamVisitor):
         super().__init__()
         self.part_name = part_name
         self.nodes = {}
+        self.node_to_items_map = {}
 
     def visitPart(self, ctx: jbeamParser.PartContext):
         if ctx.name.string_item == self.part_name:
@@ -103,6 +105,19 @@ class NodeCollector(jbeamVisitor):
 
     def visitJnode(self, node_ctx: jbeamParser.JnodeContext):
         self.nodes[node_ctx.id1.string_item] = node_ctx
+
+    def visitBeam(self, beam_ctx: jbeamParser.BeamContext):
+        self._link_to_node(beam_ctx.id1.string_item, beam_ctx)
+        self._link_to_node(beam_ctx.id2.string_item, beam_ctx)
+
+    def _link_to_node(self, key: str, item: ParserRuleContext):
+        items = self.node_to_items_map.setdefault(key, [])
+        items.append(item)
+
+    def visitColtri(self, ctx: jbeamParser.ColtriContext):
+        self._link_to_node(ctx.id1.string_item, ctx)
+        self._link_to_node(ctx.id2.string_item, ctx)
+        self._link_to_node(ctx.id3.string_item, ctx)
 
 
 jbeam_parse_tree_cache = {}
@@ -123,3 +138,6 @@ def get_parse_tree(data: str, name: str):
     return tree
 
 
+class Rewriter(TokenStreamRewriter):
+    def delete_subtree(self, subtree):
+        self.delete(self.DEFAULT_PROGRAM_NAME, subtree.start.tokenIndex, subtree.stop.tokenIndex)

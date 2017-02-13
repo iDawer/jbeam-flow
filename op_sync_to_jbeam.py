@@ -47,12 +47,13 @@ class SyncMeshToText(Operator):
 
         tree = jbeam_utils.get_parse_tree(data, text_dblock_name)
         stream = tree.parser.getTokenStream()
-        rewriter = TokenStreamRewriter(stream)
+        rewriter = jbeam_utils.Rewriter(stream)
 
         collector = jbeam_utils.NodeCollector(part_name)
         collector.visit(tree)
 
         id_lyr = bm.verts.layers.string['jbeamNodeId']
+        # update vert coordinates
         for vert in bm.verts:
             _id = vert[id_lyr].decode()
             if len(_id) == 0:  # ignore if no id set
@@ -67,7 +68,10 @@ class SyncMeshToText(Operator):
 
         # rest nodes are not in the mesh, delete them
         for _id, node in collector.nodes.items():
-            rewriter.delete(rewriter.DEFAULT_PROGRAM_NAME, node.start.tokenIndex, node.stop.tokenIndex)
+            rewriter.delete_subtree(node)
+            # delete linked beams and tris
+            for beam in collector.node_to_items_map[_id]:
+                rewriter.delete_subtree(beam)
 
         new_str = rewriter.getText()
         text_datablock.clear()
@@ -125,4 +129,3 @@ class SyncMeshToText(Operator):
                 # def unregister():
                 #     bpy.types.INFO_MT_file_import.remove(menu_func_draw)
                 #
-
