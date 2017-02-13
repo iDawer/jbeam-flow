@@ -53,6 +53,7 @@ class SyncMeshToText(Operator):
         collector.visit(tree)
 
         id_lyr = bm.verts.layers.string['jbeamNodeId']
+        nodes_to_del = collector.nodes.copy()
         # update vert coordinates
         for vert in bm.verts:
             _id = vert[id_lyr].decode()
@@ -61,17 +62,42 @@ class SyncMeshToText(Operator):
             x = round(vert.co.x, 3)
             y = round(vert.co.y, 3)
             z = round(vert.co.z, 3)
-            node = collector.nodes.pop(_id)
+            node = nodes_to_del.pop(_id)
             rewriter.replaceSingleToken(node.posX, str(x))
             rewriter.replaceSingleToken(node.posY, str(y))
             rewriter.replaceSingleToken(node.posZ, str(z))
 
         # rest nodes are not in the mesh, delete them
-        for _id, node in collector.nodes.items():
+        for _id, node in nodes_to_del.items():
             rewriter.delete_subtree(node)
             # delete linked beams and tris
             for beam in collector.node_to_items_map[_id]:
                 rewriter.delete_subtree(beam)
+
+        # process edges
+        for edge in bm.edges:
+            v1, v2 = edge.verts
+            id1 = v1[id_lyr].decode()
+            id2 = v2[id_lyr].decode()
+            if len(id1) == 0 or len(id2) == 0:
+                continue
+            # just extract actual beam from collector.beams
+            beam = collector.beams.pop((id1, id2), None)
+            if beam is None:
+                beam = collector.beams.pop((id2, id1), None)
+            if beam is None:
+                # we have no corresponding beam, so this edge is new
+                continue  # just pass trough
+        # rip remaining beams
+        for id1_id2, beam in collector.beams.items():
+            # whoops, don't remove beams with external nodes
+            node1 = collector.nodes.get(id1_id2[0])
+            node2 = collector.nodes.get(id1_id2[1])
+            # note: also rip duplicates
+            if node1 and node2:
+                rewriter.delete_subtree(beam)
+
+        #
 
         new_str = rewriter.getText()
         text_datablock.clear()
