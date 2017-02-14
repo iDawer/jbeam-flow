@@ -98,7 +98,7 @@ class NodeCollector(jbeamVisitor):
         self.part_name = part_name
         self.nodes = {}
         self.node_to_items_map = {}
-        self.beams = {}
+        self.beams = {}  # key is unordered frozenset((id1, id2)) == frozenset((id2, id1))
 
     def visitPart(self, ctx: jbeamParser.PartContext):
         if ctx.name.string_item == self.part_name:
@@ -109,9 +109,12 @@ class NodeCollector(jbeamVisitor):
 
     def visitBeam(self, beam_ctx: jbeamParser.BeamContext):
         id1, id2 = beam_ctx.id1.string_item, beam_ctx.id2.string_item
-        self.beams[id1, id2] = beam_ctx
         self._link_to_node(id1, beam_ctx)
         self._link_to_node(id2, beam_ctx)
+        key = frozenset((id1, id2))
+        # if duplicates found, use first
+        if key not in self.beams.keys():
+            self.beams[key] = beam_ctx
 
     def _link_to_node(self, key: str, item: ParserRuleContext):
         items = self.node_to_items_map.setdefault(key, [])

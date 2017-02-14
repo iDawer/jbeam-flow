@@ -49,11 +49,11 @@ class SyncMeshToText(Operator):
         stream = tree.parser.getTokenStream()
         rewriter = jbeam_utils.Rewriter(stream)
 
-        collector = jbeam_utils.NodeCollector(part_name)
-        collector.visit(tree)
+        part = jbeam_utils.NodeCollector(part_name)
+        part.visit(tree)
 
         id_lyr = bm.verts.layers.string['jbeamNodeId']
-        nodes_to_del = collector.nodes.copy()
+        nodes_to_del = part.nodes.copy()
         # update vert coordinates
         for vert in bm.verts:
             _id = vert[id_lyr].decode()
@@ -71,7 +71,7 @@ class SyncMeshToText(Operator):
         for _id, node in nodes_to_del.items():
             rewriter.delete_subtree(node)
             # delete linked beams and tris
-            for beam in collector.node_to_items_map[_id]:
+            for beam in part.node_to_items_map[_id]:
                 rewriter.delete_subtree(beam)
 
         # process edges
@@ -81,23 +81,17 @@ class SyncMeshToText(Operator):
             id2 = v2[id_lyr].decode()
             if len(id1) == 0 or len(id2) == 0:
                 continue
-            # just extract actual beam from collector.beams
-            beam = collector.beams.pop((id1, id2), None)
-            if beam is None:
-                beam = collector.beams.pop((id2, id1), None)
+            # just extract actual beam from part.beams
+            beam = part.beams.pop(frozenset((id1, id2)), None)
             if beam is None:
                 # we have no corresponding beam, so this edge is new
                 continue  # just pass trough
         # rip remaining beams
-        for id1_id2, beam in collector.beams.items():
+        nodes_id_set = part.nodes.keys()
+        for (id1, id2), beam in part.beams.items():
             # whoops, don't remove beams with external nodes
-            node1 = collector.nodes.get(id1_id2[0])
-            node2 = collector.nodes.get(id1_id2[1])
-            # note: also rip duplicates
-            if node1 and node2:
+            if id1 in nodes_id_set and id2 in nodes_id_set:
                 rewriter.delete_subtree(beam)
-
-        #
 
         new_str = rewriter.getText()
         text_datablock.clear()
