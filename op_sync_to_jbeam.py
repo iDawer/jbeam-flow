@@ -8,6 +8,7 @@ from .jb import jbeamLexer, jbeamParser, jbeamVisitor
 from . import jbeam_utils
 from antlr4.IntervalSet import IntervalSet
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
+from .misc import Triangle
 
 use_profile = False
 
@@ -57,7 +58,7 @@ class SyncMeshToText(Operator):
         # update vert coordinates
         for vert in bm.verts:
             _id = vert[id_lyr].decode()
-            if len(_id) == 0:  # ignore if no id set
+            if not _id:  # ignore if no id set
                 continue
             x = round(vert.co.x, 3)
             y = round(vert.co.y, 3)
@@ -74,24 +75,36 @@ class SyncMeshToText(Operator):
             for beam in part.node_to_items_map[_id]:
                 rewriter.delete_subtree(beam)
 
-        # process edges
+        nodes_id_set = part.nodes.keys()
+        # ================ process edges ================
         for edge in bm.edges:
             v1, v2 = edge.verts
             id1 = v1[id_lyr].decode()
             id2 = v2[id_lyr].decode()
-            if len(id1) == 0 or len(id2) == 0:
-                continue
-            # just extract actual beam from part.beams
-            beam = part.beams.pop(frozenset((id1, id2)), None)
-            if beam is None:
-                # we have no corresponding beam, so this edge is new
-                continue  # just pass trough
+            # ignore not initialised beam
+            if id1 and id2:
+                # just extract corresponding beam from part.beams
+                part.beams.pop(frozenset((id1, id2)), None)
+
         # rip remaining beams
-        nodes_id_set = part.nodes.keys()
         for (id1, id2), beam in part.beams.items():
             # whoops, don't remove beams with external nodes
             if id1 in nodes_id_set and id2 in nodes_id_set:
                 rewriter.delete_subtree(beam)
+
+        # ================ process triangles ================
+        # first pop out actual coltris from part
+        for face in bm.faces:
+            if len(face.verts) == 3:
+                id1, id2, id3 = (v[id_lyr].decode() for v in face.verts)
+                if id1 and id2 and id3:
+                    part.coltris.pop(Triangle((id1, id2, id3)), None)
+
+        # then remove remainig coltris, they are deleted from the mesh
+        for (id1, id2, id3), coltri in part.coltris.items():
+            # allow coltris to have external nodes
+            if (id1 in nodes_id_set) and (id2 in nodes_id_set) and (id3 in nodes_id_set):
+                rewriter.delete_subtree(coltri)
 
         new_str = rewriter.getText()
         text_datablock.clear()

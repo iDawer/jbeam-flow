@@ -3,6 +3,7 @@ import bmesh
 from antlr4 import *  # ToDo: get rid of the global antlr4 lib
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from .jb import jbeamLexer, jbeamParser, jbeamVisitor
+from .misc import Triangle
 
 
 def data_to_meshes(data: str):
@@ -99,6 +100,7 @@ class NodeCollector(jbeamVisitor):
         self.nodes = {}
         self.node_to_items_map = {}
         self.beams = {}  # key is unordered frozenset((id1, id2)) == frozenset((id2, id1))
+        self.coltris = {}  # key is misc.Triangle type
 
     def visitPart(self, ctx: jbeamParser.PartContext):
         if ctx.name.string_item == self.part_name:
@@ -121,9 +123,15 @@ class NodeCollector(jbeamVisitor):
         items.append(item)
 
     def visitColtri(self, ctx: jbeamParser.ColtriContext):
-        self._link_to_node(ctx.id1.string_item, ctx)
-        self._link_to_node(ctx.id2.string_item, ctx)
-        self._link_to_node(ctx.id3.string_item, ctx)
+        id1 = ctx.id1.string_item
+        id2 = ctx.id2.string_item
+        id3 = ctx.id3.string_item
+        self._link_to_node(id1, ctx)
+        self._link_to_node(id2, ctx)
+        self._link_to_node(id3, ctx)
+        tri_key = Triangle((id1, id2, id3))
+        if tri_key not in self.coltris.keys():
+            self.coltris[tri_key] = ctx
 
 
 jbeam_parse_tree_cache = {}
