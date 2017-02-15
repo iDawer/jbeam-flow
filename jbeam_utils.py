@@ -108,6 +108,9 @@ class NodeCollector(jbeamVisitor):
 
     def visitJnode(self, node_ctx: jbeamParser.JnodeContext):
         self.nodes[node_ctx.id1.string_item] = node_ctx
+        node_ctx.x = float(node_ctx.posX.text)
+        node_ctx.y = float(node_ctx.posY.text)
+        node_ctx.z = float(node_ctx.posZ.text)
 
     def visitBeam(self, beam_ctx: jbeamParser.BeamContext):
         id1, id2 = beam_ctx.id1.string_item, beam_ctx.id2.string_item

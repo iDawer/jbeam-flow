@@ -1,16 +1,13 @@
-import bpy
-from bpy.props import StringProperty, BoolProperty, EnumProperty
-from bpy.types import Operator
-import time
+import math
+
 import bmesh
-from antlr4 import *
-from .jb import jbeamLexer, jbeamParser, jbeamVisitor
+import bpy
+from bpy.types import Operator
+
 from . import jbeam_utils
-from antlr4.IntervalSet import IntervalSet
-from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from .misc import Triangle
 
-use_profile = False
+use_profile = True
 
 
 class SyncMeshToText(Operator):
@@ -63,10 +60,15 @@ class SyncMeshToText(Operator):
             x = round(vert.co.x, 3)
             y = round(vert.co.y, 3)
             z = round(vert.co.z, 3)
-            node = nodes_to_del.pop(_id)
-            rewriter.replaceSingleToken(node.posX, str(x))
-            rewriter.replaceSingleToken(node.posY, str(y))
-            rewriter.replaceSingleToken(node.posZ, str(z))
+            node = nodes_to_del.pop(_id, None)
+            # check duplicate, if node is None then node is duplicate or new -> skip
+            if node:
+                if not math.isclose(node.x, x, abs_tol=0.0005):
+                    rewriter.replaceSingleToken(node.posX, str(x))
+                if not math.isclose(node.y, y, abs_tol=0.0005):
+                    rewriter.replaceSingleToken(node.posY, str(y))
+                if not math.isclose(node.z, z, abs_tol=0.0005):
+                    rewriter.replaceSingleToken(node.posZ, str(z))
 
         # rest nodes are not in the mesh, delete them
         for _id, node in nodes_to_del.items():
