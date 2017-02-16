@@ -42,16 +42,14 @@ class ImportJBeam(Operator, ImportHelper):
         # profiler.enable()
         from . import jbeam_utils
         text_block = bpy.data.texts.load(self.filepath)
-        meshes = jbeam_utils.data_to_meshes(text_block.as_string())
+        tree = jbeam_utils.to_tree(text_block.as_string())
 
-        from bpy_extras import object_utils
+        objects = jbeam_utils.SceneObjectsBuilder(context).visit(tree)
 
         # resulting group and text names can be different
         group = bpy.data.groups.new(text_block.name)
         group['jbeam_textblock'] = text_block.name
-        obj_base = None
-        for me in meshes:
-            obj_base = object_utils.object_data_add(context, me)
+        for obj_base in objects:
             group.objects.link(obj_base.object)
 
         # profiler.disable()

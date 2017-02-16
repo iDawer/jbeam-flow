@@ -4,22 +4,23 @@ from antlr4 import *  # ToDo: get rid of the global antlr4 lib
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from .jb import jbeamLexer, jbeamParser, jbeamVisitor
 from .misc import Triangle
+from bpy_extras import object_utils
 
 
-def data_to_meshes(data: str):
-    data_stream = InputStream(data)
+def to_tree(jbeam_data: str):
+    data_stream = InputStream(jbeam_data)
 
     lexer = jbeamLexer(data_stream)
     stream = CommonTokenStream(lexer)
     parser = jbeamParser(stream)
     tree = parser.jbeam()
 
-    mesh_list = MeshListBuilder().visit(tree)
-    return mesh_list
+    return tree
 
 
-class MeshListBuilder(jbeamVisitor):
-    def __init__(self):
+class SceneObjectsBuilder(jbeamVisitor):
+    def __init__(self, context):
+        self.context = context
         self._bm = None
         self._idLayer = None
         self._vertsCache = None
@@ -39,9 +40,11 @@ class MeshListBuilder(jbeamVisitor):
         mesh = bpy.data.meshes.new(ctx.name.string_item)
         bm.to_mesh(mesh)
         mesh.update()
-        # Save part name explicitly, due Blender avoids name collision by appending '.001'
+        # Save part name explicitly, due Blender avoids names collision by appending '.001'
         mesh['jbeam_part'] = ctx.name.string_item
-        return mesh
+
+        obj_base = object_utils.object_data_add(self.context, mesh)
+        return obj_base
 
     # Aggregates meshes for further visit(...) return
     def aggregateResult(self, aggregate, next_result):
@@ -78,7 +81,7 @@ class MeshListBuilder(jbeamVisitor):
                 edge = self._bm.edges.new((v1, v2))  # throws on duplicates
                 edge[self._beamLayer] = 1
             except ValueError as err:
-                print(err, ' ', id1, ' ', id2)  # ToDo handle duplicates
+                print(err, id1, id2)  # ToDo handle duplicates
 
     def visitColtri(self, ctx: jbeamParser.ColtriContext):
         id1 = ctx.id1.string_item
@@ -90,7 +93,7 @@ class MeshListBuilder(jbeamVisitor):
             try:
                 self._bm.faces.new((v1, v2, v3))
             except ValueError as err:
-                print(err, ' ', id1, ' ', id2, ' ', id3)  # ToDo handle duplicates
+                print(err, id1, id2, id3)  # ToDo handle duplicates
 
 
 class NodeCollector(jbeamVisitor):
