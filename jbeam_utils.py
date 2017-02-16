@@ -25,6 +25,7 @@ class SceneObjectsBuilder(jbeamVisitor):
         self._idLayer = None
         self._vertsCache = None
         self._beamLayer = None
+        self._slots = None
 
     def visitPart(self, ctx: jbeamParser.PartContext):
         print('part: ' + ctx.name.string_item)
@@ -33,6 +34,7 @@ class SceneObjectsBuilder(jbeamVisitor):
         self._idLayer = bm.verts.layers.string.new('jbeamNodeId')
         self._vertsCache = {}
         self._beamLayer = bm.edges.layers.int.new('jbeam')
+        self._slots = []
 
         self.visitChildren(ctx)
 
@@ -44,6 +46,11 @@ class SceneObjectsBuilder(jbeamVisitor):
         mesh['jbeam_part'] = ctx.name.string_item
 
         obj_base = object_utils.object_data_add(self.context, mesh)
+
+        for slot_empty in self._slots:
+            self.context.scene.objects.link(slot_empty)
+            slot_empty.parent = obj_base.object
+            slot_empty.parent_type = 'OBJECT'
         return obj_base
 
     # Aggregates meshes for further visit(...) return
@@ -56,6 +63,15 @@ class SceneObjectsBuilder(jbeamVisitor):
         else:
             aggregate.append(next_result)
         return aggregate
+
+    def visitSlot(self, ctx: jbeamParser.SlotContext):
+        # slot as child empty
+        empty = bpy.data.objects.new(ctx.stype.string_item, None)
+        empty["description"] = ctx.description.string_item
+        empty["default"] = ctx.default.string_item
+        # ToDo slot offset here
+        self._slots.append(empty)
+        pass
 
     def visitSecNodes(self, ctx: jbeamParser.SecNodesContext):
         self.visitChildren(ctx)
