@@ -25,7 +25,7 @@ class SceneObjectsBuilder(jbeamVisitor):
         self._idLayer = None
         self._vertsCache = None
         self._beamLayer = None
-        self._slots = None
+        self._slots_empty = None
 
     def visitPart(self, ctx: jbeamParser.PartContext):
         print('part: ' + ctx.name.string_item)
@@ -34,7 +34,7 @@ class SceneObjectsBuilder(jbeamVisitor):
         self._idLayer = bm.verts.layers.string.new('jbeamNodeId')
         self._vertsCache = {}
         self._beamLayer = bm.edges.layers.int.new('jbeam')
-        self._slots = []
+        self._slots_empty = None
 
         self.visitChildren(ctx)
 
@@ -47,10 +47,9 @@ class SceneObjectsBuilder(jbeamVisitor):
 
         obj_base = object_utils.object_data_add(self.context, mesh)
 
-        for slot_empty in self._slots:
-            self.context.scene.objects.link(slot_empty)
-            slot_empty.parent = obj_base.object
-            slot_empty.parent_type = 'OBJECT'
+        if self._slots_empty:
+            self.link_parented(self._slots_empty, obj_base.object)
+
         return obj_base
 
     # Aggregates meshes for further visit(...) return
@@ -64,14 +63,28 @@ class SceneObjectsBuilder(jbeamVisitor):
             aggregate.append(next_result)
         return aggregate
 
+    def link_parented(self, obj, parent, prn_type='OBJECT'):
+        obj_base = self.context.scene.objects.link(obj)
+        obj.parent = parent
+        obj.parent_type = prn_type
+        return obj_base
+
+    def visitSecSlots(self, section_ctx: jbeamParser.SecSlotsContext):
+        slots_empty = bpy.data.objects.new(section_ctx.name.text.strip('"'), None)
+        self._slots_empty = slots_empty
+        #  fetch aggregated slots
+        slot_list = self.visitChildren(section_ctx)
+        # magic 0, and it works
+        for slot in slot_list[0]:
+            self.link_parented(slot, slots_empty)
+
     def visitSlot(self, ctx: jbeamParser.SlotContext):
         # slot as child empty
         empty = bpy.data.objects.new(ctx.stype.string_item, None)
         empty["description"] = ctx.description.string_item
         empty["default"] = ctx.default.string_item
         # ToDo slot offset here
-        self._slots.append(empty)
-        pass
+        return empty  # result goes aggregate > visitSecSlots
 
     def visitSecNodes(self, ctx: jbeamParser.SecNodesContext):
         self.visitChildren(ctx)
