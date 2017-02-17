@@ -26,9 +26,11 @@ class SceneObjectsBuilder(jbeamVisitor):
         self._vertsCache = None
         self._beamLayer = None
         self._slots_empty = None
+        self._current = None
 
     def visitPart(self, ctx: jbeamParser.PartContext):
-        print('part: ' + ctx.name.string_item)
+        part_name = ctx.name.string_item
+        print('part: ' + part_name)
         bm = bmesh.new()  # each part in separate object
         self._bm = bm
         self._idLayer = bm.verts.layers.string.new('jbeamNodeId')
@@ -39,11 +41,11 @@ class SceneObjectsBuilder(jbeamVisitor):
         self.visitChildren(ctx)
 
         bm.verts.ensure_lookup_table()
-        mesh = bpy.data.meshes.new(ctx.name.string_item)
+        mesh = bpy.data.meshes.new(part_name)
         bm.to_mesh(mesh)
         mesh.update()
         # Save part name explicitly, due Blender avoids names collision by appending '.001'
-        mesh['jbeam_part'] = ctx.name.string_item
+        mesh['jbeam_part'] = part_name
 
         obj_base = object_utils.object_data_add(self.context, mesh)
 
@@ -69,13 +71,17 @@ class SceneObjectsBuilder(jbeamVisitor):
         obj.parent_type = prn_type
         return obj_base
 
+    # ============================== slots ==============================
     def visitSecSlots(self, section_ctx: jbeamParser.SecSlotsContext):
         slots_empty = bpy.data.objects.new(section_ctx.name.text.strip('"'), None)
-        self._slots_empty = slots_empty
+        # slot section has no transform modifiers
+        slots_empty.lock_location = (True, True, True)
+        self.lock_rot_scale(slots_empty)
+
+        self._slots_empty = slots_empty  # > visitPart
         #  fetch aggregated slots
         slot_list = self.visitChildren(section_ctx)
-        # magic 0, and it works
-        for slot in slot_list[0]:
+        for slot in slot_list:
             self.link_parented(slot, slots_empty)
 
     def visitSlot(self, ctx: jbeamParser.SlotContext):
@@ -83,8 +89,35 @@ class SceneObjectsBuilder(jbeamVisitor):
         empty = bpy.data.objects.new(ctx.stype.string_item, None)
         empty["description"] = ctx.description.string_item
         empty["default"] = ctx.default.string_item
-        # ToDo slot offset here
+        self.lock_rot_scale(empty)
+
+        self._current = empty
+        self.visitChildren(ctx)
+        self._current = None  # keep clean
         return empty  # result goes aggregate > visitSecSlots
+
+    @staticmethod
+    def lock_rot_scale(obj):
+        obj.lock_rotation = (True, True, True)
+        obj.lock_rotation_w = True
+        obj.lock_rotations_4d = True
+        obj.lock_scale = (True, True, True)
+
+    def visitOffset(self, ctx: jbeamParser.OffsetContext):
+        offset = {'x': 0, 'y': 0, 'z': 0}
+
+        def blabla(axis):
+            if isinstance(axis, jbeamParser.OffsetAxisXContext):
+                offset['x'] = float(axis.x.text)
+            elif isinstance(axis, jbeamParser.OffsetAxisYContext):
+                offset['y'] = float(axis.y.text)
+            elif isinstance(axis, jbeamParser.OffsetAxisZContext):
+                offset['z'] = float(axis.z.text)
+
+        blabla(ctx.ax1)
+        blabla(ctx.ax2)
+        blabla(ctx.ax3)
+        self._current.location = (offset['x'], offset['y'], offset['z'])
 
     def visitSecNodes(self, ctx: jbeamParser.SecNodesContext):
         self.visitChildren(ctx)

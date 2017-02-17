@@ -59,11 +59,6 @@ class jbeamVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#arrayOfSlots.
-    def visitArrayOfSlots(self, ctx:jbeamParser.ArrayOfSlotsContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by jbeamParser#slot.
     def visitSlot(self, ctx:jbeamParser.SlotContext):
         return self.visitChildren(ctx)
@@ -74,8 +69,38 @@ class jbeamVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#arrayOfJnodes.
-    def visitArrayOfJnodes(self, ctx:jbeamParser.ArrayOfJnodesContext):
+    # Visit a parse tree produced by jbeamParser#SlotProp_NodeOffset.
+    def visitSlotProp_NodeOffset(self, ctx:jbeamParser.SlotProp_NodeOffsetContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#SlotProp_CoreSlot.
+    def visitSlotProp_CoreSlot(self, ctx:jbeamParser.SlotProp_CoreSlotContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#SlotProp_Unknown.
+    def visitSlotProp_Unknown(self, ctx:jbeamParser.SlotProp_UnknownContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#offset.
+    def visitOffset(self, ctx:jbeamParser.OffsetContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#OffsetAxisX.
+    def visitOffsetAxisX(self, ctx:jbeamParser.OffsetAxisXContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#OffsetAxisY.
+    def visitOffsetAxisY(self, ctx:jbeamParser.OffsetAxisYContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#OffsetAxisZ.
+    def visitOffsetAxisZ(self, ctx:jbeamParser.OffsetAxisZContext):
         return self.visitChildren(ctx)
 
 
@@ -149,11 +174,6 @@ class jbeamVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#arrayOfBeams.
-    def visitArrayOfBeams(self, ctx:jbeamParser.ArrayOfBeamsContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by jbeamParser#tableHeader.
     def visitTableHeader(self, ctx:jbeamParser.TableHeaderContext):
         return self.visitChildren(ctx)
@@ -166,11 +186,6 @@ class jbeamVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by jbeamParser#beamProps.
     def visitBeamProps(self, ctx:jbeamParser.BeamPropsContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by jbeamParser#arrayOfColtris.
-    def visitArrayOfColtris(self, ctx:jbeamParser.ArrayOfColtrisContext):
         return self.visitChildren(ctx)
 
 

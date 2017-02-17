@@ -98,15 +98,6 @@ class jbeamListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#arrayOfSlots.
-    def enterArrayOfSlots(self, ctx:jbeamParser.ArrayOfSlotsContext):
-        pass
-
-    # Exit a parse tree produced by jbeamParser#arrayOfSlots.
-    def exitArrayOfSlots(self, ctx:jbeamParser.ArrayOfSlotsContext):
-        pass
-
-
     # Enter a parse tree produced by jbeamParser#slot.
     def enterSlot(self, ctx:jbeamParser.SlotContext):
         pass
@@ -125,12 +116,66 @@ class jbeamListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#arrayOfJnodes.
-    def enterArrayOfJnodes(self, ctx:jbeamParser.ArrayOfJnodesContext):
+    # Enter a parse tree produced by jbeamParser#SlotProp_NodeOffset.
+    def enterSlotProp_NodeOffset(self, ctx:jbeamParser.SlotProp_NodeOffsetContext):
         pass
 
-    # Exit a parse tree produced by jbeamParser#arrayOfJnodes.
-    def exitArrayOfJnodes(self, ctx:jbeamParser.ArrayOfJnodesContext):
+    # Exit a parse tree produced by jbeamParser#SlotProp_NodeOffset.
+    def exitSlotProp_NodeOffset(self, ctx:jbeamParser.SlotProp_NodeOffsetContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#SlotProp_CoreSlot.
+    def enterSlotProp_CoreSlot(self, ctx:jbeamParser.SlotProp_CoreSlotContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#SlotProp_CoreSlot.
+    def exitSlotProp_CoreSlot(self, ctx:jbeamParser.SlotProp_CoreSlotContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#SlotProp_Unknown.
+    def enterSlotProp_Unknown(self, ctx:jbeamParser.SlotProp_UnknownContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#SlotProp_Unknown.
+    def exitSlotProp_Unknown(self, ctx:jbeamParser.SlotProp_UnknownContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#offset.
+    def enterOffset(self, ctx:jbeamParser.OffsetContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#offset.
+    def exitOffset(self, ctx:jbeamParser.OffsetContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#OffsetAxisX.
+    def enterOffsetAxisX(self, ctx:jbeamParser.OffsetAxisXContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#OffsetAxisX.
+    def exitOffsetAxisX(self, ctx:jbeamParser.OffsetAxisXContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#OffsetAxisY.
+    def enterOffsetAxisY(self, ctx:jbeamParser.OffsetAxisYContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#OffsetAxisY.
+    def exitOffsetAxisY(self, ctx:jbeamParser.OffsetAxisYContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#OffsetAxisZ.
+    def enterOffsetAxisZ(self, ctx:jbeamParser.OffsetAxisZContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#OffsetAxisZ.
+    def exitOffsetAxisZ(self, ctx:jbeamParser.OffsetAxisZContext):
         pass
 
 
@@ -260,15 +305,6 @@ class jbeamListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#arrayOfBeams.
-    def enterArrayOfBeams(self, ctx:jbeamParser.ArrayOfBeamsContext):
-        pass
-
-    # Exit a parse tree produced by jbeamParser#arrayOfBeams.
-    def exitArrayOfBeams(self, ctx:jbeamParser.ArrayOfBeamsContext):
-        pass
-
-
     # Enter a parse tree produced by jbeamParser#tableHeader.
     def enterTableHeader(self, ctx:jbeamParser.TableHeaderContext):
         pass
@@ -293,15 +329,6 @@ class jbeamListener(ParseTreeListener):
 
     # Exit a parse tree produced by jbeamParser#beamProps.
     def exitBeamProps(self, ctx:jbeamParser.BeamPropsContext):
-        pass
-
-
-    # Enter a parse tree produced by jbeamParser#arrayOfColtris.
-    def enterArrayOfColtris(self, ctx:jbeamParser.ArrayOfColtrisContext):
-        pass
-
-    # Exit a parse tree produced by jbeamParser#arrayOfColtris.
-    def exitArrayOfColtris(self, ctx:jbeamParser.ArrayOfColtrisContext):
         pass
 
 
