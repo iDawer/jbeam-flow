@@ -15,6 +15,7 @@ if "bpy" in locals():
     importlib.reload(jbeam_utils)
     importlib.reload(op_import)
     importlib.reload(op_sync_to_jbeam)
+    importlib.reload(op_attach_to_parent)
     print('Reloaded JBeam plugin')
 else:
     import bpy
@@ -23,7 +24,8 @@ else:
         misc,
         jbeam_utils,
         op_import,
-        op_sync_to_jbeam
+        op_sync_to_jbeam,
+        op_attach_to_parent
     )
 
     print("Imported JBeam plugin")
