@@ -23,7 +23,7 @@ class SceneObjectsBuilder(jbeamVisitor):
         self.context = context
         self._bm = None
         self._idLayer = None
-        self._vertsCache = None
+        self._vertsIndex = None
         self._beamLayer = None
         self._slots_empty = None
         self._current = None
@@ -34,7 +34,7 @@ class SceneObjectsBuilder(jbeamVisitor):
         bm = bmesh.new()  # each part in separate object
         self._bm = bm
         self._idLayer = bm.verts.layers.string.new('jbeamNodeId')
-        self._vertsCache = {}
+        self._vertsIndex = {}
         self._beamLayer = bm.edges.layers.int.new('jbeam')
         self._slots_empty = None
 
@@ -127,7 +127,7 @@ class SceneObjectsBuilder(jbeamVisitor):
         vert = self._bm.verts.new((float(ctx.posX.text), float(ctx.posY.text), float(ctx.posZ.text)))
         _id = ctx.id1.string_item
         vert[self._idLayer] = _id.encode()  # set JNode id
-        self._vertsCache[_id] = vert
+        self._vertsIndex[_id] = vert
         return
 
     def visitSecBeams(self, ctx: jbeamParser.SecBeamsContext):
@@ -137,25 +137,56 @@ class SceneObjectsBuilder(jbeamVisitor):
     def visitBeam(self, ctx: jbeamParser.BeamContext):
         id1 = ctx.id1.string_item
         id2 = ctx.id2.string_item
-        v1, v2 = self._vertsCache.get(id1), self._vertsCache.get(id2)
-        if v1 and v2:
-            try:
-                edge = self._bm.edges.new((v1, v2))  # throws on duplicates
-                edge[self._beamLayer] = 1
-            except ValueError as err:
-                print(err, id1, id2)  # ToDo handle duplicates
+        v1, v2 = self._vertsIndex.get(id1), self._vertsIndex.get(id2)
+        # check for attaching to parent
+        if not (v1 or v2):
+            # both belong to parent? ok
+            v1 = self.new_dummy_node(id1)
+            v2 = self.new_dummy_node(id2, v1.co)
+        elif not v1:
+            # v1 belongs to parent
+            v1 = self.new_dummy_node(id1, v2.co)
+        elif not v2:
+            v2 = self.new_dummy_node(id2, v1.co)
+
+        try:
+            edge = self._bm.edges.new((v1, v2))  # throws on duplicates
+            edge[self._beamLayer] = 1
+        except ValueError as err:
+            print(err, id1, id2)  # ToDo handle duplicates
+
+    def new_dummy_node(self, dummy_id: str, co=None):
+        """
+        Add parent node representation to be able to store attaching beams.
+        Adds '~' to the beginning of id, but _vertsIndex keeps original id.
+        :param dummy_id: string
+        :param co: mathutils.Vector
+        :return: bmesh.types.BMVert
+        """
+        if co:
+            vert = self._bm.verts.new(co)
+            # hang dummy node
+            vert.co.z -= .3
+        else:
+            vert = self._bm.verts.new((.0, .0, .0))
+        vert[self._idLayer] = ''.join(('~', dummy_id)).encode()
+        self._vertsIndex[dummy_id] = vert
+        return vert
 
     def visitColtri(self, ctx: jbeamParser.ColtriContext):
         id1 = ctx.id1.string_item
         id2 = ctx.id2.string_item
         id3 = ctx.id3.string_item
-        v_cache = self._vertsCache
+        v_cache = self._vertsIndex
         v1, v2, v3 = v_cache.get(id1), v_cache.get(id2), v_cache.get(id3)
         if v1 and v2 and v3:
             try:
                 self._bm.faces.new((v1, v2, v3))
             except ValueError as err:
                 print(err, id1, id2, id3)  # ToDo handle duplicates
+        else:
+            # coltri with parent nodes?? ok
+            print('Skipped triangle with parent nodes [{} {} {}]: not implemented')
 
 
 class NodeCollector(jbeamVisitor):
