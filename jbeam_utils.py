@@ -19,8 +19,13 @@ def to_tree(jbeam_data: str):
     return tree
 
 
+# Aggregator types
 JBEAM = 0
 PART = 1
+SECTION_SLOTS = 2
+SECTION_UNKNOWN = 3
+SLOT = 4
+MAP = 5
 
 
 class SceneObjectsBuilder(jbeamVisitor):
@@ -32,6 +37,7 @@ class SceneObjectsBuilder(jbeamVisitor):
         self._beamLayer = None
         self._slots_empty = None
         self._current = None
+        self._buildingStack = []  # ToDo implement this
 
     def visitJbeam(self, ctx: jbeamParser.JbeamContext):
         parts = self.visitChildren(ctx)
@@ -47,60 +53,83 @@ class SceneObjectsBuilder(jbeamVisitor):
         self._beamLayer = bm.edges.layers.int.new('jbeam')
         self._slots_empty = None
 
-        self.visitChildren(ctx)
+        part_obj = self.visitChildren(ctx)
 
         bm.verts.ensure_lookup_table()
-        mesh = bpy.data.meshes.new(part_name)
+
+        part_obj.name = part_name
+        mesh = part_obj.data
+        mesh.name = part_name
         bm.to_mesh(mesh)
         mesh.update()
         # Save part name explicitly, due Blender avoids names collision by appending '.001'
         mesh['jbeam_part'] = part_name
 
-        part_obj = bpy.data.objects.new(part_name, mesh)
-
         if self._slots_empty:
-            self.link_parented(self._slots_empty, part_obj)
+            self.set_parent(self._slots_empty, part_obj)
 
         return PART, part_obj
 
-    def aggregateResult(self, aggregate, next_result):
+    def aggregateResult(self, aggregator, next_result):
         if next_result is None:
-            return aggregate
+            return aggregator
 
         if isinstance(next_result, tuple):
+            # parts aggregator is a Group type
             if next_result[0] == PART:
-                # parts aggregator is a Group type
-                if aggregate is None:
-                    aggregate = bpy.data.groups.new(self.name)
-                aggregate.objects.link(next_result[1])
+                if aggregator is None:
+                    aggregator = bpy.data.groups.new(self.name)
+                aggregator.objects.link(next_result[1])
+            elif next_result[0] == SECTION_SLOTS:
+                if aggregator is None:
+                    # create part object
+                    aggregator = bpy.data.objects.new('', bpy.data.meshes.new(''))
+                self.set_parent(next_result[1], aggregator)
+            elif next_result[0] == SECTION_UNKNOWN:
+                if aggregator is None:
+                    # part object still has not been created
+                    aggregator = bpy.data.objects.new('', bpy.data.meshes.new(''))
+                # hmmm, what to do?
+                pass
+            elif next_result[0] == SLOT:
+                if aggregator is None:
+                    # create slots container empty
+                    aggregator = bpy.data.objects.new('', None)
+                self.set_parent(next_result[1], aggregator)
+            elif next_result[0] == MAP:
+                if aggregator is None:
+                    aggregator = {}
+                aggregator[next_result[1]] = next_result[2]
             else:
                 raise ValueError("Unsupported aggregation")
         else:
-            if aggregate is None:
-                aggregate = [next_result]
-            else:
-                aggregate.append(next_result)
-            return aggregate
-        return aggregate
+            if aggregator is None:
+                aggregator = next_result
+            else:  # aggregator and next_result is not None
+                # aggregate.append(next_result)
+                raise ValueError("Can't aggregate type " + str(type(next_result)))
+        return aggregator
 
     @staticmethod
-    def link_parented(obj, parent, prn_type='OBJECT'):
+    def set_parent(obj, parent, prn_type='OBJECT'):
         obj.parent = parent
         obj.parent_type = prn_type
         return obj
 
+    def visitSecUnknown(self, ctx: jbeamParser.SecUnknownContext):
+        # force part object create
+        return SECTION_UNKNOWN,
+
     # ============================== slots ==============================
+
     def visitSecSlots(self, section_ctx: jbeamParser.SecSlotsContext):
-        slots_empty = bpy.data.objects.new(section_ctx.name.text.strip('"'), None)
+        slots_empty = self.visitChildren(section_ctx)
         # slot section has no transform modifiers
         slots_empty.lock_location = (True, True, True)
         self.lock_rot_scale(slots_empty)
 
         self._slots_empty = slots_empty  # > visitPart
-        #  fetch aggregated slots
-        slot_list = self.visitChildren(section_ctx)
-        for slot in slot_list:
-            self.link_parented(slot, slots_empty)
+        return SECTION_SLOTS, slots_empty
 
     def visitSlot(self, ctx: jbeamParser.SlotContext):
         # slot as child empty
@@ -110,9 +139,10 @@ class SceneObjectsBuilder(jbeamVisitor):
         self.lock_rot_scale(empty)
 
         self._current = empty
-        self.visitChildren(ctx)
+        ctx.slot = empty
+        props = self.visitChildren(ctx)
         self._current = None  # keep clean
-        return empty  # result goes aggregate > visitSecSlots
+        return SLOT, empty  # result goes aggregate > visitSecSlots
 
     @staticmethod
     def lock_rot_scale(obj):
@@ -136,6 +166,7 @@ class SceneObjectsBuilder(jbeamVisitor):
         blabla(ctx.ax2)
         blabla(ctx.ax3)
         self._current.location = (offset['x'], offset['y'], offset['z'])
+        # return MAP, 'offset', (offset['x'], offset['y'], offset['z'])
 
     def visitSecNodes(self, ctx: jbeamParser.SecNodesContext):
         self.visitChildren(ctx)
