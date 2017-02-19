@@ -1,6 +1,5 @@
 import bpy
 import bmesh
-from bpy_extras import object_utils
 
 from antlr4 import *  # ToDo: get rid of the global antlr4 lib
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
@@ -116,13 +115,13 @@ class SceneObjectsBuilder(jbeamVisitor):
         obj.parent_type = prn_type
         return obj
 
-    def visitSecUnknown(self, ctx: jbeamParser.SecUnknownContext):
+    def visitSection_Unknown(self, ctx: jbeamParser.Section_UnknownContext):
         # force part object create
         return SECTION_UNKNOWN,
 
     # ============================== slots ==============================
 
-    def visitSecSlots(self, section_ctx: jbeamParser.SecSlotsContext):
+    def visitSection_Slots(self, section_ctx: jbeamParser.Section_SlotsContext):
         slots_empty = self.visitChildren(section_ctx)
         # slot section has no transform modifiers
         slots_empty.lock_location = (True, True, True)
@@ -168,18 +167,18 @@ class SceneObjectsBuilder(jbeamVisitor):
         self._current.location = (offset['x'], offset['y'], offset['z'])
         # return MAP, 'offset', (offset['x'], offset['y'], offset['z'])
 
-    def visitSecNodes(self, ctx: jbeamParser.SecNodesContext):
+    def visitSection_Nodes(self, ctx: jbeamParser.Section_NodesContext):
         self.visitChildren(ctx)
         self._bm.verts.ensure_lookup_table()
 
-    def visitJnode(self, ctx: jbeamParser.JnodeContext):
+    def visitNode(self, ctx: jbeamParser.NodeContext):
         vert = self._bm.verts.new((float(ctx.posX.text), float(ctx.posY.text), float(ctx.posZ.text)))
         _id = ctx.id1.string_item
         vert[self._idLayer] = _id.encode()  # set JNode id
         self._vertsIndex[_id] = vert
         return
 
-    def visitSecBeams(self, ctx: jbeamParser.SecBeamsContext):
+    def visitSection_Beams(self, ctx: jbeamParser.Section_BeamsContext):
         self.visitChildren(ctx)
         self._bm.edges.ensure_lookup_table()
 
@@ -251,7 +250,7 @@ class NodeCollector(jbeamVisitor):
         if ctx.name.string_item == self.part_name:
             return self.visitChildren(ctx)
 
-    def visitJnode(self, node_ctx: jbeamParser.JnodeContext):
+    def visitNode(self, node_ctx: jbeamParser.NodeContext):
         self.nodes[node_ctx.id1.string_item] = node_ctx
         node_ctx.x = float(node_ctx.posX.text)
         node_ctx.y = float(node_ctx.posY.text)

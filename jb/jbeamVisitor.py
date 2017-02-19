@@ -14,48 +14,58 @@ class jbeamVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by jbeamParser#partSeq.
+    def visitPartSeq(self, ctx:jbeamParser.PartSeqContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by jbeamParser#part.
     def visitPart(self, ctx:jbeamParser.PartContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#partObj.
-    def visitPartObj(self, ctx:jbeamParser.PartObjContext):
+    # Visit a parse tree produced by jbeamParser#sectionSeq.
+    def visitSectionSeq(self, ctx:jbeamParser.SectionSeqContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#SecSlotType.
-    def visitSecSlotType(self, ctx:jbeamParser.SecSlotTypeContext):
+    # Visit a parse tree produced by jbeamParser#Section_SlotType.
+    def visitSection_SlotType(self, ctx:jbeamParser.Section_SlotTypeContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#SecSlots.
-    def visitSecSlots(self, ctx:jbeamParser.SecSlotsContext):
+    # Visit a parse tree produced by jbeamParser#Section_Slots.
+    def visitSection_Slots(self, ctx:jbeamParser.Section_SlotsContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#SecNodes.
-    def visitSecNodes(self, ctx:jbeamParser.SecNodesContext):
+    # Visit a parse tree produced by jbeamParser#Section_Nodes.
+    def visitSection_Nodes(self, ctx:jbeamParser.Section_NodesContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#SecBeams.
-    def visitSecBeams(self, ctx:jbeamParser.SecBeamsContext):
+    # Visit a parse tree produced by jbeamParser#Section_Beams.
+    def visitSection_Beams(self, ctx:jbeamParser.Section_BeamsContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#SecHydros.
-    def visitSecHydros(self, ctx:jbeamParser.SecHydrosContext):
+    # Visit a parse tree produced by jbeamParser#Section_Hydros.
+    def visitSection_Hydros(self, ctx:jbeamParser.Section_HydrosContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#SecColtris.
-    def visitSecColtris(self, ctx:jbeamParser.SecColtrisContext):
+    # Visit a parse tree produced by jbeamParser#Section_Coltris.
+    def visitSection_Coltris(self, ctx:jbeamParser.Section_ColtrisContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#SecUnknown.
-    def visitSecUnknown(self, ctx:jbeamParser.SecUnknownContext):
+    # Visit a parse tree produced by jbeamParser#Section_Unknown.
+    def visitSection_Unknown(self, ctx:jbeamParser.Section_UnknownContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#slotSeq.
+    def visitSlotSeq(self, ctx:jbeamParser.SlotSeqContext):
         return self.visitChildren(ctx)
 
 
@@ -64,8 +74,8 @@ class jbeamVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#slotProps.
-    def visitSlotProps(self, ctx:jbeamParser.SlotPropsContext):
+    # Visit a parse tree produced by jbeamParser#slotPropSeq.
+    def visitSlotPropSeq(self, ctx:jbeamParser.SlotPropSeqContext):
         return self.visitChildren(ctx)
 
 
@@ -104,73 +114,113 @@ class jbeamVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#jnode.
-    def visitJnode(self, ctx:jbeamParser.JnodeContext):
+    # Visit a parse tree produced by jbeamParser#nodeSeq.
+    def visitNodeSeq(self, ctx:jbeamParser.NodeSeqContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#jnodeProps.
-    def visitJnodeProps(self, ctx:jbeamParser.JnodePropsContext):
+    # Visit a parse tree produced by jbeamParser#Node.
+    def visitNode(self, ctx:jbeamParser.NodeContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#PropNodeWeight.
-    def visitPropNodeWeight(self, ctx:jbeamParser.PropNodeWeightContext):
+    # Visit a parse tree produced by jbeamParser#NodeProps.
+    def visitNodeProps(self, ctx:jbeamParser.NodePropsContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#PropSelfCollision.
-    def visitPropSelfCollision(self, ctx:jbeamParser.PropSelfCollisionContext):
+    # Visit a parse tree produced by jbeamParser#nodePropSeq.
+    def visitNodePropSeq(self, ctx:jbeamParser.NodePropSeqContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#PropCollision.
-    def visitPropCollision(self, ctx:jbeamParser.PropCollisionContext):
+    # Visit a parse tree produced by jbeamParser#NodeProp_NodeWeight.
+    def visitNodeProp_NodeWeight(self, ctx:jbeamParser.NodeProp_NodeWeightContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#PropGroup.
-    def visitPropGroup(self, ctx:jbeamParser.PropGroupContext):
+    # Visit a parse tree produced by jbeamParser#NodeProp_SelfCollision.
+    def visitNodeProp_SelfCollision(self, ctx:jbeamParser.NodeProp_SelfCollisionContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#PropFrictionCoef.
-    def visitPropFrictionCoef(self, ctx:jbeamParser.PropFrictionCoefContext):
+    # Visit a parse tree produced by jbeamParser#NodeProp_Collision.
+    def visitNodeProp_Collision(self, ctx:jbeamParser.NodeProp_CollisionContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#PropNodeMaterial.
-    def visitPropNodeMaterial(self, ctx:jbeamParser.PropNodeMaterialContext):
+    # Visit a parse tree produced by jbeamParser#NodeProp_Group.
+    def visitNodeProp_Group(self, ctx:jbeamParser.NodeProp_GroupContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#PropFixed.
-    def visitPropFixed(self, ctx:jbeamParser.PropFixedContext):
+    # Visit a parse tree produced by jbeamParser#NodeProp_FrictionCoef.
+    def visitNodeProp_FrictionCoef(self, ctx:jbeamParser.NodeProp_FrictionCoefContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#PropSurfaceCoef.
-    def visitPropSurfaceCoef(self, ctx:jbeamParser.PropSurfaceCoefContext):
+    # Visit a parse tree produced by jbeamParser#NodeProp_NodeMaterial.
+    def visitNodeProp_NodeMaterial(self, ctx:jbeamParser.NodeProp_NodeMaterialContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#PropVolumeCoef.
-    def visitPropVolumeCoef(self, ctx:jbeamParser.PropVolumeCoefContext):
+    # Visit a parse tree produced by jbeamParser#NodeProp_Fixed.
+    def visitNodeProp_Fixed(self, ctx:jbeamParser.NodeProp_FixedContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#PropUnknown.
-    def visitPropUnknown(self, ctx:jbeamParser.PropUnknownContext):
+    # Visit a parse tree produced by jbeamParser#NodeProp_SurfaceCoef.
+    def visitNodeProp_SurfaceCoef(self, ctx:jbeamParser.NodeProp_SurfaceCoefContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#PropSingleGroup.
-    def visitPropSingleGroup(self, ctx:jbeamParser.PropSingleGroupContext):
+    # Visit a parse tree produced by jbeamParser#NodeProp_VolumeCoef.
+    def visitNodeProp_VolumeCoef(self, ctx:jbeamParser.NodeProp_VolumeCoefContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#PropManyGroups.
-    def visitPropManyGroups(self, ctx:jbeamParser.PropManyGroupsContext):
+    # Visit a parse tree produced by jbeamParser#NodeProp_Unknown.
+    def visitNodeProp_Unknown(self, ctx:jbeamParser.NodeProp_UnknownContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#NodeGroupProp_SingleGroup.
+    def visitNodeGroupProp_SingleGroup(self, ctx:jbeamParser.NodeGroupProp_SingleGroupContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#NodeGroupProp_Groups.
+    def visitNodeGroupProp_Groups(self, ctx:jbeamParser.NodeGroupProp_GroupsContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#beamSeq.
+    def visitBeamSeq(self, ctx:jbeamParser.BeamSeqContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#Beam.
+    def visitBeam(self, ctx:jbeamParser.BeamContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#BeamProps.
+    def visitBeamProps(self, ctx:jbeamParser.BeamPropsContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#coltriSeq.
+    def visitColtriSeq(self, ctx:jbeamParser.ColtriSeqContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#Coltri.
+    def visitColtri(self, ctx:jbeamParser.ColtriContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by jbeamParser#ColtriProps.
+    def visitColtriProps(self, ctx:jbeamParser.ColtriPropsContext):
         return self.visitChildren(ctx)
 
 
@@ -179,23 +229,8 @@ class jbeamVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#beam.
-    def visitBeam(self, ctx:jbeamParser.BeamContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by jbeamParser#beamProps.
-    def visitBeamProps(self, ctx:jbeamParser.BeamPropsContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by jbeamParser#coltri.
-    def visitColtri(self, ctx:jbeamParser.ColtriContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by jbeamParser#coltriProps.
-    def visitColtriProps(self, ctx:jbeamParser.ColtriPropsContext):
+    # Visit a parse tree produced by jbeamParser#genericStringSeq.
+    def visitGenericStringSeq(self, ctx:jbeamParser.GenericStringSeqContext):
         return self.visitChildren(ctx)
 
 
@@ -234,13 +269,8 @@ class jbeamVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#TrueVal.
-    def visitTrueVal(self, ctx:jbeamParser.TrueValContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by jbeamParser#FalseVal.
-    def visitFalseVal(self, ctx:jbeamParser.FalseValContext):
+    # Visit a parse tree produced by jbeamParser#boolean.
+    def visitBoolean(self, ctx:jbeamParser.BooleanContext):
         return self.visitChildren(ctx)
 
 

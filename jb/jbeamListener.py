@@ -17,6 +17,15 @@ class jbeamListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by jbeamParser#partSeq.
+    def enterPartSeq(self, ctx:jbeamParser.PartSeqContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#partSeq.
+    def exitPartSeq(self, ctx:jbeamParser.PartSeqContext):
+        pass
+
+
     # Enter a parse tree produced by jbeamParser#part.
     def enterPart(self, ctx:jbeamParser.PartContext):
         pass
@@ -26,75 +35,84 @@ class jbeamListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#partObj.
-    def enterPartObj(self, ctx:jbeamParser.PartObjContext):
+    # Enter a parse tree produced by jbeamParser#sectionSeq.
+    def enterSectionSeq(self, ctx:jbeamParser.SectionSeqContext):
         pass
 
-    # Exit a parse tree produced by jbeamParser#partObj.
-    def exitPartObj(self, ctx:jbeamParser.PartObjContext):
-        pass
-
-
-    # Enter a parse tree produced by jbeamParser#SecSlotType.
-    def enterSecSlotType(self, ctx:jbeamParser.SecSlotTypeContext):
-        pass
-
-    # Exit a parse tree produced by jbeamParser#SecSlotType.
-    def exitSecSlotType(self, ctx:jbeamParser.SecSlotTypeContext):
+    # Exit a parse tree produced by jbeamParser#sectionSeq.
+    def exitSectionSeq(self, ctx:jbeamParser.SectionSeqContext):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#SecSlots.
-    def enterSecSlots(self, ctx:jbeamParser.SecSlotsContext):
+    # Enter a parse tree produced by jbeamParser#Section_SlotType.
+    def enterSection_SlotType(self, ctx:jbeamParser.Section_SlotTypeContext):
         pass
 
-    # Exit a parse tree produced by jbeamParser#SecSlots.
-    def exitSecSlots(self, ctx:jbeamParser.SecSlotsContext):
-        pass
-
-
-    # Enter a parse tree produced by jbeamParser#SecNodes.
-    def enterSecNodes(self, ctx:jbeamParser.SecNodesContext):
-        pass
-
-    # Exit a parse tree produced by jbeamParser#SecNodes.
-    def exitSecNodes(self, ctx:jbeamParser.SecNodesContext):
+    # Exit a parse tree produced by jbeamParser#Section_SlotType.
+    def exitSection_SlotType(self, ctx:jbeamParser.Section_SlotTypeContext):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#SecBeams.
-    def enterSecBeams(self, ctx:jbeamParser.SecBeamsContext):
+    # Enter a parse tree produced by jbeamParser#Section_Slots.
+    def enterSection_Slots(self, ctx:jbeamParser.Section_SlotsContext):
         pass
 
-    # Exit a parse tree produced by jbeamParser#SecBeams.
-    def exitSecBeams(self, ctx:jbeamParser.SecBeamsContext):
-        pass
-
-
-    # Enter a parse tree produced by jbeamParser#SecHydros.
-    def enterSecHydros(self, ctx:jbeamParser.SecHydrosContext):
-        pass
-
-    # Exit a parse tree produced by jbeamParser#SecHydros.
-    def exitSecHydros(self, ctx:jbeamParser.SecHydrosContext):
+    # Exit a parse tree produced by jbeamParser#Section_Slots.
+    def exitSection_Slots(self, ctx:jbeamParser.Section_SlotsContext):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#SecColtris.
-    def enterSecColtris(self, ctx:jbeamParser.SecColtrisContext):
+    # Enter a parse tree produced by jbeamParser#Section_Nodes.
+    def enterSection_Nodes(self, ctx:jbeamParser.Section_NodesContext):
         pass
 
-    # Exit a parse tree produced by jbeamParser#SecColtris.
-    def exitSecColtris(self, ctx:jbeamParser.SecColtrisContext):
+    # Exit a parse tree produced by jbeamParser#Section_Nodes.
+    def exitSection_Nodes(self, ctx:jbeamParser.Section_NodesContext):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#SecUnknown.
-    def enterSecUnknown(self, ctx:jbeamParser.SecUnknownContext):
+    # Enter a parse tree produced by jbeamParser#Section_Beams.
+    def enterSection_Beams(self, ctx:jbeamParser.Section_BeamsContext):
         pass
 
-    # Exit a parse tree produced by jbeamParser#SecUnknown.
-    def exitSecUnknown(self, ctx:jbeamParser.SecUnknownContext):
+    # Exit a parse tree produced by jbeamParser#Section_Beams.
+    def exitSection_Beams(self, ctx:jbeamParser.Section_BeamsContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#Section_Hydros.
+    def enterSection_Hydros(self, ctx:jbeamParser.Section_HydrosContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#Section_Hydros.
+    def exitSection_Hydros(self, ctx:jbeamParser.Section_HydrosContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#Section_Coltris.
+    def enterSection_Coltris(self, ctx:jbeamParser.Section_ColtrisContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#Section_Coltris.
+    def exitSection_Coltris(self, ctx:jbeamParser.Section_ColtrisContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#Section_Unknown.
+    def enterSection_Unknown(self, ctx:jbeamParser.Section_UnknownContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#Section_Unknown.
+    def exitSection_Unknown(self, ctx:jbeamParser.Section_UnknownContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#slotSeq.
+    def enterSlotSeq(self, ctx:jbeamParser.SlotSeqContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#slotSeq.
+    def exitSlotSeq(self, ctx:jbeamParser.SlotSeqContext):
         pass
 
 
@@ -107,12 +125,12 @@ class jbeamListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#slotProps.
-    def enterSlotProps(self, ctx:jbeamParser.SlotPropsContext):
+    # Enter a parse tree produced by jbeamParser#slotPropSeq.
+    def enterSlotPropSeq(self, ctx:jbeamParser.SlotPropSeqContext):
         pass
 
-    # Exit a parse tree produced by jbeamParser#slotProps.
-    def exitSlotProps(self, ctx:jbeamParser.SlotPropsContext):
+    # Exit a parse tree produced by jbeamParser#slotPropSeq.
+    def exitSlotPropSeq(self, ctx:jbeamParser.SlotPropSeqContext):
         pass
 
 
@@ -179,129 +197,201 @@ class jbeamListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#jnode.
-    def enterJnode(self, ctx:jbeamParser.JnodeContext):
+    # Enter a parse tree produced by jbeamParser#nodeSeq.
+    def enterNodeSeq(self, ctx:jbeamParser.NodeSeqContext):
         pass
 
-    # Exit a parse tree produced by jbeamParser#jnode.
-    def exitJnode(self, ctx:jbeamParser.JnodeContext):
-        pass
-
-
-    # Enter a parse tree produced by jbeamParser#jnodeProps.
-    def enterJnodeProps(self, ctx:jbeamParser.JnodePropsContext):
-        pass
-
-    # Exit a parse tree produced by jbeamParser#jnodeProps.
-    def exitJnodeProps(self, ctx:jbeamParser.JnodePropsContext):
+    # Exit a parse tree produced by jbeamParser#nodeSeq.
+    def exitNodeSeq(self, ctx:jbeamParser.NodeSeqContext):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#PropNodeWeight.
-    def enterPropNodeWeight(self, ctx:jbeamParser.PropNodeWeightContext):
+    # Enter a parse tree produced by jbeamParser#Node.
+    def enterNode(self, ctx:jbeamParser.NodeContext):
         pass
 
-    # Exit a parse tree produced by jbeamParser#PropNodeWeight.
-    def exitPropNodeWeight(self, ctx:jbeamParser.PropNodeWeightContext):
-        pass
-
-
-    # Enter a parse tree produced by jbeamParser#PropSelfCollision.
-    def enterPropSelfCollision(self, ctx:jbeamParser.PropSelfCollisionContext):
-        pass
-
-    # Exit a parse tree produced by jbeamParser#PropSelfCollision.
-    def exitPropSelfCollision(self, ctx:jbeamParser.PropSelfCollisionContext):
+    # Exit a parse tree produced by jbeamParser#Node.
+    def exitNode(self, ctx:jbeamParser.NodeContext):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#PropCollision.
-    def enterPropCollision(self, ctx:jbeamParser.PropCollisionContext):
+    # Enter a parse tree produced by jbeamParser#NodeProps.
+    def enterNodeProps(self, ctx:jbeamParser.NodePropsContext):
         pass
 
-    # Exit a parse tree produced by jbeamParser#PropCollision.
-    def exitPropCollision(self, ctx:jbeamParser.PropCollisionContext):
-        pass
-
-
-    # Enter a parse tree produced by jbeamParser#PropGroup.
-    def enterPropGroup(self, ctx:jbeamParser.PropGroupContext):
-        pass
-
-    # Exit a parse tree produced by jbeamParser#PropGroup.
-    def exitPropGroup(self, ctx:jbeamParser.PropGroupContext):
+    # Exit a parse tree produced by jbeamParser#NodeProps.
+    def exitNodeProps(self, ctx:jbeamParser.NodePropsContext):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#PropFrictionCoef.
-    def enterPropFrictionCoef(self, ctx:jbeamParser.PropFrictionCoefContext):
+    # Enter a parse tree produced by jbeamParser#nodePropSeq.
+    def enterNodePropSeq(self, ctx:jbeamParser.NodePropSeqContext):
         pass
 
-    # Exit a parse tree produced by jbeamParser#PropFrictionCoef.
-    def exitPropFrictionCoef(self, ctx:jbeamParser.PropFrictionCoefContext):
-        pass
-
-
-    # Enter a parse tree produced by jbeamParser#PropNodeMaterial.
-    def enterPropNodeMaterial(self, ctx:jbeamParser.PropNodeMaterialContext):
-        pass
-
-    # Exit a parse tree produced by jbeamParser#PropNodeMaterial.
-    def exitPropNodeMaterial(self, ctx:jbeamParser.PropNodeMaterialContext):
+    # Exit a parse tree produced by jbeamParser#nodePropSeq.
+    def exitNodePropSeq(self, ctx:jbeamParser.NodePropSeqContext):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#PropFixed.
-    def enterPropFixed(self, ctx:jbeamParser.PropFixedContext):
+    # Enter a parse tree produced by jbeamParser#NodeProp_NodeWeight.
+    def enterNodeProp_NodeWeight(self, ctx:jbeamParser.NodeProp_NodeWeightContext):
         pass
 
-    # Exit a parse tree produced by jbeamParser#PropFixed.
-    def exitPropFixed(self, ctx:jbeamParser.PropFixedContext):
-        pass
-
-
-    # Enter a parse tree produced by jbeamParser#PropSurfaceCoef.
-    def enterPropSurfaceCoef(self, ctx:jbeamParser.PropSurfaceCoefContext):
-        pass
-
-    # Exit a parse tree produced by jbeamParser#PropSurfaceCoef.
-    def exitPropSurfaceCoef(self, ctx:jbeamParser.PropSurfaceCoefContext):
+    # Exit a parse tree produced by jbeamParser#NodeProp_NodeWeight.
+    def exitNodeProp_NodeWeight(self, ctx:jbeamParser.NodeProp_NodeWeightContext):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#PropVolumeCoef.
-    def enterPropVolumeCoef(self, ctx:jbeamParser.PropVolumeCoefContext):
+    # Enter a parse tree produced by jbeamParser#NodeProp_SelfCollision.
+    def enterNodeProp_SelfCollision(self, ctx:jbeamParser.NodeProp_SelfCollisionContext):
         pass
 
-    # Exit a parse tree produced by jbeamParser#PropVolumeCoef.
-    def exitPropVolumeCoef(self, ctx:jbeamParser.PropVolumeCoefContext):
-        pass
-
-
-    # Enter a parse tree produced by jbeamParser#PropUnknown.
-    def enterPropUnknown(self, ctx:jbeamParser.PropUnknownContext):
-        pass
-
-    # Exit a parse tree produced by jbeamParser#PropUnknown.
-    def exitPropUnknown(self, ctx:jbeamParser.PropUnknownContext):
+    # Exit a parse tree produced by jbeamParser#NodeProp_SelfCollision.
+    def exitNodeProp_SelfCollision(self, ctx:jbeamParser.NodeProp_SelfCollisionContext):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#PropSingleGroup.
-    def enterPropSingleGroup(self, ctx:jbeamParser.PropSingleGroupContext):
+    # Enter a parse tree produced by jbeamParser#NodeProp_Collision.
+    def enterNodeProp_Collision(self, ctx:jbeamParser.NodeProp_CollisionContext):
         pass
 
-    # Exit a parse tree produced by jbeamParser#PropSingleGroup.
-    def exitPropSingleGroup(self, ctx:jbeamParser.PropSingleGroupContext):
+    # Exit a parse tree produced by jbeamParser#NodeProp_Collision.
+    def exitNodeProp_Collision(self, ctx:jbeamParser.NodeProp_CollisionContext):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#PropManyGroups.
-    def enterPropManyGroups(self, ctx:jbeamParser.PropManyGroupsContext):
+    # Enter a parse tree produced by jbeamParser#NodeProp_Group.
+    def enterNodeProp_Group(self, ctx:jbeamParser.NodeProp_GroupContext):
         pass
 
-    # Exit a parse tree produced by jbeamParser#PropManyGroups.
-    def exitPropManyGroups(self, ctx:jbeamParser.PropManyGroupsContext):
+    # Exit a parse tree produced by jbeamParser#NodeProp_Group.
+    def exitNodeProp_Group(self, ctx:jbeamParser.NodeProp_GroupContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#NodeProp_FrictionCoef.
+    def enterNodeProp_FrictionCoef(self, ctx:jbeamParser.NodeProp_FrictionCoefContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#NodeProp_FrictionCoef.
+    def exitNodeProp_FrictionCoef(self, ctx:jbeamParser.NodeProp_FrictionCoefContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#NodeProp_NodeMaterial.
+    def enterNodeProp_NodeMaterial(self, ctx:jbeamParser.NodeProp_NodeMaterialContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#NodeProp_NodeMaterial.
+    def exitNodeProp_NodeMaterial(self, ctx:jbeamParser.NodeProp_NodeMaterialContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#NodeProp_Fixed.
+    def enterNodeProp_Fixed(self, ctx:jbeamParser.NodeProp_FixedContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#NodeProp_Fixed.
+    def exitNodeProp_Fixed(self, ctx:jbeamParser.NodeProp_FixedContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#NodeProp_SurfaceCoef.
+    def enterNodeProp_SurfaceCoef(self, ctx:jbeamParser.NodeProp_SurfaceCoefContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#NodeProp_SurfaceCoef.
+    def exitNodeProp_SurfaceCoef(self, ctx:jbeamParser.NodeProp_SurfaceCoefContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#NodeProp_VolumeCoef.
+    def enterNodeProp_VolumeCoef(self, ctx:jbeamParser.NodeProp_VolumeCoefContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#NodeProp_VolumeCoef.
+    def exitNodeProp_VolumeCoef(self, ctx:jbeamParser.NodeProp_VolumeCoefContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#NodeProp_Unknown.
+    def enterNodeProp_Unknown(self, ctx:jbeamParser.NodeProp_UnknownContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#NodeProp_Unknown.
+    def exitNodeProp_Unknown(self, ctx:jbeamParser.NodeProp_UnknownContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#NodeGroupProp_SingleGroup.
+    def enterNodeGroupProp_SingleGroup(self, ctx:jbeamParser.NodeGroupProp_SingleGroupContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#NodeGroupProp_SingleGroup.
+    def exitNodeGroupProp_SingleGroup(self, ctx:jbeamParser.NodeGroupProp_SingleGroupContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#NodeGroupProp_Groups.
+    def enterNodeGroupProp_Groups(self, ctx:jbeamParser.NodeGroupProp_GroupsContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#NodeGroupProp_Groups.
+    def exitNodeGroupProp_Groups(self, ctx:jbeamParser.NodeGroupProp_GroupsContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#beamSeq.
+    def enterBeamSeq(self, ctx:jbeamParser.BeamSeqContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#beamSeq.
+    def exitBeamSeq(self, ctx:jbeamParser.BeamSeqContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#Beam.
+    def enterBeam(self, ctx:jbeamParser.BeamContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#Beam.
+    def exitBeam(self, ctx:jbeamParser.BeamContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#BeamProps.
+    def enterBeamProps(self, ctx:jbeamParser.BeamPropsContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#BeamProps.
+    def exitBeamProps(self, ctx:jbeamParser.BeamPropsContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#coltriSeq.
+    def enterColtriSeq(self, ctx:jbeamParser.ColtriSeqContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#coltriSeq.
+    def exitColtriSeq(self, ctx:jbeamParser.ColtriSeqContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#Coltri.
+    def enterColtri(self, ctx:jbeamParser.ColtriContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#Coltri.
+    def exitColtri(self, ctx:jbeamParser.ColtriContext):
+        pass
+
+
+    # Enter a parse tree produced by jbeamParser#ColtriProps.
+    def enterColtriProps(self, ctx:jbeamParser.ColtriPropsContext):
+        pass
+
+    # Exit a parse tree produced by jbeamParser#ColtriProps.
+    def exitColtriProps(self, ctx:jbeamParser.ColtriPropsContext):
         pass
 
 
@@ -314,39 +404,12 @@ class jbeamListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#beam.
-    def enterBeam(self, ctx:jbeamParser.BeamContext):
+    # Enter a parse tree produced by jbeamParser#genericStringSeq.
+    def enterGenericStringSeq(self, ctx:jbeamParser.GenericStringSeqContext):
         pass
 
-    # Exit a parse tree produced by jbeamParser#beam.
-    def exitBeam(self, ctx:jbeamParser.BeamContext):
-        pass
-
-
-    # Enter a parse tree produced by jbeamParser#beamProps.
-    def enterBeamProps(self, ctx:jbeamParser.BeamPropsContext):
-        pass
-
-    # Exit a parse tree produced by jbeamParser#beamProps.
-    def exitBeamProps(self, ctx:jbeamParser.BeamPropsContext):
-        pass
-
-
-    # Enter a parse tree produced by jbeamParser#coltri.
-    def enterColtri(self, ctx:jbeamParser.ColtriContext):
-        pass
-
-    # Exit a parse tree produced by jbeamParser#coltri.
-    def exitColtri(self, ctx:jbeamParser.ColtriContext):
-        pass
-
-
-    # Enter a parse tree produced by jbeamParser#coltriProps.
-    def enterColtriProps(self, ctx:jbeamParser.ColtriPropsContext):
-        pass
-
-    # Exit a parse tree produced by jbeamParser#coltriProps.
-    def exitColtriProps(self, ctx:jbeamParser.ColtriPropsContext):
+    # Exit a parse tree produced by jbeamParser#genericStringSeq.
+    def exitGenericStringSeq(self, ctx:jbeamParser.GenericStringSeqContext):
         pass
 
 
@@ -413,21 +476,12 @@ class jbeamListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#TrueVal.
-    def enterTrueVal(self, ctx:jbeamParser.TrueValContext):
+    # Enter a parse tree produced by jbeamParser#boolean.
+    def enterBoolean(self, ctx:jbeamParser.BooleanContext):
         pass
 
-    # Exit a parse tree produced by jbeamParser#TrueVal.
-    def exitTrueVal(self, ctx:jbeamParser.TrueValContext):
-        pass
-
-
-    # Enter a parse tree produced by jbeamParser#FalseVal.
-    def enterFalseVal(self, ctx:jbeamParser.FalseValContext):
-        pass
-
-    # Exit a parse tree produced by jbeamParser#FalseVal.
-    def exitFalseVal(self, ctx:jbeamParser.FalseValContext):
+    # Exit a parse tree produced by jbeamParser#boolean.
+    def exitBoolean(self, ctx:jbeamParser.BooleanContext):
         pass
 
 
