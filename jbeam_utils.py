@@ -1,10 +1,11 @@
 import bpy
 import bmesh
+from bpy_extras import object_utils
+
 from antlr4 import *  # ToDo: get rid of the global antlr4 lib
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from .jb import jbeamLexer, jbeamParser, jbeamVisitor
 from .misc import Triangle
-from bpy_extras import object_utils
 
 
 def to_tree(jbeam_data: str):
@@ -18,15 +19,23 @@ def to_tree(jbeam_data: str):
     return tree
 
 
+JBEAM = 0
+PART = 1
+
+
 class SceneObjectsBuilder(jbeamVisitor):
-    def __init__(self, context):
-        self.context = context
+    def __init__(self, name='JBeam file'):
+        self.name = name
         self._bm = None
         self._idLayer = None
         self._vertsIndex = None
         self._beamLayer = None
         self._slots_empty = None
         self._current = None
+
+    def visitJbeam(self, ctx: jbeamParser.JbeamContext):
+        parts = self.visitChildren(ctx)
+        return parts
 
     def visitPart(self, ctx: jbeamParser.PartContext):
         part_name = ctx.name.string_item
@@ -47,29 +56,38 @@ class SceneObjectsBuilder(jbeamVisitor):
         # Save part name explicitly, due Blender avoids names collision by appending '.001'
         mesh['jbeam_part'] = part_name
 
-        obj_base = object_utils.object_data_add(self.context, mesh)
+        part_obj = bpy.data.objects.new(part_name, mesh)
 
         if self._slots_empty:
-            self.link_parented(self._slots_empty, obj_base.object)
+            self.link_parented(self._slots_empty, part_obj)
 
-        return obj_base
+        return PART, part_obj
 
-    # Aggregates meshes for further visit(...) return
     def aggregateResult(self, aggregate, next_result):
         if next_result is None:
             return aggregate
 
-        if aggregate is None:
-            aggregate = [next_result]
+        if isinstance(next_result, tuple):
+            if next_result[0] == PART:
+                # parts aggregator is a Group type
+                if aggregate is None:
+                    aggregate = bpy.data.groups.new(self.name)
+                aggregate.objects.link(next_result[1])
+            else:
+                raise ValueError("Unsupported aggregation")
         else:
-            aggregate.append(next_result)
+            if aggregate is None:
+                aggregate = [next_result]
+            else:
+                aggregate.append(next_result)
+            return aggregate
         return aggregate
 
-    def link_parented(self, obj, parent, prn_type='OBJECT'):
-        obj_base = self.context.scene.objects.link(obj)
+    @staticmethod
+    def link_parented(obj, parent, prn_type='OBJECT'):
         obj.parent = parent
         obj.parent_type = prn_type
-        return obj_base
+        return obj
 
     # ============================== slots ==============================
     def visitSecSlots(self, section_ctx: jbeamParser.SecSlotsContext):

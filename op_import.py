@@ -44,13 +44,12 @@ class ImportJBeam(Operator, ImportHelper):
         text_block = bpy.data.texts.load(self.filepath)
         tree = jbeam_utils.to_tree(text_block.as_string())
 
-        objects = jbeam_utils.SceneObjectsBuilder(context).visit(tree)
+        group = jbeam_utils.SceneObjectsBuilder(text_block.name).visit(tree)
 
         # resulting group and text names can be different
-        group = bpy.data.groups.new(text_block.name)
         group['jbeam_textblock'] = text_block.name
-        for obj_base in objects:
-            group.objects.link(obj_base.object)
+        for obj in group.objects:
+            context.scene.objects.link(obj)
 
         # profiler.disable()
         # profiler.dump_stats(r'C:\Users\Dawer\AppData\Roaming\Blender '
