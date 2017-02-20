@@ -1,3 +1,4 @@
+import itertools as iter
 import bpy
 from bpy.props import StringProperty, BoolProperty, EnumProperty
 from bpy.types import Operator
@@ -44,13 +45,13 @@ class ImportJBeam(Operator, ImportHelper):
         text_block = bpy.data.texts.load(self.filepath)
         tree = jbeam_utils.to_tree(text_block.as_string())
 
-        objects = jbeam_utils.SceneObjectsBuilder(context).visit(tree)
+        builder = jbeam_utils.PartObjectsBuilder(text_block.name)
+        parts_group = builder.visit(tree)
 
-        # resulting group and text names can be different
-        group = bpy.data.groups.new(text_block.name)
-        group['jbeam_textblock'] = text_block.name
-        for obj_base in objects:
-            group.objects.link(obj_base.object)
+        # resulting parts_group and text names can be different
+        parts_group['jbeam_textblock'] = text_block.name
+        for obj in iter.chain(parts_group.objects, builder.helper_objects):
+            context.scene.objects.link(obj)
 
         # profiler.disable()
         # profiler.dump_stats(r'C:\Users\Dawer\AppData\Roaming\Blender '
