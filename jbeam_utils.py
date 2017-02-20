@@ -27,20 +27,26 @@ SLOT = 4
 MAP = 5
 
 
-class SceneObjectsBuilder(jbeamVisitor):
+class PartObjectsBuilder(jbeamVisitor):
     def __init__(self, name='JBeam file'):
         self.name = name
         self._bm = None
         self._idLayer = None
         self._vertsIndex = None
         self._beamLayer = None
-        self._slots_empty = None
+        # self._slots_empty = None
         self._current = None
-        self._buildingStack = []  # ToDo implement this
+        self.parts_group = None
+        self.helper_objects = []
 
     def visitJbeam(self, ctx: jbeamParser.JbeamContext):
-        parts = self.visitChildren(ctx)
-        return parts
+        jbeam_group = bpy.data.groups.new(self.name)
+        self.parts_group = jbeam_group
+        if ctx.listt is not None:
+            for part_ctx in ctx.listt.getChildren():
+                part_obj = part_ctx.accept(self)
+                jbeam_group.objects.link(part_obj)
+        return jbeam_group
 
     def visitPart(self, ctx: jbeamParser.PartContext):
         part_name = ctx.name.string_item
@@ -50,30 +56,33 @@ class SceneObjectsBuilder(jbeamVisitor):
         self._idLayer = bm.verts.layers.string.new('jbeamNodeId')
         self._vertsIndex = {}
         self._beamLayer = bm.edges.layers.int.new('jbeam')
-        self._slots_empty = None
+        # self._slots_empty = None
 
-        part_obj = self.visitChildren(ctx)
+        # self.visitChildren(ctx)
 
         bm.verts.ensure_lookup_table()
-
-        part_obj.name = part_name
-        mesh = part_obj.data
-        mesh.name = part_name
+        mesh = bpy.data.meshes.new(part_name)
         bm.to_mesh(mesh)
         mesh.update()
         # Save part name explicitly, due Blender avoids names collision by appending '.001'
         mesh['jbeam_part'] = part_name
 
-        if self._slots_empty:
-            self.set_parent(self._slots_empty, part_obj)
+        part_obj = bpy.data.objects.new(part_name, mesh)
 
-        return PART, part_obj
+        if ctx.listt is not None:
+            for section_ctx in ctx.listt.getChildren():
+                if isinstance(section_ctx, jbeamParser.Section_SlotsContext):
+                    slots_empty = section_ctx.accept(self)
+                    self.set_parent(slots_empty, part_obj)
+
+        return part_obj
 
     def aggregateResult(self, aggregator, next_result):
         if next_result is None:
             return aggregator
 
         if isinstance(next_result, tuple):
+            raise ValueError("stop")
             # parts aggregator is a Group type
             if next_result[0] == PART:
                 if aggregator is None:
@@ -104,44 +113,51 @@ class SceneObjectsBuilder(jbeamVisitor):
         else:
             if aggregator is None:
                 aggregator = next_result
-            else:  # aggregator and next_result is not None
-                # aggregate.append(next_result)
-                raise ValueError("Can't aggregate type " + str(type(next_result)))
+            # else:  # aggregator and next_result is not None
+            #     # aggregate.append(next_result)
+            #     raise ValueError("Can't aggregate type " + str(type(next_result)))
         return aggregator
 
-    @staticmethod
-    def set_parent(obj, parent, prn_type='OBJECT'):
+    def set_parent(self, obj, parent, prn_type='OBJECT'):
         obj.parent = parent
         obj.parent_type = prn_type
+        self.helper_objects.append(obj)
         return obj
 
-    def visitSection_Unknown(self, ctx: jbeamParser.Section_UnknownContext):
-        # force part object create
-        return SECTION_UNKNOWN,
+    def shouldVisitNextChild(self, node, currentResult):
+        return not isinstance(node, jbeamParser.Section_SlotsContext)
+
+    # def visitSection_Unknown(self, ctx: jbeamParser.Section_UnknownContext):
+    #     # force part object create
+    #     return SECTION_UNKNOWN,
 
     # ============================== slots ==============================
 
-    def visitSection_Slots(self, section_ctx: jbeamParser.Section_SlotsContext):
-        slots_empty = self.visitChildren(section_ctx)
+    def visitSection_Slots(self, ctx: jbeamParser.Section_SlotsContext):
+        slots_empty = bpy.data.objects.new(ctx.name.text.strip('"'), None)
         # slot section has no transform modifiers
         slots_empty.lock_location = (True, True, True)
         self.lock_rot_scale(slots_empty)
-
-        self._slots_empty = slots_empty  # > visitPart
-        return SECTION_SLOTS, slots_empty
+        if ctx.listt is not None:
+            for slot_ctx in ctx.listt.getChildren():
+                slot = slot_ctx.accept(self)
+                self.set_parent(slot, slots_empty)
+        # self._slots_empty = slots_empty  # > visitPart
+        return slots_empty
 
     def visitSlot(self, ctx: jbeamParser.SlotContext):
-        # slot as child empty
-        empty = bpy.data.objects.new(ctx.stype.string_item, None)
-        empty["description"] = ctx.description.string_item
-        empty["default"] = ctx.default.string_item
-        self.lock_rot_scale(empty)
+        slot = bpy.data.objects.new(ctx.stype.string_item, None)
+        slot["description"] = ctx.description.string_item
+        slot["default"] = ctx.default.string_item
+        self.lock_rot_scale(slot)
 
-        self._current = empty
-        ctx.slot = empty
-        props = self.visitChildren(ctx)
-        self._current = None  # keep clean
-        return SLOT, empty  # result goes aggregate > visitSecSlots
+        ctx.slot = slot
+        if ctx.prop_list is not None:
+            for prop_ctx in ctx.prop_list.getChildren():
+                if isinstance(prop_ctx, jbeamParser.SlotProp_NodeOffsetContext):
+                    slot.location = prop_ctx.node_offset.accept(self)
+
+        return slot  # result goes aggregate > visitSecSlots
 
     @staticmethod
     def lock_rot_scale(obj):
@@ -164,8 +180,7 @@ class SceneObjectsBuilder(jbeamVisitor):
         blabla(ctx.ax1)
         blabla(ctx.ax2)
         blabla(ctx.ax3)
-        self._current.location = (offset['x'], offset['y'], offset['z'])
-        # return MAP, 'offset', (offset['x'], offset['y'], offset['z'])
+        return offset['x'], offset['y'], offset['z']
 
     def visitSection_Nodes(self, ctx: jbeamParser.Section_NodesContext):
         self.visitChildren(ctx)
