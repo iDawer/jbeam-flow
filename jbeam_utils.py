@@ -1,13 +1,14 @@
 from types import GeneratorType
+from io import StringIO
 
 import bpy
-from bpy.types import Object
+from bpy.types import Object as IDObject
 import bmesh
 
 from antlr4 import *  # ToDo: get rid of the global antlr4 lib
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from .jb import jbeamLexer, jbeamParser, jbeamVisitor
-from .misc import Triangle, Switch
+from .misc import Triangle, Switch, JsonVisitorMixin
 
 
 def to_tree(jbeam_data: str):
@@ -21,7 +22,7 @@ def to_tree(jbeam_data: str):
     return tree
 
 
-class PartObjectsBuilder(jbeamVisitor):
+class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
     def __init__(self, name='JBeam file'):
         self.name = name
         self._idLayer = None
@@ -46,25 +47,31 @@ class PartObjectsBuilder(jbeamVisitor):
         self._idLayer = bm.verts.layers.string.new('jbeamNodeId')
         self._vertsIndex = {}
         self._beamLayer = bm.edges.layers.int.new('jbeam')
-        # self._slots_empty = None
 
         mesh = bpy.data.meshes.new(part_name)
         # Save part name explicitly, due Blender avoids names collision by appending '.001'
         mesh['jbeam_part'] = part_name
         part_obj = bpy.data.objects.new(part_name, mesh)
 
+        data_buf = StringIO()
         if ctx.listt is not None:
             for section_ctx in ctx.listt.getChildren():
                 result = section_ctx.accept(self)
 
                 with Switch(type(result)) as case:
-                    if case(Object):
+                    if case(IDObject):
                         self.set_parent(result, part_obj)
                     elif case(GeneratorType):
                         result.send(None)  # charge generator
                         result.send(bm)
+                    elif case(type(None)):
+                        # other sections
+                        src_text = ctx.parser.getTokenStream().getText(section_ctx.getSourceInterval())
+                        data_buf.write(src_text)
+                        data_buf.write('\n')
                     else:
-                        print("Skipped section", section_ctx.name.text)
+                        raise ValueError("Section not implemented")
+        mesh['jbeam_part_data'] = data_buf.getvalue()
 
         bm.verts.ensure_lookup_table()
         bm.to_mesh(mesh)
@@ -99,10 +106,76 @@ class PartObjectsBuilder(jbeamVisitor):
 
         ctx.slot = slot
         if ctx.prop_list is not None:
-            for prop_ctx in ctx.prop_list.getChildren():
-                if isinstance(prop_ctx, jbeamParser.SlotProp_NodeOffsetContext):
-                    slot.location = prop_ctx.node_offset.accept(self)
+            self.visitChildren(ctx.prop_list, slot)
+
+            # for prop_ctx in ctx.prop_list.getChildren():
+            #     with Switch(type(prop_ctx)) as case:
+            #         if case(jbeamParser.SlotProp_NodeOffsetContext):
+            #             # slot.location = prop_ctx.node_offset.accept(self)
+            #             setattr(slot, 'location', prop_ctx.node_offset.accept(self))
+            #         elif case(jbeamParser.SlotProp_CoreSlotContext):
+            #
+            #             slot["coreSlot"] = prop_ctx.core.accept(self)
+            #         else:
+            #             pass  # ???
         return slot
+
+    def visitChildren(self, node, aggregator=None):
+        for c in node.getChildren():
+            if not self.shouldVisitNextChild(node, aggregator):
+                return
+
+            childResult = c.accept(self)
+            if childResult is None:
+                continue
+            with Switch(type(childResult)) as case:
+                if case(tuple):
+                    # treat as key val setter
+                    if aggregator is None:
+                        aggregator = {}
+                    if len(childResult) == 3:
+                        # attr setter
+                        rna, attr, val = childResult
+                        setattr(aggregator, attr, val)
+                    else:
+                        # dict
+                        key, val = childResult
+                        aggregator[key] = val
+                elif case(GeneratorType):
+                    childResult.send(None)  # charge generator
+                    childResult.send(aggregator)
+                else:
+                    if aggregator is None:
+                        aggregator = []
+                    aggregator.append(childResult)
+
+        return aggregator
+
+    def a2342423ggregateResult(self, aggregator, nextResult):
+        if nextResult is None:
+            return aggregator
+
+        with Switch(type(nextResult)) as case:
+            if case(tuple):
+                if aggregator is None:
+                    aggregator = {}
+                if len(nextResult) == 3:
+                    # attr setter
+                    rna, attr, val = nextResult
+                    setattr(aggregator, attr, val)
+                else:
+                    # dict
+                    key, val = nextResult
+                    aggregator[key] = val
+            elif case(GeneratorType):
+                nextResult.send(None)  # charge generator
+                nextResult.send(aggregator)
+            else:
+                if aggregator is None:
+                    aggregator = []
+                aggregator.append(nextResult)
+
+        return aggregator
 
     @staticmethod
     def lock_rot_scale(obj):
@@ -110,6 +183,12 @@ class PartObjectsBuilder(jbeamVisitor):
         obj.lock_rotation_w = True
         obj.lock_rotations_4d = True
         obj.lock_scale = (True, True, True)
+
+    def visitSlotProp_CoreSlot(self, ctx: jbeamParser.SlotProp_CoreSlotContext):
+        return 'coreSlot', ctx.core.accept(self)
+
+    def visitSlotProp_NodeOffset(self, ctx: jbeamParser.SlotProp_NodeOffsetContext):
+        return 'RNA', 'location', ctx.node_offset.accept(self)
 
     def visitOffset(self, ctx: jbeamParser.OffsetContext):
         offset = {'x': 0, 'y': 0, 'z': 0}
