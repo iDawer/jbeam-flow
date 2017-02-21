@@ -3,26 +3,27 @@ import bmesh
 from bpy.types import Operator
 
 from .misc import anytree
+from .misc.op_constants import opt, rep, ret
 
 
 class AttachToParent(Operator):
     bl_idname = "object.jbeam_attach_to_parent"
     bl_label = "JBeam: Attach to parent"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {opt.REGISTER, opt.UNDO}
 
     def execute(self, context):
         obj = context.active_object
         # ToDo check context and handle noninitialised data layers
 
         if not obj:
-            self.report({'ERROR'}, 'There is no active object')
-            return {'CANCELLED'}
+            self.report({rep.ERROR}, 'There is no active object')
+            return {ret.CANCELLED}
         if obj.type != 'MESH':
-            self.report({'ERROR_INVALID_INPUT'}, 'Mesh type object required')
-            return {'CANCELLED'}
+            self.report({rep.ERROR_INVALID_INPUT}, 'Mesh type object required')
+            return {ret.CANCELLED}
         if obj.parent is None:
-            self.report({'ERROR_INVALID_INPUT'}, 'Active object is not parented')
-            return {'CANCELLED'}
+            self.report({rep.ERROR_INVALID_INPUT}, 'Active object is not parented')
+            return {ret.CANCELLED}
 
         me = obj.data
         if me.is_editmode:
@@ -36,8 +37,8 @@ class AttachToParent(Operator):
                        if _id and _id.startswith('~')}
 
         if not dummy_verts:
-            self.report({'INFO'}, 'Dummies are not found')
-            return {'FINISHED'}
+            self.report({rep.INFO}, 'Dummies are not found')
+            return {ret.FINISHED}
 
         slot_node = build_tree_with(context.scene.objects, obj.parent)
         root = slot_node.root
@@ -48,17 +49,17 @@ class AttachToParent(Operator):
         position_dummies(dummy_verts, nodes_iter)
 
         if dummy_verts:
-            self.report({'WARNING'}, 'Not all dummies positioned, dumped to the console.')
+            self.report({rep.WARNING}, 'Not all dummies positioned, dumped to the console.')
             print('Not positioned dummies: ', ', '.join(('~' + _id for _id in sorted(dummy_verts))))
         else:
-            self.report({'INFO'}, 'All dummies positioned')
+            self.report({rep.INFO}, 'All dummies positioned')
 
         if me.is_editmode:
             bmesh.update_edit_mesh(me, destructive=False)
         else:
             bm.to_mesh(me)
         me.update()
-        return {'FINISHED'}
+        return {ret.FINISHED}
 
     pass
 
