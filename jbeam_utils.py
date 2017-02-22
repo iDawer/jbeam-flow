@@ -25,11 +25,9 @@ def to_tree(jbeam_data: str):
 class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
     def __init__(self, name='JBeam file'):
         self.name = name
-        self._idLayer = None
-        self._vertsIndex = None
-        self._beamLayer = None
         self.parts_group = None
         self.helper_objects = []
+        self._vertsIndex = None
 
     def visitJbeam(self, ctx: jbeamParser.JbeamContext):
         jbeam_group = bpy.data.groups.new(self.name)
@@ -43,39 +41,52 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
     def visitPart(self, ctx: jbeamParser.PartContext):
         part_name = ctx.name.string_item
         print('part: ' + part_name)
-        bm = bmesh.new()  # each part in separate object
-        self._idLayer = bm.verts.layers.string.new('jbeamNodeId')
         self._vertsIndex = {}
-        self._beamLayer = bm.edges.layers.int.new('jbeam')
 
         mesh = bpy.data.meshes.new(part_name)
         # Save part name explicitly, due Blender avoids names collision by appending '.001'
         mesh['jbeam_part'] = part_name
         part_obj = bpy.data.objects.new(part_name, mesh)
 
+        # keep tracking src indexes
+        # section_eval_map = {}
         data_buf = StringIO()
         if ctx.listt is not None:
+            bm = bmesh.new()
+            # children_idx = list(enumerate(ctx.listt.getChildren()))
+            # geometry = [c for c in children_idx
+            #             if isinstance(c[1], (jbeamParser.Section_NodesContext,
+            #                                  jbeamParser.Section_BeamsContext,
+            #                                  jbeamParser.Section_ColtrisContext,
+            #                                  jbeamParser.Section_HydrosContext))]
+            # other = (c for c in children_idx if c not in geometry)
+            #
+            # for idx, section_ctx in geometry:
+            #     # expecting generator (coroutine)
+            #     gen = section_ctx.accept(self)
+            #     gen.send(None)  # charge generator
+            #     section_eval_map[idx] = gen.send(bm)
+
             for section_ctx in ctx.listt.getChildren():
                 result = section_ctx.accept(self)
-
                 with Switch(type(result)) as case:
                     if case(IDObject):
                         self.set_parent(result, part_obj)
                     elif case(GeneratorType):
                         result.send(None)  # charge generator
-                        result.send(bm)
+                        # generator returns a placeholder text
+                        data_buf.write(result.send(bm))
+                        data_buf.write('\n')
                     elif case(str):
                         # other sections
                         data_buf.write(result)
                         data_buf.write('\n')
                     else:
                         raise ValueError("Section not implemented")
+            bm.to_mesh(mesh)
+
         mesh['jbeam_part_data'] = data_buf.getvalue()
-
-        bm.verts.ensure_lookup_table()
-        bm.to_mesh(mesh)
         mesh.update()
-
         return part_obj
 
     def set_parent(self, obj, parent, prn_type='OBJECT'):
@@ -115,7 +126,10 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
             if child_result is None:
                 continue
             with Switch(type(child_result)) as case:
-                if case(tuple):
+                if case(GeneratorType):
+                    child_result.send(None)  # charge generator
+                    child_result.send(aggregator)
+                elif case(tuple):
                     # treat as key val setter
                     if aggregator is None:
                         aggregator = {}
@@ -127,9 +141,6 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
                         # dict
                         key, val = child_result
                         aggregator[key] = val
-                elif case(GeneratorType):
-                    child_result.send(None)  # charge generator
-                    child_result.send(aggregator)
                 elif case(IDObject):
                     # suppose aggregator is IDObject too
                     self.set_parent(child_result, aggregator)
@@ -173,16 +184,17 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
 
     def visitSection_Nodes(self, ctx: jbeamParser.Section_NodesContext):
         bm = yield  # bmesh
+        id_layer = bm.verts.layers.string.new('jbeamNodeId')
         if ctx.listt is not None:
-            self.visitChildren(ctx.listt, bm)
+            self.visitChildren(ctx.listt, (bm, id_layer))
         bm.verts.ensure_lookup_table()
-        yield
+        yield '${nodes}'
 
     def visitNode(self, ctx: jbeamParser.NodeContext):
-        bm = yield  # bm.verts.new() function
+        bm, id_layer = yield  # bmesh
         vert = bm.verts.new((float(ctx.posX.text), float(ctx.posY.text), float(ctx.posZ.text)))
         _id = ctx.id1.string_item
-        vert[self._idLayer] = _id.encode()  # set node id to the data layer
+        vert[id_layer] = _id.encode()  # set node id to the data layer
         self._vertsIndex[_id] = vert
         yield vert
 
@@ -194,36 +206,38 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
 
     def visitSection_Beams(self, ctx: jbeamParser.Section_BeamsContext):
         bm = yield
+        id_layer = bm.verts.layers.string.active
+        beam_layer = bm.edges.layers.int.new('jbeam')
         if ctx.listt is not None:
-            self.visitChildren(ctx.listt, bm)
+            self.visitChildren(ctx.listt, (bm, id_layer, beam_layer))
         bm.edges.ensure_lookup_table()
-        yield
+        yield '${beams}'
 
     def visitBeam(self, ctx: jbeamParser.BeamContext):
-        bm = yield
+        bm, id_layer, beam_layer = yield
         id1 = ctx.id1.string_item
         id2 = ctx.id2.string_item
         v1, v2 = self._vertsIndex.get(id1), self._vertsIndex.get(id2)
         # check for attaching to parent
         if not (v1 or v2):
             # both belong to parent? ok
-            v1 = self.new_dummy_node(bm, id1)
-            v2 = self.new_dummy_node(bm, id2, v1.co)
+            v1 = self.new_dummy_node(bm, id_layer, id1)
+            v2 = self.new_dummy_node(bm, id_layer, id2, v1.co)
         elif not v1:
             # v1 belongs to parent
-            v1 = self.new_dummy_node(bm, id1, v2.co)
+            v1 = self.new_dummy_node(bm, id_layer, id1, v2.co)
         elif not v2:
-            v2 = self.new_dummy_node(bm, id2, v1.co)
+            v2 = self.new_dummy_node(bm, id_layer, id2, v1.co)
 
         try:
             edge = bm.edges.new((v1, v2))  # throws on duplicates
-            edge[self._beamLayer] = 1
+            edge[beam_layer] = 1
             yield edge
         except ValueError as err:
             print(err, id1, id2)  # ToDo handle duplicates
             yield
 
-    def new_dummy_node(self, bm, dummy_id: str, co=None):
+    def new_dummy_node(self, bm, id_layer, dummy_id: str, co=None):
         """
         Add parent node representation to be able to store attaching beams.
         Adds '~' to the beginning of id, but _vertsIndex keeps original id.
@@ -238,7 +252,7 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
             vert.co.z -= .3
         else:
             vert = bm.verts.new((.0, .0, .0))
-        vert[self._idLayer] = ''.join(('~', dummy_id)).encode()
+        vert[id_layer] = ''.join(('~', dummy_id)).encode()
         self._vertsIndex[dummy_id] = vert
         return vert
 
@@ -251,7 +265,8 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
         bm = yield
         if ctx.listt is not None:
             self.visitChildren(ctx.listt, bm)
-        yield
+        bm.faces.ensure_lookup_table()
+        yield '${triangles}'
 
     def visitColtri(self, ctx: jbeamParser.ColtriContext):
         bm = yield
@@ -279,7 +294,9 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
 
     def visitSection_Unknown(self, ctx: jbeamParser.Section_UnknownContext):
         # return source text
-        return ctx.parser.getTokenStream().getText(ctx.getSourceInterval())
+        escaped_src = ctx.parser.getTokenStream().getText(ctx.getSourceInterval())
+        escaped_src = escaped_src.replace('$', '$$')
+        return escaped_src
 
     def visitSection_Hydros(self, ctx: jbeamParser.Section_HydrosContext):
         return self.visitSection_Unknown(ctx)
