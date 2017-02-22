@@ -64,10 +64,9 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
                     elif case(GeneratorType):
                         result.send(None)  # charge generator
                         result.send(bm)
-                    elif case(type(None)):
+                    elif case(str):
                         # other sections
-                        src_text = ctx.parser.getTokenStream().getText(section_ctx.getSourceInterval())
-                        data_buf.write(src_text)
+                        data_buf.write(result)
                         data_buf.write('\n')
                     else:
                         raise ValueError("Section not implemented")
@@ -93,9 +92,7 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
         slots_empty.lock_location = (True, True, True)
         self.lock_rot_scale(slots_empty)
         if ctx.listt is not None:
-            for slot_ctx in ctx.listt.getChildren():
-                slot = slot_ctx.accept(self)
-                self.set_parent(slot, slots_empty)
+            self.visitChildren(ctx.listt, slots_empty)
         return slots_empty
 
     def visitSlot(self, ctx: jbeamParser.SlotContext):
@@ -107,17 +104,6 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
         ctx.slot = slot
         if ctx.prop_list is not None:
             self.visitChildren(ctx.prop_list, slot)
-
-            # for prop_ctx in ctx.prop_list.getChildren():
-            #     with Switch(type(prop_ctx)) as case:
-            #         if case(jbeamParser.SlotProp_NodeOffsetContext):
-            #             # slot.location = prop_ctx.node_offset.accept(self)
-            #             setattr(slot, 'location', prop_ctx.node_offset.accept(self))
-            #         elif case(jbeamParser.SlotProp_CoreSlotContext):
-            #
-            #             slot["coreSlot"] = prop_ctx.core.accept(self)
-            #         else:
-            #             pass  # ???
         return slot
 
     def visitChildren(self, node, aggregator=None):
@@ -125,55 +111,32 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
             if not self.shouldVisitNextChild(node, aggregator):
                 return
 
-            childResult = c.accept(self)
-            if childResult is None:
+            child_result = c.accept(self)
+            if child_result is None:
                 continue
-            with Switch(type(childResult)) as case:
+            with Switch(type(child_result)) as case:
                 if case(tuple):
                     # treat as key val setter
                     if aggregator is None:
                         aggregator = {}
-                    if len(childResult) == 3:
+                    if len(child_result) == 3:
                         # attr setter
-                        rna, attr, val = childResult
+                        rna, attr, val = child_result
                         setattr(aggregator, attr, val)
                     else:
                         # dict
-                        key, val = childResult
+                        key, val = child_result
                         aggregator[key] = val
                 elif case(GeneratorType):
-                    childResult.send(None)  # charge generator
-                    childResult.send(aggregator)
+                    child_result.send(None)  # charge generator
+                    child_result.send(aggregator)
+                elif case(IDObject):
+                    # suppose aggregator is IDObject too
+                    self.set_parent(child_result, aggregator)
                 else:
                     if aggregator is None:
                         aggregator = []
-                    aggregator.append(childResult)
-
-        return aggregator
-
-    def a2342423ggregateResult(self, aggregator, nextResult):
-        if nextResult is None:
-            return aggregator
-
-        with Switch(type(nextResult)) as case:
-            if case(tuple):
-                if aggregator is None:
-                    aggregator = {}
-                if len(nextResult) == 3:
-                    # attr setter
-                    rna, attr, val = nextResult
-                    setattr(aggregator, attr, val)
-                else:
-                    # dict
-                    key, val = nextResult
-                    aggregator[key] = val
-            elif case(GeneratorType):
-                nextResult.send(None)  # charge generator
-                nextResult.send(aggregator)
-            else:
-                if aggregator is None:
-                    aggregator = []
-                aggregator.append(nextResult)
+                    aggregator.append(child_result)
 
         return aggregator
 
@@ -211,32 +174,28 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
     def visitSection_Nodes(self, ctx: jbeamParser.Section_NodesContext):
         bm = yield  # bmesh
         if ctx.listt is not None:
-            for node_ctx in ctx.listt.getChildren():
-                if isinstance(node_ctx, jbeamParser.NodeContext):
-                    node_generator = node_ctx.accept(self)
-                    node_generator.send(None)
-                    node_generator.send(bm.verts.new)
+            self.visitChildren(ctx.listt, bm)
         bm.verts.ensure_lookup_table()
         yield
 
     def visitNode(self, ctx: jbeamParser.NodeContext):
-        vert_new = yield  # bm.verts.new() function
-        vert = vert_new((float(ctx.posX.text), float(ctx.posY.text), float(ctx.posZ.text)))
+        bm = yield  # bm.verts.new() function
+        vert = bm.verts.new((float(ctx.posX.text), float(ctx.posY.text), float(ctx.posZ.text)))
         _id = ctx.id1.string_item
         vert[self._idLayer] = _id.encode()  # set node id to the data layer
         self._vertsIndex[_id] = vert
         yield vert
+
+    def visitNodeProps(self, ctx: jbeamParser.NodePropsContext):
+        # ToDo Node Props
+        return None
 
     # ============================== beams ==============================
 
     def visitSection_Beams(self, ctx: jbeamParser.Section_BeamsContext):
         bm = yield
         if ctx.listt is not None:
-            for beam_ctx in ctx.listt.getChildren():
-                if isinstance(beam_ctx, jbeamParser.BeamContext):
-                    beam_generator = beam_ctx.accept(self)
-                    beam_generator.send(None)
-                    beam_generator.send(bm)
+            self.visitChildren(ctx.listt, bm)
         bm.edges.ensure_lookup_table()
         yield
 
@@ -283,16 +242,15 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
         self._vertsIndex[dummy_id] = vert
         return vert
 
+    def visitBeamProps(self, ctx: jbeamParser.BeamPropsContext):
+        return None
+
     # ============================== collision triangles ==============================
 
     def visitSection_Coltris(self, ctx: jbeamParser.Section_ColtrisContext):
         bm = yield
         if ctx.listt is not None:
-            for coltri_ctx in ctx.listt.getChildren():
-                if isinstance(coltri_ctx, jbeamParser.ColtriContext):
-                    coltri_generator = coltri_ctx.accept(self)
-                    coltri_generator.send(None)
-                    coltri_generator.send(bm)
+            self.visitChildren(ctx.listt, bm)
         yield
 
     def visitColtri(self, ctx: jbeamParser.ColtriContext):
@@ -313,6 +271,21 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
             # coltri with parent nodes?? ok
             print('Skipped triangle with parent nodes [{} {} {}]: not implemented')
             yield
+
+    def visitColtriProps(self, ctx: jbeamParser.ColtriPropsContext):
+        return None
+
+    # ============================== unknown section ==============================
+
+    def visitSection_Unknown(self, ctx: jbeamParser.Section_UnknownContext):
+        # return source text
+        return ctx.parser.getTokenStream().getText(ctx.getSourceInterval())
+
+    def visitSection_Hydros(self, ctx: jbeamParser.Section_HydrosContext):
+        return self.visitSection_Unknown(ctx)
+
+    def visitSection_SlotType(self, ctx: jbeamParser.Section_SlotTypeContext):
+        return self.visitSection_Unknown(ctx)
 
 
 class NodeCollector(jbeamVisitor):
