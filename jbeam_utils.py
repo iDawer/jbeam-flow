@@ -48,24 +48,9 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
         mesh['jbeam_part'] = part_name
         part_obj = bpy.data.objects.new(part_name, mesh)
 
-        # keep tracking src indexes
-        # section_eval_map = {}
         data_buf = StringIO()
         if ctx.listt is not None:
             bm = bmesh.new()
-            # children_idx = list(enumerate(ctx.listt.getChildren()))
-            # geometry = [c for c in children_idx
-            #             if isinstance(c[1], (jbeamParser.Section_NodesContext,
-            #                                  jbeamParser.Section_BeamsContext,
-            #                                  jbeamParser.Section_ColtrisContext,
-            #                                  jbeamParser.Section_HydrosContext))]
-            # other = (c for c in children_idx if c not in geometry)
-            #
-            # for idx, section_ctx in geometry:
-            #     # expecting generator (coroutine)
-            #     gen = section_ctx.accept(self)
-            #     gen.send(None)  # charge generator
-            #     section_eval_map[idx] = gen.send(bm)
 
             for section_ctx in ctx.listt.getChildren():
                 result = section_ctx.accept(self)
@@ -191,7 +176,7 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
         yield '${nodes}'
 
     def visitNode(self, ctx: jbeamParser.NodeContext):
-        bm, id_layer = yield  # bmesh
+        bm, id_layer = yield  # receive visitChildren's aggregator kwarg
         vert = bm.verts.new((float(ctx.posX.text), float(ctx.posY.text), float(ctx.posZ.text)))
         _id = ctx.id1.string_item
         vert[id_layer] = _id.encode()  # set node id to the data layer
@@ -242,6 +227,7 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
         Add parent node representation to be able to store attaching beams.
         Adds '~' to the beginning of id, but _vertsIndex keeps original id.
         :param bm: bmesh
+        :param id_layer: bmesh.types.BMLayerItem
         :param dummy_id: string
         :param co: mathutils.Vector
         :return: bmesh.types.BMVert
@@ -288,15 +274,16 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
             yield
 
     def visitColtriProps(self, ctx: jbeamParser.ColtriPropsContext):
-        return None
+        return None  # ToDo ColtriProps
 
     # ============================== unknown section ==============================
 
     def visitSection_Unknown(self, ctx: jbeamParser.Section_UnknownContext):
         # return source text
-        escaped_src = ctx.parser.getTokenStream().getText(ctx.getSourceInterval())
-        escaped_src = escaped_src.replace('$', '$$')
-        return escaped_src
+        src = ctx.parser.getTokenStream().getText(ctx.getSourceInterval())
+        # escape for templating
+        src = src.replace('$', '$$')
+        return src
 
     def visitSection_Hydros(self, ctx: jbeamParser.Section_HydrosContext):
         return self.visitSection_Unknown(ctx)
