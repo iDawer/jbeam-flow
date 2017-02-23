@@ -15,7 +15,7 @@ class Helper:
         obj.lock_scale = (True, True, True)
 
     @staticmethod
-    def get_src_text_replaced(ctx, subctx, placeholder):
+    def get_src_text_replaced(ctx, subctx=None, placeholder=None):
         src_int = ctx.getSourceInterval()
         src = []
         stream = ctx.parser.getTokenStream()

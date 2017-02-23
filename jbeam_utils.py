@@ -167,17 +167,21 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
     def visitSection_Nodes(self, ctx: jbeamParser.Section_NodesContext):
         bm = yield  # bmesh
         id_layer = bm.verts.layers.string.new('jbeamNodeId')
+        prop_layer = bm.verts.layers.string.new('jbeamNodeProps')
         if ctx.listt is not None:
-            self.visitChildren(ctx.listt, (bm, id_layer))
+            self.visitChildren(ctx.listt, (bm, id_layer, prop_layer))
         bm.verts.ensure_lookup_table()
         yield self.get_src_text_replaced(ctx, ctx.listt, '${nodes}')
 
     def visitNode(self, ctx: jbeamParser.NodeContext):
-        bm, id_layer = yield  # receive visitChildren's aggregator kwarg
+        bm, id_layer, prop_layer = yield  # receive visitChildren's aggregator kwarg
         vert = bm.verts.new((float(ctx.posX.text), float(ctx.posY.text), float(ctx.posZ.text)))
         _id = ctx.id1.string_item
         vert[id_layer] = _id.encode()  # set node id to the data layer
         self._vertsIndex[_id] = vert
+        # node props
+        if ctx.props is not None:
+            vert[prop_layer] = self.get_src_text_replaced(ctx.props).encode()
         yield vert
 
     def visitNodeProps(self, ctx: jbeamParser.NodePropsContext):
@@ -189,6 +193,9 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
     def visitSection_Beams(self, ctx: jbeamParser.Section_BeamsContext):
         bm = yield
         id_layer = bm.verts.layers.string.active
+        if id_layer is None:
+            # in case if no nodes section, i.e. beams with parent part nodes
+            id_layer = bm.verts.layers.string.new('jbeamNodeId')
         beam_layer = bm.edges.layers.int.new('jbeam')
         if ctx.listt is not None:
             self.visitChildren(ctx.listt, (bm, id_layer, beam_layer))

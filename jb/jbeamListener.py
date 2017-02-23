@@ -224,12 +224,12 @@ class jbeamListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by jbeamParser#nodePropSeq.
-    def enterNodePropSeq(self, ctx:jbeamParser.NodePropSeqContext):
+    # Enter a parse tree produced by jbeamParser#nodePropObj.
+    def enterNodePropObj(self, ctx:jbeamParser.NodePropObjContext):
         pass
 
-    # Exit a parse tree produced by jbeamParser#nodePropSeq.
-    def exitNodePropSeq(self, ctx:jbeamParser.NodePropSeqContext):
+    # Exit a parse tree produced by jbeamParser#nodePropObj.
+    def exitNodePropObj(self, ctx:jbeamParser.NodePropObjContext):
         pass
 
 
