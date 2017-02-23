@@ -173,7 +173,7 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
         if ctx.listt is not None:
             self.visitChildren(ctx.listt, (bm, id_layer))
         bm.verts.ensure_lookup_table()
-        yield '${nodes}'
+        yield self.get_src_text_replaced(ctx, ctx.listt, '${nodes}')
 
     def visitNode(self, ctx: jbeamParser.NodeContext):
         bm, id_layer = yield  # receive visitChildren's aggregator kwarg
@@ -196,7 +196,7 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
         if ctx.listt is not None:
             self.visitChildren(ctx.listt, (bm, id_layer, beam_layer))
         bm.edges.ensure_lookup_table()
-        yield '${beams}'
+        yield self.get_src_text_replaced(ctx, ctx.listt, '${beams}')
 
     def visitBeam(self, ctx: jbeamParser.BeamContext):
         bm, id_layer, beam_layer = yield
@@ -252,7 +252,7 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
         if ctx.listt is not None:
             self.visitChildren(ctx.listt, bm)
         bm.faces.ensure_lookup_table()
-        yield '${triangles}'
+        yield self.get_src_text_replaced(ctx, ctx.listt, '${triangles}')
 
     def visitColtri(self, ctx: jbeamParser.ColtriContext):
         bm = yield
@@ -290,6 +290,22 @@ class PartObjectsBuilder(JsonVisitorMixin, jbeamVisitor):
 
     def visitSection_SlotType(self, ctx: jbeamParser.Section_SlotTypeContext):
         return self.visitSection_Unknown(ctx)
+
+    # ============================== helpers ==============================
+
+    @staticmethod
+    def get_src_text_replaced(ctx, subctx, placeholder):
+        src_int = ctx.getSourceInterval()
+        src = []
+        stream = ctx.parser.getTokenStream()
+        if subctx is not None:
+            sub_int = subctx.getSourceInterval()
+            src.append(stream.getText((src_int[0], sub_int[0] - 1)).replace('$', '$$'))
+            src.append(placeholder)
+            src.append(stream.getText((sub_int[1] + 1, src_int[1])).replace('$', '$$'))
+        else:
+            src.append(stream.getText(src_int).replace('$', '$$'))
+        return ''.join(src)
 
 
 class NodeCollector(jbeamVisitor):
