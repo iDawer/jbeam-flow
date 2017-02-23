@@ -1,9 +1,42 @@
-from ..jb import jbeamParser
+from ..jb import jbeamParser, jbeamVisitor
 
 
-class Json:
+class Json(jbeamVisitor):
     def visitBoolean(self, ctx: jbeamParser.BooleanContext):
+        if ctx.exception is not None:
+            return None
         return ctx.val.type == jbeamParser.TRUE
+
+    def visitGenericString(self, ctx: jbeamParser.GenericStringContext):
+        if ctx.exception is not None:
+            return None
+        return ctx.string_item
+
+    def visitAtom(self, ctx: jbeamParser.AtomContext):
+        if ctx.exception is not None:
+            raise ValueError("bad atom value: '%s'" % ctx.getText())
+        if ctx.NULL() is not None:
+            return None
+        node = ctx.NUMBER()
+        if node is not None:
+            return float(node.getText())
+        node = ctx.boolean()
+        if node is not None:
+            return self.visitBoolean(node)
+
+    def visitString(self, ctx: jbeamParser.StringContext):
+        return self.visitGenericString(ctx.genericString())
+
+    def visitArrayValue(self, ctx: jbeamParser.ArrayValueContext):
+        return self.visitArray(ctx.array())
+
+    def aggregateResult(self, aggregate, nextResult):
+        if nextResult is None:
+            return aggregate
+        if aggregate is None:
+            aggregate = []
+        aggregate.append(nextResult)
+        return aggregate
 
 
 class Helper:
@@ -27,4 +60,3 @@ class Helper:
         else:
             src.append(stream.getText(src_int).replace('$', '$$'))
         return ''.join(src)
-
