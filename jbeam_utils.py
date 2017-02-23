@@ -1,13 +1,18 @@
 from types import GeneratorType
+from io import StringIO
 
 import bpy
-from bpy.types import Object
+from bpy.types import Object as IDObject
 import bmesh
 
 from antlr4 import *  # ToDo: get rid of the global antlr4 lib
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from .jb import jbeamLexer, jbeamParser, jbeamVisitor
-from .misc import Triangle, Switch
+from .misc import (
+    Triangle,
+    Switch,
+    visitor_mixins as vmix,
+)
 
 
 def to_tree(jbeam_data: str):
@@ -21,14 +26,12 @@ def to_tree(jbeam_data: str):
     return tree
 
 
-class PartObjectsBuilder(jbeamVisitor):
+class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
     def __init__(self, name='JBeam file'):
         self.name = name
-        self._idLayer = None
-        self._vertsIndex = None
-        self._beamLayer = None
         self.parts_group = None
         self.helper_objects = []
+        self._vertsIndex = None
 
     def visitJbeam(self, ctx: jbeamParser.JbeamContext):
         jbeam_group = bpy.data.groups.new(self.name)
@@ -42,34 +45,37 @@ class PartObjectsBuilder(jbeamVisitor):
     def visitPart(self, ctx: jbeamParser.PartContext):
         part_name = ctx.name.string_item
         print('part: ' + part_name)
-        bm = bmesh.new()  # each part in separate object
-        self._idLayer = bm.verts.layers.string.new('jbeamNodeId')
         self._vertsIndex = {}
-        self._beamLayer = bm.edges.layers.int.new('jbeam')
-        # self._slots_empty = None
 
         mesh = bpy.data.meshes.new(part_name)
         # Save part name explicitly, due Blender avoids names collision by appending '.001'
         mesh['jbeam_part'] = part_name
         part_obj = bpy.data.objects.new(part_name, mesh)
 
+        data_buf = StringIO()
         if ctx.listt is not None:
+            bm = bmesh.new()
+
             for section_ctx in ctx.listt.getChildren():
                 result = section_ctx.accept(self)
-
                 with Switch(type(result)) as case:
-                    if case(Object):
+                    if case(IDObject):
                         self.set_parent(result, part_obj)
                     elif case(GeneratorType):
                         result.send(None)  # charge generator
-                        result.send(bm)
+                        # generator returns a placeholder text
+                        data_buf.write(result.send(bm))
+                        data_buf.write('\n')
+                    elif case(str):
+                        # other sections
+                        data_buf.write(result)
+                        data_buf.write('\n')
                     else:
-                        print("Skipped section", section_ctx.name.text)
+                        raise ValueError("Section not implemented")
+            bm.to_mesh(mesh)
 
-        bm.verts.ensure_lookup_table()
-        bm.to_mesh(mesh)
+        mesh['jbeam_part_data'] = data_buf.getvalue()
         mesh.update()
-
         return part_obj
 
     def set_parent(self, obj, parent, prn_type='OBJECT'):
@@ -86,9 +92,7 @@ class PartObjectsBuilder(jbeamVisitor):
         slots_empty.lock_location = (True, True, True)
         self.lock_rot_scale(slots_empty)
         if ctx.listt is not None:
-            for slot_ctx in ctx.listt.getChildren():
-                slot = slot_ctx.accept(self)
-                self.set_parent(slot, slots_empty)
+            self.visitChildren(ctx.listt, slots_empty)
         return slots_empty
 
     def visitSlot(self, ctx: jbeamParser.SlotContext):
@@ -99,17 +103,48 @@ class PartObjectsBuilder(jbeamVisitor):
 
         ctx.slot = slot
         if ctx.prop_list is not None:
-            for prop_ctx in ctx.prop_list.getChildren():
-                if isinstance(prop_ctx, jbeamParser.SlotProp_NodeOffsetContext):
-                    slot.location = prop_ctx.node_offset.accept(self)
+            self.visitChildren(ctx.prop_list, slot)
         return slot
 
-    @staticmethod
-    def lock_rot_scale(obj):
-        obj.lock_rotation = (True, True, True)
-        obj.lock_rotation_w = True
-        obj.lock_rotations_4d = True
-        obj.lock_scale = (True, True, True)
+    def visitChildren(self, node, aggregator=None):
+        for c in node.getChildren():
+            if not self.shouldVisitNextChild(node, aggregator):
+                return
+
+            child_result = c.accept(self)
+            if child_result is None:
+                continue
+            with Switch(type(child_result)) as case:
+                if case(GeneratorType):
+                    child_result.send(None)  # charge generator
+                    child_result.send(aggregator)
+                elif case(tuple):
+                    # treat as key val setter
+                    if aggregator is None:
+                        aggregator = {}
+                    if len(child_result) == 3:
+                        # attr setter
+                        rna, attr, val = child_result
+                        setattr(aggregator, attr, val)
+                    else:
+                        # dict
+                        key, val = child_result
+                        aggregator[key] = val
+                elif case(IDObject):
+                    # suppose aggregator is IDObject too
+                    self.set_parent(child_result, aggregator)
+                else:
+                    if aggregator is None:
+                        aggregator = []
+                    aggregator.append(child_result)
+
+        return aggregator
+
+    def visitSlotProp_CoreSlot(self, ctx: jbeamParser.SlotProp_CoreSlotContext):
+        return 'coreSlot', ctx.core.accept(self)
+
+    def visitSlotProp_NodeOffset(self, ctx: jbeamParser.SlotProp_NodeOffsetContext):
+        return 'RNA', 'location', ctx.node_offset.accept(self)
 
     def visitOffset(self, ctx: jbeamParser.OffsetContext):
         offset = {'x': 0, 'y': 0, 'z': 0}
@@ -131,65 +166,65 @@ class PartObjectsBuilder(jbeamVisitor):
 
     def visitSection_Nodes(self, ctx: jbeamParser.Section_NodesContext):
         bm = yield  # bmesh
+        id_layer = bm.verts.layers.string.new('jbeamNodeId')
         if ctx.listt is not None:
-            for node_ctx in ctx.listt.getChildren():
-                if isinstance(node_ctx, jbeamParser.NodeContext):
-                    node_generator = node_ctx.accept(self)
-                    node_generator.send(None)
-                    node_generator.send(bm.verts.new)
+            self.visitChildren(ctx.listt, (bm, id_layer))
         bm.verts.ensure_lookup_table()
-        yield
+        yield self.get_src_text_replaced(ctx, ctx.listt, '${nodes}')
 
     def visitNode(self, ctx: jbeamParser.NodeContext):
-        vert_new = yield  # bm.verts.new() function
-        vert = vert_new((float(ctx.posX.text), float(ctx.posY.text), float(ctx.posZ.text)))
+        bm, id_layer = yield  # receive visitChildren's aggregator kwarg
+        vert = bm.verts.new((float(ctx.posX.text), float(ctx.posY.text), float(ctx.posZ.text)))
         _id = ctx.id1.string_item
-        vert[self._idLayer] = _id.encode()  # set node id to the data layer
+        vert[id_layer] = _id.encode()  # set node id to the data layer
         self._vertsIndex[_id] = vert
         yield vert
+
+    def visitNodeProps(self, ctx: jbeamParser.NodePropsContext):
+        # ToDo Node Props
+        return None
 
     # ============================== beams ==============================
 
     def visitSection_Beams(self, ctx: jbeamParser.Section_BeamsContext):
         bm = yield
+        id_layer = bm.verts.layers.string.active
+        beam_layer = bm.edges.layers.int.new('jbeam')
         if ctx.listt is not None:
-            for beam_ctx in ctx.listt.getChildren():
-                if isinstance(beam_ctx, jbeamParser.BeamContext):
-                    beam_generator = beam_ctx.accept(self)
-                    beam_generator.send(None)
-                    beam_generator.send(bm)
+            self.visitChildren(ctx.listt, (bm, id_layer, beam_layer))
         bm.edges.ensure_lookup_table()
-        yield
+        yield self.get_src_text_replaced(ctx, ctx.listt, '${beams}')
 
     def visitBeam(self, ctx: jbeamParser.BeamContext):
-        bm = yield
+        bm, id_layer, beam_layer = yield
         id1 = ctx.id1.string_item
         id2 = ctx.id2.string_item
         v1, v2 = self._vertsIndex.get(id1), self._vertsIndex.get(id2)
         # check for attaching to parent
         if not (v1 or v2):
             # both belong to parent? ok
-            v1 = self.new_dummy_node(bm, id1)
-            v2 = self.new_dummy_node(bm, id2, v1.co)
+            v1 = self.new_dummy_node(bm, id_layer, id1)
+            v2 = self.new_dummy_node(bm, id_layer, id2, v1.co)
         elif not v1:
             # v1 belongs to parent
-            v1 = self.new_dummy_node(bm, id1, v2.co)
+            v1 = self.new_dummy_node(bm, id_layer, id1, v2.co)
         elif not v2:
-            v2 = self.new_dummy_node(bm, id2, v1.co)
+            v2 = self.new_dummy_node(bm, id_layer, id2, v1.co)
 
         try:
             edge = bm.edges.new((v1, v2))  # throws on duplicates
-            edge[self._beamLayer] = 1
+            edge[beam_layer] = 1
             yield edge
         except ValueError as err:
             print(err, id1, id2)  # ToDo handle duplicates
             yield
 
-    def new_dummy_node(self, bm, dummy_id: str, co=None):
+    def new_dummy_node(self, bm, id_layer, dummy_id: str, co=None):
         """
         Add parent node representation to be able to store attaching beams.
         Adds '~' to the beginning of id, but _vertsIndex keeps original id.
         :param bm: bmesh
+        :param id_layer: bmesh.types.BMLayerItem
         :param dummy_id: string
         :param co: mathutils.Vector
         :return: bmesh.types.BMVert
@@ -200,21 +235,21 @@ class PartObjectsBuilder(jbeamVisitor):
             vert.co.z -= .3
         else:
             vert = bm.verts.new((.0, .0, .0))
-        vert[self._idLayer] = ''.join(('~', dummy_id)).encode()
+        vert[id_layer] = ''.join(('~', dummy_id)).encode()
         self._vertsIndex[dummy_id] = vert
         return vert
+
+    def visitBeamProps(self, ctx: jbeamParser.BeamPropsContext):
+        return None
 
     # ============================== collision triangles ==============================
 
     def visitSection_Coltris(self, ctx: jbeamParser.Section_ColtrisContext):
         bm = yield
         if ctx.listt is not None:
-            for coltri_ctx in ctx.listt.getChildren():
-                if isinstance(coltri_ctx, jbeamParser.ColtriContext):
-                    coltri_generator = coltri_ctx.accept(self)
-                    coltri_generator.send(None)
-                    coltri_generator.send(bm)
-        yield
+            self.visitChildren(ctx.listt, bm)
+        bm.faces.ensure_lookup_table()
+        yield self.get_src_text_replaced(ctx, ctx.listt, '${triangles}')
 
     def visitColtri(self, ctx: jbeamParser.ColtriContext):
         bm = yield
@@ -234,6 +269,24 @@ class PartObjectsBuilder(jbeamVisitor):
             # coltri with parent nodes?? ok
             print('Skipped triangle with parent nodes [{} {} {}]: not implemented')
             yield
+
+    def visitColtriProps(self, ctx: jbeamParser.ColtriPropsContext):
+        return None  # ToDo ColtriProps
+
+    # ============================== unknown section ==============================
+
+    def visitSection_Unknown(self, ctx: jbeamParser.Section_UnknownContext):
+        # return source text
+        src = ctx.parser.getTokenStream().getText(ctx.getSourceInterval())
+        # escape for templating
+        src = src.replace('$', '$$')
+        return src
+
+    def visitSection_Hydros(self, ctx: jbeamParser.Section_HydrosContext):
+        return self.visitSection_Unknown(ctx)
+
+    def visitSection_SlotType(self, ctx: jbeamParser.Section_SlotTypeContext):
+        return self.visitSection_Unknown(ctx)
 
 
 class NodeCollector(jbeamVisitor):
