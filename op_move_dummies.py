@@ -5,9 +5,9 @@ from bpy.types import Operator
 from .misc import anytree
 
 
-class AttachToParent(Operator):
-    bl_idname = "object.jbeam_attach_to_parent"
-    bl_label = "JBeam: Attach to parent"
+class MoveDummies(Operator):
+    bl_idname = "object.jbeam_move_dummies"
+    bl_label = "JBeam: Move dummy nodes to their original position"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -36,7 +36,7 @@ class AttachToParent(Operator):
                        if _id and _id.startswith('~')}
 
         if not dummy_verts:
-            self.report({'INFO'}, 'Dummies are not found')
+            self.report({'INFO'}, 'Dummies was not found')
             return {'FINISHED'}
 
         slot_node = build_tree_with(context.scene.objects, obj.parent)
@@ -47,8 +47,8 @@ class AttachToParent(Operator):
         nodes_iter = anytree.PreOrderIter(root)
         position_dummies(dummy_verts, nodes_iter)
 
-        if dummy_verts:
-            self.report({'WARNING'}, 'Not all dummies positioned, dumped to the console.')
+        if len(dummy_verts):
+            self.report({'WARNING'}, 'Some of dummies was not positioned, dumped to the console.')
             print('Not positioned dummies: ', ', '.join(('~' + _id for _id in sorted(dummy_verts))))
         else:
             self.report({'INFO'}, 'All dummies positioned')
@@ -75,14 +75,14 @@ def get_jnodes_co(mesh):
 
 
 def position_dummies(dummy_verts, tree_nodes):
-    """Visit all nodes of the tree and position dummies to their reals.
+    """Visit all nodes of the tree and position dummies at their reals.
     After return dummy_verts contains dummies whose reals was not found"""
 
     # collect all jnode ids and coordinates in the object hierarchy
     jnode_map = {}
     for t_node in tree_nodes:
         if t_node.obj.type == 'MESH':
-            # note jnode id can be overwritten during dic.update(), i.e. part's jnode override parent!
+            # note jnode id can be overwritten during dic.update(), i.e. part's jnode overrides parent's node!
             # Is this behavior correct? ToDo check jnode override behavior
             jnode_map.update(get_jnodes_co(t_node.obj.data))
 
@@ -106,7 +106,7 @@ def build_tree_with(obj_map, specific_obj):
                 # is parent linked to the scene?
                 node.parent = parent_node
 
-    roots = (node for node in node_map.values() if node.parent is None)
+    roots = (node for node in node_map.values() if node.is_root)
 
     text = bpy.data.texts.get('tree') or bpy.data.texts.new('tree')
     text.clear()
