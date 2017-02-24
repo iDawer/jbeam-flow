@@ -129,8 +129,8 @@ class jbeamVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by jbeamParser#nodePropSeq.
-    def visitNodePropSeq(self, ctx:jbeamParser.NodePropSeqContext):
+    # Visit a parse tree produced by jbeamParser#nodePropObj.
+    def visitNodePropObj(self, ctx:jbeamParser.NodePropObjContext):
         return self.visitChildren(ctx)
 
 
