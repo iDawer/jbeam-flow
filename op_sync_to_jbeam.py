@@ -6,6 +6,7 @@ from bpy.types import Operator
 
 from . import jbeam_utils
 from .misc import Triangle
+from .misc.op_constants import opt, rep, ret
 
 use_profile = True
 
@@ -13,7 +14,7 @@ use_profile = True
 class SyncMeshToText(Operator):
     bl_idname = "mesh.sync_to_jbeam"
     bl_label = "Sync mesh to jbeam"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {opt.REGISTER, opt.UNDO}
 
     running = False
 
@@ -31,14 +32,14 @@ class SyncMeshToText(Operator):
         text_dblock_name = next(
             (jb for jb in (group.get('jbeam_textblock') for group in obj.users_group) if jb is not None), None)
         if text_dblock_name is None:
-            self.report({'ERROR_INVALID_INPUT'}, 'Corresponding jbeam group is not found')
-            return {'CANCELLED'}
+            self.report({rep.ERROR_INVALID_INPUT}, 'Corresponding jbeam group is not found')
+            return {ret.CANCELLED}
 
         part_name = obj.data.get('jbeam_part')
         if part_name is None:
-            self.report({'ERROR_INVALID_INPUT'},
+            self.report({rep.ERROR_INVALID_INPUT},
                         "Missing property: {0} has no custom property 'jbeam_part'".format(obj.data))
-            return {'CANCELLED'}
+            return {ret.CANCELLED}
 
         text_datablock = bpy.data.texts[text_dblock_name]
         data = text_datablock.as_string()
@@ -112,7 +113,7 @@ class SyncMeshToText(Operator):
         text_datablock.clear()
         text_datablock.write(new_str)
 
-        return {'FINISHED'}
+        return {ret.FINISHED}
 
     # Profiling dance
     if use_profile:

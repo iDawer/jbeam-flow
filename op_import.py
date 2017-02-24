@@ -6,12 +6,14 @@ from bpy import path
 from bpy_extras.io_utils import ImportHelper
 import cProfile
 
+from .misc.op_constants import opt, rep, ret
+
 
 class ImportJBeam(Operator, ImportHelper):
     """Import from BeamNG's JBeam file"""
     bl_idname = "import_mesh.jbeam"  # important since its how bpy.ops.import_test.some_data is constructed
     bl_label = "Import JBeam (.jbeam)"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {opt.REGISTER, opt.UNDO}
 
     # ImportHelper mixin class uses this
     filename_ext = ".jbeam"
@@ -58,7 +60,7 @@ class ImportJBeam(Operator, ImportHelper):
         #                     r'Foundation\Blender\2.78\scripts\addons\BlenderJBeam\profile\ImportJBeam.pstat')
         # profiler.clear()
 
-        return {'FINISHED'}
+        return {ret.FINISHED}
 
     @staticmethod
     def register():
