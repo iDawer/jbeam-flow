@@ -8,7 +8,7 @@ from bpy.props import BoolProperty
 from bpy_extras.view3d_utils import location_3d_to_region_2d
 
 
-def draw_ui(self, context):
+def draw_ui_mesh_display(self, context):
     if context.active_object.type == 'MESH':
         layout = self.layout
         layout.label(text="Jbeam info:")
@@ -17,7 +17,7 @@ def draw_ui(self, context):
         row.prop(context.active_object, 'show_jbeam_nodes')
 
 
-def draw_ui_all(self, context):
+def draw_ui_display(self, context):
     layout = self.layout
     layout.label(text="Jbeam info:")
 
@@ -92,9 +92,9 @@ def register():
         description="Force display all jbeam nodes id",
         options={'HIDDEN'},
     )
-    bpy.types.VIEW3D_PT_view3d_meshdisplay.append(draw_ui)
-    bpy.types.OBJECT_PT_display.append(draw_ui)
-    bpy.types.VIEW3D_PT_view3d_display.append(draw_ui_all)
+    bpy.types.VIEW3D_PT_view3d_meshdisplay.append(draw_ui_mesh_display)
+    bpy.types.OBJECT_PT_display.append(draw_ui_mesh_display)
+    bpy.types.VIEW3D_PT_view3d_display.append(draw_ui_display)
     KotL.start_draw(())
 
 
@@ -102,6 +102,6 @@ def unregister():
     KotL.stop_it()
     del bpy.types.Object.show_jbeam_nodes
     del bpy.types.Scene.show_all_jbeam_nodes
-    bpy.types.VIEW3D_PT_view3d_meshdisplay.remove(draw_ui)
-    bpy.types.OBJECT_PT_display.remove(draw_ui)
-    bpy.types.VIEW3D_PT_view3d_display.remove(draw_ui_all)
+    bpy.types.VIEW3D_PT_view3d_meshdisplay.remove(draw_ui_mesh_display)
+    bpy.types.OBJECT_PT_display.remove(draw_ui_mesh_display)
+    bpy.types.VIEW3D_PT_view3d_display.remove(draw_ui_display)
