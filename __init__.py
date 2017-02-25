@@ -17,6 +17,7 @@ if "bpy" in locals():
     importlib.reload(op_sync_to_jbeam)
     importlib.reload(op_move_dummies)
     importlib.reload(op_rename_node)
+    importlib.reload(display_nodes)
     print('Reloaded JBeam plugin')
 else:
     import bpy
@@ -28,6 +29,7 @@ else:
         op_sync_to_jbeam,
         op_move_dummies,
         op_rename_node,
+        display_nodes,
     )
 
     print("Imported JBeam plugin")
@@ -39,9 +41,11 @@ else:
 
 def register():
     bpy.utils.register_module(__name__)
+    display_nodes.register()
     print("REGISTERED  JBeam plugin")
 
 
 def unregister():
     bpy.utils.unregister_module(__name__)
+    display_nodes.unregister()
     print("UNREGISTERED  JBeam plugin")
