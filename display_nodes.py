@@ -4,23 +4,23 @@ import bpy
 import bgl
 import blf
 import bmesh
-import mathutils
-from bpy.types import Operator
 from bpy.props import BoolProperty
 from bpy_extras.view3d_utils import location_3d_to_region_2d
 
 
 def draw_ui(self, context):
-    self.layout.separator()
+    # context.mode == 'EDIT_MESH' cuz we are in the Mesh Display panel
+    if context.active_object.type == 'MESH':
+        layout = self.layout
+        layout.label(text="Jbeam info:")
 
-    row = self.layout.row(align=True)
-    # row.label("Jbeam")
-    row.prop(context.scene, 'show_jbeam_nodes', toggle=True)
+        row = layout.row(align=True)
+        row.prop(context.active_object.data, 'show_jbeam_nodes', toggle=True)
 
 
 class KotL:  # magic here!
     draw_nodes_handle = None
-    scene = None
+    drawing_mesh = None
 
     @staticmethod
     def start_draw(args):
@@ -28,7 +28,7 @@ class KotL:  # magic here!
             KotL.stop_it()
         KotL.draw_nodes_handle = bpy.types.SpaceView3D.draw_handler_add(
             draw_nodes, args, 'WINDOW', 'POST_PIXEL')  # PRE_VIEW POST_VIEW POST_PIXEL
-        KotL.scene = args[0]
+        KotL.drawing_mesh = args[0]
 
     @staticmethod
     def stop_it():
@@ -49,10 +49,14 @@ def draw_nodes(self, context):
     obj = context.active_object
     if not obj.data.is_editmode:
         self.show_jbeam_nodes = False
+        return
 
-    obj_location = obj.location
     bm = bmesh.from_edit_mesh(obj.data)
     id_layer = bm.verts.layers.string.get('jbeamNodeId')
+    if id_layer is None:
+        return
+
+    obj_location = obj.location
     region = context.region
     rv3d = context.region_data
 
@@ -89,7 +93,7 @@ def draw_nodes(self, context):
 
 
 def register():
-    bpy.types.Scene.show_jbeam_nodes = BoolProperty(
+    bpy.types.Mesh.show_jbeam_nodes = BoolProperty(
         name="Nodes",
         description="Display jbeam nodes id",
         update=update_show
@@ -98,7 +102,7 @@ def register():
 
 
 def unregister():
-    if KotL.scene is not None:
-        KotL.scene.show_jbeam_nodes = False
-    del bpy.types.Scene.show_jbeam_nodes
+    if KotL.drawing_mesh is not None:
+        KotL.drawing_mesh.show_jbeam_nodes = False
+    del bpy.types.Mesh.show_jbeam_nodes
     bpy.types.VIEW3D_PT_view3d_meshdisplay.remove(draw_ui)
