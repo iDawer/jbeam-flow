@@ -64,8 +64,11 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
                     elif case(GeneratorType):
                         result.send(None)  # charge generator
                         # generator returns a placeholder text
-                        data_buf.write(result.send(bm))
+                        gen_res = result.send(bm)
+                        data_buf.write(gen_res[0])
                         data_buf.write('\n')
+                        if len(gen_res) == 3:
+                            mesh[gen_res[1]] = gen_res[2]
                     elif case(str):
                         # other sections
                         data_buf.write(result)
@@ -167,14 +170,33 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
     def visitSection_Nodes(self, ctx: jbeamParser.Section_NodesContext):
         bm = yield  # bmesh
         id_layer = bm.verts.layers.string.new('jbeamNodeId')
+        prop_inh = PartObjectsBuilder.PropInheritance(bm.verts)
         prop_layer = bm.verts.layers.string.new('jbeamNodeProps')
         if ctx.listt is not None:
-            self.visitChildren(ctx.listt, (bm, id_layer, prop_layer))
+            self.visitChildren(ctx.listt, (bm, id_layer, prop_layer, prop_inh))
         bm.verts.ensure_lookup_table()
-        yield self.get_src_text_replaced(ctx, ctx.listt, '${nodes}')
+        text_replaced = self.get_src_text_replaced(ctx, ctx.listt, '${nodes}')
+        yield text_replaced, 'jbeam_nodes_inh_props', prop_inh.prop_groups
+
+    class PropInheritance:
+        def __init__(self, bm_elem_seq):
+            # property inheritance factor
+            # 0 - not affected with property inheritance
+            self._current_f = 0.0
+            self.step = 100.0
+            # A node inherits properties step by step from 0 (nothing) to last factor <= vert[_lyr]
+            self._lyr = bm_elem_seq.layers.float.new('jbeamInhFactor')
+            self.prop_groups = {}
+
+        def set_prop(self, bm_elem):
+            bm_elem[self._lyr] = self._current_f
+
+        def next_prop(self, src):
+            self._current_f += self.step
+            self.prop_groups[repr(self._current_f)] = src
 
     def visitNode(self, ctx: jbeamParser.NodeContext):
-        bm, id_layer, prop_layer = yield  # receive visitChildren's aggregator kwarg
+        bm, id_layer, prop_layer, prop_inh = yield  # receive visitChildren's aggregator kwarg
         vert = bm.verts.new((float(ctx.posX.text), float(ctx.posY.text), float(ctx.posZ.text)))
         _id = ctx.id1.string_item
         vert[id_layer] = _id.encode()  # set node id to the data layer
@@ -182,11 +204,14 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         # node props
         if ctx.props is not None:
             vert[prop_layer] = self.get_src_text_replaced(ctx.props).encode()
+        prop_inh.set_prop(vert)
         yield vert
 
     def visitNodeProps(self, ctx: jbeamParser.NodePropsContext):
-        # ToDo Node Props
-        return None
+        bm, id_layer, prop_layer, prop_inh = yield
+        src = self.get_src_text_replaced(ctx)
+        prop_inh.next_prop(src)
+        yield
 
     # ============================== beams ==============================
 
@@ -200,7 +225,7 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         if ctx.listt is not None:
             self.visitChildren(ctx.listt, (bm, id_layer, beam_layer))
         bm.edges.ensure_lookup_table()
-        yield self.get_src_text_replaced(ctx, ctx.listt, '${beams}')
+        yield self.get_src_text_replaced(ctx, ctx.listt, '${beams}'),
 
     def visitBeam(self, ctx: jbeamParser.BeamContext):
         bm, id_layer, beam_layer = yield
