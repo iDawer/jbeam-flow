@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from types import GeneratorType
 from io import StringIO
 
@@ -176,7 +177,7 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
             self.visitChildren(ctx.listt, (bm, id_layer, prop_layer, prop_inh))
         bm.verts.ensure_lookup_table()
         text_replaced = self.get_src_text_replaced(ctx, ctx.listt, '${nodes}')
-        yield text_replaced, 'jbeam_nodes_inh_props', prop_inh.prop_groups
+        yield text_replaced, 'jbeam_nodes_inh_props', prop_inh.as_ID()
 
     class PropInheritance:
         def __init__(self, bm_elem_seq):
@@ -186,14 +187,18 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
             self.step = 100.0
             # A node inherits properties step by step from 0 (nothing) to last factor <= vert[_lyr]
             self._lyr = bm_elem_seq.layers.float.new('jbeamInhFactor')
-            self.prop_groups = {}
+            self.prop_groups = OrderedDict()
 
         def set_prop(self, bm_elem):
             bm_elem[self._lyr] = self._current_f
 
         def next_prop(self, src):
             self._current_f += self.step
-            self.prop_groups[repr(self._current_f)] = src
+            self.prop_groups[self._current_f] = src
+
+        def as_ID(self):
+            # convert float keys to str
+            return OrderedDict(((repr(f), src) for (f, src) in self.prop_groups.items()))
 
     def visitNode(self, ctx: jbeamParser.NodeContext):
         bm, id_layer, prop_layer, prop_inh = yield  # receive visitChildren's aggregator kwarg
