@@ -33,6 +33,10 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         self.helper_objects = []
         self._vertsIndex = None
 
+    def get_all_objects(self):
+        from itertools import chain
+        return chain(self.parts_group.objects, self.helper_objects)
+
     def visitJbeam(self, ctx: jbeamParser.JbeamContext):
         jbeam_group = bpy.data.groups.new(self.name)
         self.parts_group = jbeam_group

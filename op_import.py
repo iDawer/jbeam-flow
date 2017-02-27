@@ -50,7 +50,7 @@ class ImportJBeam(Operator, ImportHelper):
 
         # resulting parts_group and text names can be different
         parts_group['jbeam_textblock'] = text_block.name
-        for obj in iter.chain(parts_group.objects, builder.helper_objects):
+        for obj in builder.get_all_objects():
             context.scene.objects.link(obj)
 
         # profiler.disable()
