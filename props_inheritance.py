@@ -1,30 +1,23 @@
 from collections import OrderedDict
+from itertools import cycle, islice
 from time import time
 
 import bmesh
 import bpy
-from bpy.props import IntProperty, FloatProperty, CollectionProperty, PointerProperty, BoolProperty
-from bpy.types import Panel, UIList, PropertyGroup, Operator
-
-
-class PropInheritanceBuilder:
-    def __init__(self, bm_elem_seq, props_inh: JbeamPropsInheritance):
-        self._last_prop_id = 0
-        # property inheritance factor
-        # 0 - not affected with property inheritance
-        self._current_f = 0.0
-        self.step = 100.0
-        # A node inherits properties step by step from 0 (nothing) to last factor <= vert[_lyr]
-        self._lyr = bm_elem_seq.layers.int.new('jbeamInhProp')
-        self.props_inh = props_inh  # JbeamPropsInheritance
-
-    def next_item(self, bm_elem):
-        bm_elem[self._lyr] = self._last_prop_id
-
-    def next_prop(self, src):
-        self._current_f += self.step
-        prop = self.props_inh.add(self._current_f, src)
-        self._last_prop_id = prop.id
+from bpy.props import (
+    IntProperty,
+    FloatProperty,
+    CollectionProperty,
+    PointerProperty,
+    BoolProperty,
+    EnumProperty,
+)
+from bpy.types import (
+    Panel,
+    UIList,
+    PropertyGroup,
+    Operator,
+)
 
 
 class JbeamProp(PropertyGroup):
@@ -59,6 +52,26 @@ class JbeamPropsInheritance(PropertyGroup):
             last_inh_prop = sorted(self.chain_list, key=lambda p: p.factor)[-1]
             factor = last_inh_prop.factor
         return self.add(factor + 100, "{}")
+
+
+class PropInheritanceBuilder:
+    def __init__(self, bm_elem_seq, props_inh: JbeamPropsInheritance):
+        self._last_prop_id = 0
+        # property inheritance factor
+        # 0 - not affected with property inheritance
+        self._current_f = 0.0
+        self.step = 100.0
+        # A node inherits properties step by step from 0 (nothing) to last factor <= vert[_lyr]
+        self._lyr = bm_elem_seq.layers.int.new('jbeamInhProp')
+        self.props_inh = props_inh  # JbeamPropsInheritance
+
+    def next_item(self, bm_elem):
+        bm_elem[self._lyr] = self._last_prop_id
+
+    def next_prop(self, src):
+        self._current_f += self.step
+        prop = self.props_inh.add(self._current_f, src)
+        self._last_prop_id = prop.id
 
 
 class MESH_UL_jbeam_props(UIList):
@@ -96,6 +109,9 @@ class DATA_PT_jbeam(Panel):
         col = row.column(align=True)
         col.operator('object.jbeam_prop_inheritance_add', icon='ZOOMIN', text="")
         col.operator('object.jbeam_prop_inheritance_remove', icon='ZOOMOUT', text="")
+        col.separator()
+        col.operator("object.jbeam_prop_inheritance_move", icon='TRIA_UP', text="").direction = 'UP'
+        col.operator("object.jbeam_prop_inheritance_move", icon='TRIA_DOWN', text="").direction = 'DOWN'
 
         if ob.data.jbeam_nodes_inh_props.chain_list and ob.mode == 'EDIT':
             row = layout.row()
@@ -121,6 +137,7 @@ class JbeamPropAdd(Operator):
     """ Add a new inherited node property to the active object """
     bl_idname = "object.jbeam_prop_inheritance_add"
     bl_label = "Add a new item"
+    bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
         props = context.object.data.jbeam_nodes_inh_props
@@ -133,6 +150,7 @@ class JbeamPropRemove(Operator):
     """ Delete the active property from the active object and free assigned nodes """
     bl_idname = "object.jbeam_prop_inheritance_remove"
     bl_label = "Delete the active item"
+    bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
     def poll(cls, context):
@@ -165,10 +183,50 @@ class JbeamPropRemove(Operator):
         return {'FINISHED'}
 
 
+class JbeamPropMove(Operator):
+    """ Move the active property group up/down in the chain list """
+    bl_idname = "object.jbeam_prop_inheritance_move"
+    bl_label = "Move property group"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    direction = bpy.props.EnumProperty(
+        items=(
+            ('UP', 'Up', ""),
+            ('DOWN', 'Down', ""),
+        ),
+        name="Direction"
+    )
+
+    @classmethod
+    def poll(cls, context):
+        props = context.object.data.jbeam_nodes_inh_props
+        return props and props.active_index >= 0
+
+    def execute(self, context):
+        me = context.object.data
+        props = me.jbeam_nodes_inh_props
+        p_item = props.chain_list[props.active_index]
+
+        idx = props.active_index
+        _len = len(props.chain_list)
+        if self.direction == 'DOWN':
+            # get next index in cycled range
+            new_idx = next(islice(cycle(range(0, _len)), idx + 1, None))
+        elif self.direction == 'UP':
+            # get prev index in cycled range
+            new_idx = next(islice(cycle(reversed(range(0, _len))), _len - idx, None))
+        else:
+            return {'CANCELLED'}
+        props.chain_list.move(idx, new_idx)
+        props.active_index = new_idx
+        return {'FINISHED'}
+
+
 class JbeamPropAssign(Operator):
     """ Assign the selected nodes to the active inherited property """
     bl_idname = "object.jbeam_prop_inheritance_assign"
     bl_label = "Assign"
+    bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
     def poll(cls, context):
@@ -194,6 +252,7 @@ class JbeamPropFree(Operator):
     """ Free the selected nodes from any inherited property """
     bl_idname = "object.jbeam_prop_inheritance_remove_from"
     bl_label = "Remove from"
+    bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
         me = context.object.data
@@ -209,7 +268,8 @@ class JbeamPropFree(Operator):
 class JbeamPropSelect(Operator):
     """ Select/deselect all nodes assigned to the active property group """
     bl_idname = "object.jbeam_prop_inheritance_select"
-    bl_label = "Assign"
+    bl_label = "Select"
+    bl_options = {'REGISTER', 'UNDO'}
 
     deselect = BoolProperty(
         name="Deselect",
