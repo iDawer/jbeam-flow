@@ -1,9 +1,10 @@
 from collections import OrderedDict
 from time import time
 
+import bmesh
 import bpy
-from bpy.props import IntProperty, FloatProperty, CollectionProperty, PointerProperty
-from bpy.types import Panel, UIList, PropertyGroup
+from bpy.props import IntProperty, FloatProperty, CollectionProperty, PointerProperty, BoolProperty
+from bpy.types import Panel, UIList, PropertyGroup, Operator
 
 
 class PropInheritanceBuilder:
@@ -26,8 +27,9 @@ class PropInheritanceBuilder:
         self._last_prop_id = prop.id
 
 
-class JbeamProp(bpy.types.PropertyGroup):
+class JbeamProp(PropertyGroup):
     # name = StringProperty() is already defined
+    # 'id' is a reference for nodes
     id = IntProperty()
     factor = FloatProperty()
 
@@ -39,10 +41,11 @@ class JbeamPropsInheritance(PropertyGroup):
     Item with factor N inherits all props in the chain with factor less or equal to N with priority of the last.
     """
     chain_list = CollectionProperty(type=JbeamProp)
-    active_index = IntProperty()
+    active_index = IntProperty(default=-1)
     last_id = IntProperty()
 
     def add(self, factor, src):
+        # ids start from 1, default 0 is root of the chain
         self.last_id += 1
         prop_item = self.chain_list.add()
         prop_item.id = self.last_id
@@ -89,8 +92,21 @@ class DATA_PT_jbeam(Panel):
         row = layout.row()
         row.template_list("MESH_UL_jbeam_props", "", ob.data.jbeam_nodes_inh_props, "chain_list",
                           ob.data.jbeam_nodes_inh_props, "active_index")
-        row = layout.row()
-        row.operator('my_list.new_item')
+
+        col = row.column(align=True)
+        col.operator('object.jbeam_prop_inheritance_add', icon='ZOOMIN', text="")
+        col.operator('object.jbeam_prop_inheritance_remove', icon='ZOOMOUT', text="")
+
+        if ob.data.jbeam_nodes_inh_props.chain_list and ob.mode == 'EDIT':
+            row = layout.row()
+
+            sub = row.row(align=True)
+            sub.operator("object.jbeam_prop_inheritance_assign", text="Assign")
+            sub.operator("object.jbeam_prop_inheritance_remove_from", text="Free")
+
+            sub = row.row(align=True)
+            sub.operator("object.jbeam_prop_inheritance_select", text="Select").deselect = False
+            sub.operator("object.jbeam_prop_inheritance_select", text="Deselect").deselect = True
 
     @staticmethod
     def register():
@@ -101,15 +117,124 @@ class DATA_PT_jbeam(Panel):
         del bpy.types.Mesh.jbeam_nodes_inh_props
 
 
-class TEST_OP(bpy.types.Operator):
-    """ Add a new item to the list """
-
-    bl_idname = "my_list.new_item"
+class JbeamPropAdd(Operator):
+    """ Add a new inherited node property to the active object """
+    bl_idname = "object.jbeam_prop_inheritance_add"
     bl_label = "Add a new item"
 
     def execute(self, context):
-        ob = context.object
+        props = context.object.data.jbeam_nodes_inh_props
+        props.new()
+        props.active_index = len(props.chain_list) - 1
+        return {'FINISHED'}
 
-        item = ob.data.jbeam_nodes_inh_props.new()
-        # item.name = str(time())
+
+class JbeamPropRemove(Operator):
+    """ Delete the active property from the active object and free assigned nodes """
+    bl_idname = "object.jbeam_prop_inheritance_remove"
+    bl_label = "Delete the active item"
+
+    @classmethod
+    def poll(cls, context):
+        props = context.object.data.jbeam_nodes_inh_props
+        return props and props.active_index >= 0
+
+    def execute(self, context):
+        me = context.object.data
+        props = me.jbeam_nodes_inh_props
+        p_item = props.chain_list[props.active_index]
+
+        if me.is_editmode:
+            bm = bmesh.from_edit_mesh(me)
+        else:
+            bm = bmesh.new()
+            bm.from_mesh(me)
+
+        inh_prop_layer = bm.verts.layers.int['jbeamInhProp']
+        for v in bm.verts:
+            if v[inh_prop_layer] == p_item.id:
+                # inherit from root (no props)
+                v[inh_prop_layer] = 0
+
+        props.chain_list.remove(props.active_index)
+
+        if props.active_index:
+            props.active_index -= 1
+        if len(props.chain_list) == 0:
+            props.active_index = -1
+        return {'FINISHED'}
+
+
+class JbeamPropAssign(Operator):
+    """ Assign the selected nodes to the active inherited property """
+    bl_idname = "object.jbeam_prop_inheritance_assign"
+    bl_label = "Assign"
+
+    @classmethod
+    def poll(cls, context):
+        props = context.object.data.jbeam_nodes_inh_props
+        return props and props.active_index >= 0
+
+    def execute(self, context):
+        me = context.object.data
+        props = me.jbeam_nodes_inh_props
+        p_item = props.chain_list[props.active_index]
+
+        bm = bmesh.from_edit_mesh(me)
+        inh_prop_layer = bm.verts.layers.int['jbeamInhProp']
+        for v in bm.verts:
+            if v.select:
+                # override old values
+                v[inh_prop_layer] = p_item.id
+
+        return {'FINISHED'}
+
+
+class JbeamPropFree(Operator):
+    """ Free the selected nodes from any inherited property """
+    bl_idname = "object.jbeam_prop_inheritance_remove_from"
+    bl_label = "Remove from"
+
+    def execute(self, context):
+        me = context.object.data
+        bm = bmesh.from_edit_mesh(me)
+        inh_prop_layer = bm.verts.layers.int['jbeamInhProp']
+        for v in bm.verts:
+            if v.select:
+                # inherit from root (no props)
+                v[inh_prop_layer] = 0
+        return {'FINISHED'}
+
+
+class JbeamPropSelect(Operator):
+    """ Select/deselect all nodes assigned to the active property group """
+    bl_idname = "object.jbeam_prop_inheritance_select"
+    bl_label = "Assign"
+
+    deselect = BoolProperty(
+        name="Deselect",
+        description="Deselect, or not deselect, that's the question",
+        default=False
+    )
+
+    @classmethod
+    def poll(cls, context):
+        props = context.object.data.jbeam_nodes_inh_props
+        return props and props.active_index >= 0
+
+    def execute(self, context):
+        me = context.object.data
+        props = me.jbeam_nodes_inh_props
+        p_item = props.chain_list[props.active_index]
+
+        bm = bmesh.from_edit_mesh(me)
+        inh_prop_layer = bm.verts.layers.int['jbeamInhProp']
+        for v in bm.verts:
+            if v[inh_prop_layer] == p_item.id:
+                v.select = not self.deselect
+
+        # propagate selection to other selection modes (edge and face)
+        bm.select_flush(not self.deselect)
+        # force viewport update
+        bmesh.update_edit_mesh(me, tessface=False, destructive=False)
         return {'FINISHED'}
