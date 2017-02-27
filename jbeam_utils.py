@@ -173,7 +173,7 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
     def visitSection_Nodes(self, ctx: jbeamParser.Section_NodesContext):
         bm, me = yield  # bmesh
         id_layer = bm.verts.layers.string.new('jbeamNodeId')
-        prop_inh = PropInheritanceBuilder(bm.verts, me.jbeam_nodes_inh_props.list)
+        prop_inh = PropInheritanceBuilder(bm.verts, me.jbeam_nodes_inh_props)
         prop_layer = bm.verts.layers.string.new('jbeamNodeProps')
         if ctx.listt is not None:
             self.visitChildren(ctx.listt, (bm, id_layer, prop_layer, prop_inh))
@@ -190,7 +190,7 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         # node props
         if ctx.props is not None:
             vert[prop_layer] = self.get_src_text_replaced(ctx.props).encode()
-        prop_inh.set_prop(vert)
+        prop_inh.next_item(vert)
         yield vert
 
     def visitNodeProps(self, ctx: jbeamParser.NodePropsContext):

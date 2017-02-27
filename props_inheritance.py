@@ -7,37 +7,55 @@ from bpy.types import Panel, UIList, PropertyGroup
 
 
 class PropInheritanceBuilder:
-    def __init__(self, bm_elem_seq, inh_props_list):
+    def __init__(self, bm_elem_seq, props_inh: JbeamPropsInheritance):
+        self._last_prop_id = 0
         # property inheritance factor
         # 0 - not affected with property inheritance
         self._current_f = 0.0
         self.step = 100.0
         # A node inherits properties step by step from 0 (nothing) to last factor <= vert[_lyr]
-        self._lyr = bm_elem_seq.layers.float.new('jbeamInhFactor')
-        self.prop_groups = OrderedDict()
-        self.inh_props_list = inh_props_list  # CollectionProperty(type=JbeamProp)
+        self._lyr = bm_elem_seq.layers.int.new('jbeamInhProp')
+        self.props_inh = props_inh  # JbeamPropsInheritance
 
-    def set_prop(self, bm_elem):
-        bm_elem[self._lyr] = self._current_f
+    def next_item(self, bm_elem):
+        bm_elem[self._lyr] = self._last_prop_id
 
     def next_prop(self, src):
         self._current_f += self.step
-        self.prop_groups[self._current_f] = src
-
-        inh_prop = self.inh_props_list.add()
-        inh_prop.name = src
-        inh_prop.factor = self._current_f
+        prop = self.props_inh.add(self._current_f, src)
+        self._last_prop_id = prop.id
 
 
 class JbeamProp(bpy.types.PropertyGroup):
     # name = StringProperty() is already defined
-    # id = IntProperty()
+    id = IntProperty()
     factor = FloatProperty()
 
 
 class JbeamPropsInheritance(PropertyGroup):
-    list = CollectionProperty(type=JbeamProp)
+    """
+    Represents properties inheritance chaining.
+    Position in the chain described with factor (float number).
+    Item with factor N inherits all props in the chain with factor less or equal to N with priority of the last.
+    """
+    chain_list = CollectionProperty(type=JbeamProp)
     active_index = IntProperty()
+    last_id = IntProperty()
+
+    def add(self, factor, src):
+        self.last_id += 1
+        prop_item = self.chain_list.add()
+        prop_item.id = self.last_id
+        prop_item.name = src
+        prop_item.factor = factor
+        return prop_item
+
+    def new(self):
+        factor = 0  # root
+        if len(self.chain_list):
+            last_inh_prop = sorted(self.chain_list, key=lambda p: p.factor)[-1]
+            factor = last_inh_prop.factor
+        return self.add(factor + 100, "{}")
 
 
 class MESH_UL_jbeam_props(UIList):
@@ -45,7 +63,11 @@ class MESH_UL_jbeam_props(UIList):
         jb_prop = item
 
         row = layout.row(align=True)
-        row.prop(jb_prop, "name", text="", emboss=False, icon_value=icon)
+        row.prop(jb_prop, "name", text="", emboss=False)
+
+    def draw_filter(self, context, layout):
+        # no filter
+        pass
 
 
 class DATA_PT_jbeam(Panel):
@@ -65,7 +87,7 @@ class DATA_PT_jbeam(Panel):
 
         layout.label('Node properties inheritance')
         row = layout.row()
-        row.template_list("MESH_UL_jbeam_props", "", ob.data.jbeam_nodes_inh_props, "list",
+        row.template_list("MESH_UL_jbeam_props", "", ob.data.jbeam_nodes_inh_props, "chain_list",
                           ob.data.jbeam_nodes_inh_props, "active_index")
         row = layout.row()
         row.operator('my_list.new_item')
@@ -88,6 +110,6 @@ class TEST_OP(bpy.types.Operator):
     def execute(self, context):
         ob = context.object
 
-        item = ob.data.jbeam_nodes_inh_props.list.add()
-        item.name = str(time())
+        item = ob.data.jbeam_nodes_inh_props.new()
+        # item.name = str(time())
         return {'FINISHED'}
