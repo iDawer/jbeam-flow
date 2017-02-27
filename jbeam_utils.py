@@ -8,6 +8,7 @@ import bmesh
 
 from antlr4 import *  # ToDo: get rid of the global antlr4 lib
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
+from .props_inheritance import PropInheritanceBuilder
 from .jb import jbeamLexer, jbeamParser, jbeamVisitor
 from .misc import (
     Triangle,
@@ -65,11 +66,12 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
                     elif case(GeneratorType):
                         result.send(None)  # charge generator
                         # generator returns a placeholder text
-                        gen_res = result.send(bm)
+                        gen_res = result.send((bm, mesh))
                         data_buf.write(gen_res[0])
                         data_buf.write('\n')
-                        if len(gen_res) == 3:
-                            mesh[gen_res[1]] = gen_res[2]
+                        # if len(gen_res) == 3:
+                        #     # ID property
+                        #     mesh[gen_res[1]] = gen_res[2]
                     elif case(str):
                         # other sections
                         data_buf.write(result)
@@ -169,36 +171,15 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
     # ============================== nodes ==============================
 
     def visitSection_Nodes(self, ctx: jbeamParser.Section_NodesContext):
-        bm = yield  # bmesh
+        bm, me = yield  # bmesh
         id_layer = bm.verts.layers.string.new('jbeamNodeId')
-        prop_inh = PartObjectsBuilder.PropInheritance(bm.verts)
+        prop_inh = PropInheritanceBuilder(bm.verts, me.jbeam_nodes_inh_props.list)
         prop_layer = bm.verts.layers.string.new('jbeamNodeProps')
         if ctx.listt is not None:
             self.visitChildren(ctx.listt, (bm, id_layer, prop_layer, prop_inh))
         bm.verts.ensure_lookup_table()
         text_replaced = self.get_src_text_replaced(ctx, ctx.listt, '${nodes}')
-        yield text_replaced, 'jbeam_nodes_inh_props', prop_inh.as_ID()
-
-    class PropInheritance:
-        def __init__(self, bm_elem_seq):
-            # property inheritance factor
-            # 0 - not affected with property inheritance
-            self._current_f = 0.0
-            self.step = 100.0
-            # A node inherits properties step by step from 0 (nothing) to last factor <= vert[_lyr]
-            self._lyr = bm_elem_seq.layers.float.new('jbeamInhFactor')
-            self.prop_groups = OrderedDict()
-
-        def set_prop(self, bm_elem):
-            bm_elem[self._lyr] = self._current_f
-
-        def next_prop(self, src):
-            self._current_f += self.step
-            self.prop_groups[self._current_f] = src
-
-        def as_ID(self):
-            # convert float keys to str
-            return OrderedDict(((repr(f), src) for (f, src) in self.prop_groups.items()))
+        yield text_replaced,
 
     def visitNode(self, ctx: jbeamParser.NodeContext):
         bm, id_layer, prop_layer, prop_inh = yield  # receive visitChildren's aggregator kwarg
@@ -221,7 +202,7 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
     # ============================== beams ==============================
 
     def visitSection_Beams(self, ctx: jbeamParser.Section_BeamsContext):
-        bm = yield
+        bm = (yield)[0]
         id_layer = bm.verts.layers.string.active
         if id_layer is None:
             # in case if no nodes section, i.e. beams with parent part nodes
@@ -282,7 +263,7 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
     # ============================== collision triangles ==============================
 
     def visitSection_Coltris(self, ctx: jbeamParser.Section_ColtrisContext):
-        bm = yield
+        bm = (yield)[0]
         if ctx.listt is not None:
             self.visitChildren(ctx.listt, bm)
         bm.faces.ensure_lookup_table()
