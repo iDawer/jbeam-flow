@@ -121,8 +121,8 @@ class DATA_PT_jbeam(Panel):
             sub.operator("object.jbeam_prop_inheritance_remove_from", text="Free")
 
             sub = row.row(align=True)
-            sub.operator("object.jbeam_prop_inheritance_select", text="Select").deselect = False
-            sub.operator("object.jbeam_prop_inheritance_select", text="Deselect").deselect = True
+            sub.operator("object.jbeam_prop_inheritance_select", text="Select").select = True
+            sub.operator("object.jbeam_prop_inheritance_select", text="Deselect").select = False
 
     @staticmethod
     def register():
@@ -133,33 +133,72 @@ class DATA_PT_jbeam(Panel):
         del bpy.types.Mesh.jbeam_nodes_inh_props
 
 
-class JbeamPropAdd(Operator):
-    """ Add a new inherited node property to the active object """
-    bl_idname = "object.jbeam_prop_inheritance_add"
-    bl_label = "Add a new item"
+# class PropOpMixin:
+#     bl_options = {'REGISTER', 'UNDO'}
+#
+#     section = bpy.props.EnumProperty(
+#         items=(
+#             ('NODES', 'Nodes', ""),
+#             ('BEAMS', 'Beams', ""),
+#             ('TRIANGLES', 'Collision triangles', ""),
+#         ),
+#         name="Section"
+#     )
+#
+#     def get_props(self, context):
+#         from .misc import Switch
+#         with Switch(self.section) as case:
+#             if case('NODES'):
+#                 return context.object.data.jbeam_nodes_inh_props
+#             else:
+#                 raise NotImplementedError(self.section)
+
+
+class PropSetBase:
     bl_options = {'REGISTER', 'UNDO'}
 
+    @staticmethod
+    def get_props(context):
+        raise NotImplementedError('Abstract method call')
+
+    @staticmethod
+    def get_datalayer(bmesh):
+        raise NotImplementedError('Abstract method call')
+
+
+class PropSetAddMixin(PropSetBase):
     def execute(self, context):
-        props = context.object.data.jbeam_nodes_inh_props
+        props = self.get_props(context)
         props.new()
         props.active_index = len(props.chain_list) - 1
         return {'FINISHED'}
 
 
-class JbeamPropRemove(Operator):
-    """ Delete the active property from the active object and free assigned nodes """
-    bl_idname = "object.jbeam_prop_inheritance_remove"
-    bl_label = "Delete the active item"
-    bl_options = {'REGISTER', 'UNDO'}
+class NodesOpMixin(PropSetBase):
+    @staticmethod
+    def get_props(context):
+        return context.object.data.jbeam_nodes_inh_props
 
+    @staticmethod
+    def get_datalayer(bmesh):
+        return bmesh.verts.layers.int['jbeamInhProp']
+
+
+class JbeamPropAdd(NodesOpMixin, PropSetAddMixin, Operator):
+    """ Add a new property set to the nodes section of the active object """
+    bl_label = "Add a new property set to the nodes section"
+    bl_idname = "object.jbeam_prop_inheritance_add"
+
+
+class PropSetRemoveMixin(PropSetBase):
     @classmethod
     def poll(cls, context):
-        props = context.object.data.jbeam_nodes_inh_props
+        props = cls.get_props(context)
         return props and props.active_index >= 0
 
     def execute(self, context):
         me = context.object.data
-        props = me.jbeam_nodes_inh_props
+        props = self.get_props(context)
         p_item = props.chain_list[props.active_index]
 
         if me.is_editmode:
@@ -168,7 +207,7 @@ class JbeamPropRemove(Operator):
             bm = bmesh.new()
             bm.from_mesh(me)
 
-        inh_prop_layer = bm.verts.layers.int['jbeamInhProp']
+        inh_prop_layer = self.get_datalayer(bm)
         for v in bm.verts:
             if v[inh_prop_layer] == p_item.id:
                 # inherit from root (no props)
@@ -183,12 +222,13 @@ class JbeamPropRemove(Operator):
         return {'FINISHED'}
 
 
-class JbeamPropMove(Operator):
-    """ Move the active property group up/down in the chain list """
-    bl_idname = "object.jbeam_prop_inheritance_move"
-    bl_label = "Move property group"
-    bl_options = {'REGISTER', 'UNDO'}
+class JbeamPropRemove(NodesOpMixin, Operator, PropSetRemoveMixin):
+    """ Delete the active property from the active object and free assigned nodes """
+    bl_idname = "object.jbeam_prop_inheritance_remove"
+    bl_label = "Delete the active item"
 
+
+class PropSetMoveMixin(PropSetBase):
     direction = bpy.props.EnumProperty(
         items=(
             ('UP', 'Up', ""),
@@ -199,13 +239,12 @@ class JbeamPropMove(Operator):
 
     @classmethod
     def poll(cls, context):
-        props = context.object.data.jbeam_nodes_inh_props
+        props = cls.get_props(context)
         return props and props.active_index >= 0
 
     def execute(self, context):
-        me = context.object.data
-        props = me.jbeam_nodes_inh_props
-        p_item = props.chain_list[props.active_index]
+        props = self.get_props(context)
+        # p_item = props.chain_list[props.active_index]
 
         idx = props.active_index
         _len = len(props.chain_list)
@@ -222,24 +261,25 @@ class JbeamPropMove(Operator):
         return {'FINISHED'}
 
 
-class JbeamPropAssign(Operator):
-    """ Assign the selected nodes to the active inherited property """
-    bl_idname = "object.jbeam_prop_inheritance_assign"
-    bl_label = "Assign"
-    bl_options = {'REGISTER', 'UNDO'}
+class JbeamPropMove(NodesOpMixin, PropSetMoveMixin, Operator):
+    """ Move the active property group up/down in the chain list """
+    bl_idname = "object.jbeam_prop_inheritance_move"
+    bl_label = "Move property group"
 
+
+class PropSetAssignMixin(PropSetBase):
     @classmethod
     def poll(cls, context):
-        props = context.object.data.jbeam_nodes_inh_props
+        props = cls.get_props(context)
         return props and props.active_index >= 0
 
     def execute(self, context):
         me = context.object.data
-        props = me.jbeam_nodes_inh_props
+        props = self.get_props(context)
         p_item = props.chain_list[props.active_index]
 
         bm = bmesh.from_edit_mesh(me)
-        inh_prop_layer = bm.verts.layers.int['jbeamInhProp']
+        inh_prop_layer = self.get_datalayer(bm)
         for v in bm.verts:
             if v.select:
                 # override old values
@@ -248,16 +288,17 @@ class JbeamPropAssign(Operator):
         return {'FINISHED'}
 
 
-class JbeamPropFree(Operator):
-    """ Free the selected nodes from any inherited property """
-    bl_idname = "object.jbeam_prop_inheritance_remove_from"
-    bl_label = "Remove from"
-    bl_options = {'REGISTER', 'UNDO'}
+class JbeamPropAssign(NodesOpMixin, PropSetAssignMixin, Operator):
+    """ Assign the selected nodes to the active inherited property """
+    bl_idname = "object.jbeam_prop_inheritance_assign"
+    bl_label = "Assign"
 
+
+class PropSetFreeMixin(PropSetBase):
     def execute(self, context):
         me = context.object.data
         bm = bmesh.from_edit_mesh(me)
-        inh_prop_layer = bm.verts.layers.int['jbeamInhProp']
+        inh_prop_layer = self.get_datalayer(bm)
         for v in bm.verts:
             if v.select:
                 # inherit from root (no props)
@@ -265,36 +306,43 @@ class JbeamPropFree(Operator):
         return {'FINISHED'}
 
 
-class JbeamPropSelect(Operator):
-    """ Select/deselect all nodes assigned to the active property group """
-    bl_idname = "object.jbeam_prop_inheritance_select"
-    bl_label = "Select"
-    bl_options = {'REGISTER', 'UNDO'}
+class JbeamPropFree(NodesOpMixin, PropSetFreeMixin, Operator):
+    """ Free the selected nodes from any inherited property """
+    bl_idname = "object.jbeam_prop_inheritance_remove_from"
+    bl_label = "Remove from"
 
-    deselect = BoolProperty(
-        name="Deselect",
-        description="Deselect, or not deselect, that's the question",
-        default=False
+
+class PropSetSelect(PropSetBase):
+    select = BoolProperty(
+        name="Select",
+        description="Select, or deselect, that's the question",
+        default=True
     )
 
     @classmethod
     def poll(cls, context):
-        props = context.object.data.jbeam_nodes_inh_props
+        props = cls.get_props(context)
         return props and props.active_index >= 0
 
     def execute(self, context):
         me = context.object.data
-        props = me.jbeam_nodes_inh_props
+        props = self.get_props(context)
         p_item = props.chain_list[props.active_index]
 
         bm = bmesh.from_edit_mesh(me)
-        inh_prop_layer = bm.verts.layers.int['jbeamInhProp']
+        inh_prop_layer = self.get_datalayer(bm)
         for v in bm.verts:
             if v[inh_prop_layer] == p_item.id:
-                v.select = not self.deselect
+                v.select = self.select
 
         # propagate selection to other selection modes (edge and face)
-        bm.select_flush(not self.deselect)
+        bm.select_flush(self.select)
         # force viewport update
         bmesh.update_edit_mesh(me, tessface=False, destructive=False)
         return {'FINISHED'}
+
+
+class JbeamPropSelect(NodesOpMixin, Operator, PropSetSelect):
+    """ Select/deselect all nodes assigned to the active property set """
+    bl_idname = "object.jbeam_prop_inheritance_select"
+    bl_label = "Select"
