@@ -149,7 +149,10 @@ class PropSet_Add(PropSetBase):
     def execute(self, context):
         props = self.get_props(context)
         props.new()
-        props.active_index = len(props.chain_list) - 1
+        next_idx = props.active_index + 1
+        # smart add after current selected item
+        props.chain_list.move(len(props.chain_list) - 1, next_idx)
+        props.active_index = next_idx
         return {'FINISHED'}
 
 
