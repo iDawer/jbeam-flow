@@ -166,7 +166,7 @@ class PropSetBase:
         raise NotImplementedError('Abstract method call')
 
 
-class PropSetAddMixin(PropSetBase):
+class PropSet_Add(PropSetBase):
     def execute(self, context):
         props = self.get_props(context)
         props.new()
@@ -174,23 +174,7 @@ class PropSetAddMixin(PropSetBase):
         return {'FINISHED'}
 
 
-class NodesOpMixin(PropSetBase):
-    @staticmethod
-    def get_props(context):
-        return context.object.data.jbeam_nodes_inh_props
-
-    @staticmethod
-    def get_datalayer(bmesh):
-        return bmesh.verts.layers.int['jbeamInhProp']
-
-
-class JbeamPropAdd(NodesOpMixin, PropSetAddMixin, Operator):
-    """ Add a new property set to the nodes section of the active object """
-    bl_label = "Add a new property set to the nodes section"
-    bl_idname = "object.jbeam_prop_inheritance_add"
-
-
-class PropSetRemoveMixin(PropSetBase):
+class PropSet_Remove(PropSetBase):
     @classmethod
     def poll(cls, context):
         props = cls.get_props(context)
@@ -222,13 +206,7 @@ class PropSetRemoveMixin(PropSetBase):
         return {'FINISHED'}
 
 
-class JbeamPropRemove(NodesOpMixin, Operator, PropSetRemoveMixin):
-    """ Delete the active property from the active object and free assigned nodes """
-    bl_idname = "object.jbeam_prop_inheritance_remove"
-    bl_label = "Delete the active item"
-
-
-class PropSetMoveMixin(PropSetBase):
+class PropSet_Move(PropSetBase):
     direction = bpy.props.EnumProperty(
         items=(
             ('UP', 'Up', ""),
@@ -261,13 +239,7 @@ class PropSetMoveMixin(PropSetBase):
         return {'FINISHED'}
 
 
-class JbeamPropMove(NodesOpMixin, PropSetMoveMixin, Operator):
-    """ Move the active property group up/down in the chain list """
-    bl_idname = "object.jbeam_prop_inheritance_move"
-    bl_label = "Move property group"
-
-
-class PropSetAssignMixin(PropSetBase):
+class PropSet_Assign(PropSetBase):
     @classmethod
     def poll(cls, context):
         props = cls.get_props(context)
@@ -288,13 +260,7 @@ class PropSetAssignMixin(PropSetBase):
         return {'FINISHED'}
 
 
-class JbeamPropAssign(NodesOpMixin, PropSetAssignMixin, Operator):
-    """ Assign the selected nodes to the active inherited property """
-    bl_idname = "object.jbeam_prop_inheritance_assign"
-    bl_label = "Assign"
-
-
-class PropSetFreeMixin(PropSetBase):
+class PropSet_Free(PropSetBase):
     def execute(self, context):
         me = context.object.data
         bm = bmesh.from_edit_mesh(me)
@@ -306,13 +272,7 @@ class PropSetFreeMixin(PropSetBase):
         return {'FINISHED'}
 
 
-class JbeamPropFree(NodesOpMixin, PropSetFreeMixin, Operator):
-    """ Free the selected nodes from any inherited property """
-    bl_idname = "object.jbeam_prop_inheritance_remove_from"
-    bl_label = "Remove from"
-
-
-class PropSetSelect(PropSetBase):
+class PropSet_Select(PropSetBase):
     select = BoolProperty(
         name="Select",
         description="Select, or deselect, that's the question",
@@ -342,7 +302,47 @@ class PropSetSelect(PropSetBase):
         return {'FINISHED'}
 
 
-class JbeamPropSelect(NodesOpMixin, Operator, PropSetSelect):
+class NodesOpMixin(PropSetBase):
+    @staticmethod
+    def get_props(context):
+        return context.object.data.jbeam_nodes_inh_props
+
+    @staticmethod
+    def get_datalayer(bmesh):
+        return bmesh.verts.layers.int['jbeamInhProp']
+
+
+class JbeamPropAdd(NodesOpMixin, PropSet_Add, Operator):
+    """ Add a new property set to the nodes section of the active object """
+    bl_label = "Add a new property set to the nodes section"
+    bl_idname = "object.jbeam_prop_inheritance_add"
+
+
+class JbeamPropRemove(NodesOpMixin, PropSet_Remove, Operator):
+    """ Delete the active property from the active object and free assigned nodes """
+    bl_idname = "object.jbeam_prop_inheritance_remove"
+    bl_label = "Delete the active item"
+
+
+class JbeamPropMove(NodesOpMixin, PropSet_Move, Operator):
+    """ Move the active property group up/down in the chain list """
+    bl_idname = "object.jbeam_prop_inheritance_move"
+    bl_label = "Move property group"
+
+
+class JbeamPropAssign(NodesOpMixin, PropSet_Assign, Operator):
+    """ Assign the selected nodes to the active inherited property """
+    bl_idname = "object.jbeam_prop_inheritance_assign"
+    bl_label = "Assign"
+
+
+class JbeamPropFree(NodesOpMixin, PropSet_Free, Operator):
+    """ Free the selected nodes from any inherited property """
+    bl_idname = "object.jbeam_prop_inheritance_remove_from"
+    bl_label = "Remove from"
+
+
+class JbeamPropSelect(NodesOpMixin, PropSet_Select, Operator):
     """ Select/deselect all nodes assigned to the active property set """
     bl_idname = "object.jbeam_prop_inheritance_select"
     bl_label = "Select"
