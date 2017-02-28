@@ -62,7 +62,7 @@ class PropInheritanceBuilder:
         self._current_f = 0.0
         self.step = 100.0
         # A node inherits properties step by step from 0 (nothing) to last factor <= vert[_lyr]
-        self._lyr = bm_elem_seq.layers.int.new('jbeamInhProp')
+        self._lyr = bm_elem_seq.layers.int.new('jbeam_prop_chain_id')
         self.props_inh = props_inh  # JbeamPropsInheritance
 
     def next_item(self, bm_elem):
@@ -101,57 +101,36 @@ class DATA_PT_jbeam(Panel):
         layout = self.layout
         ob = context.object
 
-        layout.label('Node properties inheritance')
+        layout.label('Node chain of property inheritance')
         row = layout.row()
-        row.template_list("MESH_UL_jbeam_props", "", ob.data.jbeam_nodes_inh_props, "chain_list",
-                          ob.data.jbeam_nodes_inh_props, "active_index")
+        row.template_list("MESH_UL_jbeam_props", "", ob.data.jbeam_node_prop_chain, "chain_list",
+                          ob.data.jbeam_node_prop_chain, "active_index")
 
         col = row.column(align=True)
-        col.operator('object.jbeam_prop_inheritance_add', icon='ZOOMIN', text="")
-        col.operator('object.jbeam_prop_inheritance_remove', icon='ZOOMOUT', text="")
+        col.operator('object.jbeam_node_prop_chain_add', icon='ZOOMIN', text="")
+        col.operator('object.jbeam_node_prop_chain_remove', icon='ZOOMOUT', text="")
         col.separator()
-        col.operator("object.jbeam_prop_inheritance_move", icon='TRIA_UP', text="").direction = 'UP'
-        col.operator("object.jbeam_prop_inheritance_move", icon='TRIA_DOWN', text="").direction = 'DOWN'
+        col.operator("object.jbeam_node_prop_chain_move", icon='TRIA_UP', text="").direction = 'UP'
+        col.operator("object.jbeam_node_prop_chain_move", icon='TRIA_DOWN', text="").direction = 'DOWN'
 
-        if ob.data.jbeam_nodes_inh_props.chain_list and ob.mode == 'EDIT':
+        if ob.data.jbeam_node_prop_chain.chain_list and ob.mode == 'EDIT':
             row = layout.row()
 
             sub = row.row(align=True)
-            sub.operator("object.jbeam_prop_inheritance_assign", text="Assign")
-            sub.operator("object.jbeam_prop_inheritance_remove_from", text="Free")
+            sub.operator("object.jbeam_node_prop_chain_assign", text="Assign")
+            sub.operator("object.jbeam_node_prop_chain_remove_from", text="Free")
 
             sub = row.row(align=True)
-            sub.operator("object.jbeam_prop_inheritance_select", text="Select").select = True
-            sub.operator("object.jbeam_prop_inheritance_select", text="Deselect").select = False
+            sub.operator("object.jbeam_node_prop_chain_select", text="Select").select = True
+            sub.operator("object.jbeam_node_prop_chain_select", text="Deselect").select = False
 
     @staticmethod
     def register():
-        bpy.types.Mesh.jbeam_nodes_inh_props = PointerProperty(type=JbeamPropsInheritance)
+        bpy.types.Mesh.jbeam_node_prop_chain = PointerProperty(type=JbeamPropsInheritance)
 
     @staticmethod
     def unregister():
-        del bpy.types.Mesh.jbeam_nodes_inh_props
-
-
-# class PropOpMixin:
-#     bl_options = {'REGISTER', 'UNDO'}
-#
-#     section = bpy.props.EnumProperty(
-#         items=(
-#             ('NODES', 'Nodes', ""),
-#             ('BEAMS', 'Beams', ""),
-#             ('TRIANGLES', 'Collision triangles', ""),
-#         ),
-#         name="Section"
-#     )
-#
-#     def get_props(self, context):
-#         from .misc import Switch
-#         with Switch(self.section) as case:
-#             if case('NODES'):
-#                 return context.object.data.jbeam_nodes_inh_props
-#             else:
-#                 raise NotImplementedError(self.section)
+        del bpy.types.Mesh.jbeam_node_prop_chain
 
 
 class PropSetBase:
@@ -305,44 +284,46 @@ class PropSet_Select(PropSetBase):
 class NodesOpMixin(PropSetBase):
     @staticmethod
     def get_props(context):
-        return context.object.data.jbeam_nodes_inh_props
+        return context.object.data.jbeam_node_prop_chain
 
     @staticmethod
     def get_datalayer(bmesh):
-        return bmesh.verts.layers.int['jbeamInhProp']
+        return bmesh.verts.layers.int['jbeam_prop_chain_id']
 
 
-class JbeamPropAdd(NodesOpMixin, PropSet_Add, Operator):
-    """ Add a new property set to the nodes section of the active object """
+class NodePropChain_Add(NodesOpMixin, PropSet_Add, Operator):
+    """Add a new property set to the nodes section of the active object """
+    bl_idname = "object.jbeam_node_prop_chain_add"
     bl_label = "Add a new property set to the nodes section"
-    bl_idname = "object.jbeam_prop_inheritance_add"
 
 
-class JbeamPropRemove(NodesOpMixin, PropSet_Remove, Operator):
-    """ Delete the active property from the active object and free assigned nodes """
-    bl_idname = "object.jbeam_prop_inheritance_remove"
+class NodePropChain_Remove(NodesOpMixin, PropSet_Remove, Operator):
+    """Delete the active property from the active object and free assigned nodes """
+    bl_idname = "object.jbeam_node_prop_chain_remove"
     bl_label = "Delete the active item"
 
 
-class JbeamPropMove(NodesOpMixin, PropSet_Move, Operator):
-    """ Move the active property group up/down in the chain list """
-    bl_idname = "object.jbeam_prop_inheritance_move"
+class NodePropChain_Move(NodesOpMixin, PropSet_Move, Operator):
+    """Move the active property group up/down in the chain list """
+    bl_idname = "object.jbeam_node_prop_chain_move"
     bl_label = "Move property group"
 
 
-class JbeamPropAssign(NodesOpMixin, PropSet_Assign, Operator):
-    """ Assign the selected nodes to the active inherited property """
-    bl_idname = "object.jbeam_prop_inheritance_assign"
+class NodePropChain_Assign(NodesOpMixin, PropSet_Assign, Operator):
+    """Assign the selected nodes to the active property set.
+Note, a node can be assigned to only one element of the chain.
+"""
+    bl_idname = "object.jbeam_node_prop_chain_assign"
     bl_label = "Assign"
 
 
-class JbeamPropFree(NodesOpMixin, PropSet_Free, Operator):
-    """ Free the selected nodes from any inherited property """
-    bl_idname = "object.jbeam_prop_inheritance_remove_from"
+class NodePropChain_Free(NodesOpMixin, PropSet_Free, Operator):
+    """Free the selected nodes from any inherited property """
+    bl_idname = "object.jbeam_node_prop_chain_remove_from"
     bl_label = "Remove from"
 
 
-class JbeamPropSelect(NodesOpMixin, PropSet_Select, Operator):
-    """ Select/deselect all nodes assigned to the active property set """
-    bl_idname = "object.jbeam_prop_inheritance_select"
+class NodePropChain_Select(NodesOpMixin, PropSet_Select, Operator):
+    """Select/deselect all nodes assigned to the active property set """
+    bl_idname = "object.jbeam_node_prop_chain_select"
     bl_label = "Select"
