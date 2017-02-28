@@ -291,7 +291,10 @@ class NodesOpMixin(PropSetBase):
 
     @staticmethod
     def get_datalayer(bmesh):
-        return bmesh.verts.layers.int['jbeam_prop_chain_id']
+        dlayer = bmesh.verts.layers.int.get('jbeam_prop_chain_id', None)
+        if dlayer is None:
+            dlayer = bmesh.verts.layers.int.new('jbeam_prop_chain_id')
+        return dlayer
 
 
 class NodePropChain_Add(NodesOpMixin, PropSet_Add, Operator):
