@@ -55,6 +55,8 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         # Save part name explicitly, due Blender avoids names collision by appending '.001'
         mesh['jbeam_part'] = part_name
         part_obj = bpy.data.objects.new(part_name, mesh)
+        part_obj.show_wire = True
+        part_obj.show_all_edges = True
 
         data_buf = StringIO()
         if ctx.listt is not None:
