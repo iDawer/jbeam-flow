@@ -202,19 +202,20 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
     # ============================== beams ==============================
 
     def visitSection_Beams(self, ctx: jbeamParser.Section_BeamsContext):
-        bm = (yield)[0]
+        bm, me = yield
         id_layer = bm.verts.layers.string.active
         if id_layer is None:
             # in case if no nodes section, i.e. beams with parent part nodes
             id_layer = bm.verts.layers.string.new('jbeamNodeId')
         beam_layer = bm.edges.layers.int.new('jbeam')
+        prop_inh = PropInheritanceBuilder(bm.edges, me.jbeam_beam_prop_chain)
         if ctx.listt is not None:
-            self.visitChildren(ctx.listt, (bm, id_layer, beam_layer))
+            self.visitChildren(ctx.listt, (bm, id_layer, beam_layer, prop_inh))
         bm.edges.ensure_lookup_table()
         yield self.get_src_text_replaced(ctx, ctx.listt, '${beams}'),
 
     def visitBeam(self, ctx: jbeamParser.BeamContext):
-        bm, id_layer, beam_layer = yield
+        bm, id_layer, beam_layer, prop_inh = yield
         id1 = ctx.id1.string_item
         id2 = ctx.id2.string_item
         v1, v2 = self._vertsIndex.get(id1), self._vertsIndex.get(id2)
@@ -232,6 +233,7 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         try:
             edge = bm.edges.new((v1, v2))  # throws on duplicates
             edge[beam_layer] = 1
+            prop_inh.next_item(edge)
             yield edge
         except ValueError as err:
             print(err, id1, id2)  # ToDo handle duplicates
@@ -258,7 +260,10 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         return vert
 
     def visitBeamProps(self, ctx: jbeamParser.BeamPropsContext):
-        return None
+        bm, id_layer, beam_layer, prop_inh = yield
+        src = self.get_src_text_replaced(ctx)
+        prop_inh.next_prop(src)
+        yield
 
     # ============================== collision triangles ==============================
 
