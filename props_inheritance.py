@@ -19,6 +19,8 @@ from bpy.types import (
     Operator,
 )
 
+PROP_CHAIN_ID = 'jbeam_prop_chain_id'
+
 
 class JbeamProp(PropertyGroup):
     # name = StringProperty() is already defined
@@ -62,7 +64,7 @@ class PropInheritanceBuilder:
         self._current_f = 0.0
         self.step = 100.0
         # A node inherits properties step by step from 0 (nothing) to last factor <= vert[_lyr]
-        self._lyr = bm_elem_seq.layers.int.new('jbeam_prop_chain_id')
+        self._lyr = bm_elem_seq.layers.int.new(PROP_CHAIN_ID)
         self.props_inh = props_inh  # JbeamPropsInheritance
 
     def next_item(self, bm_elem):
@@ -74,7 +76,7 @@ class PropInheritanceBuilder:
         self._last_prop_id = prop.id
 
 
-class MESH_UL_jbeam_props(UIList):
+class ChainListMixin:
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         jb_prop = item
 
@@ -86,16 +88,17 @@ class MESH_UL_jbeam_props(UIList):
         pass
 
 
-class MESH_UL_jbeam_beam_chain(UIList):
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
-        jb_prop = item
+# list shares events between his instances, so we need to create different classes per section
+class MESH_UL_jbeam_node_chain(ChainListMixin, UIList):
+    pass
 
-        row = layout.row(align=True)
-        row.prop(jb_prop, "name", text="", emboss=False)
 
-    def draw_filter(self, context, layout):
-        # no filter
-        pass
+class MESH_UL_jbeam_beam_chain(ChainListMixin, UIList):
+    pass
+
+
+class MESH_UL_jbeam_triangle_chain(ChainListMixin, UIList):
+    pass
 
 
 class DATA_PT_jbeam(Panel):
@@ -116,7 +119,7 @@ class DATA_PT_jbeam(Panel):
         # ============= nodes
         layout.label('Node chain of property inheritance')
         row = layout.row()
-        row.template_list("MESH_UL_jbeam_props", "", ob.data.jbeam_node_prop_chain, "chain_list",
+        row.template_list("MESH_UL_jbeam_node_chain", "", ob.data.jbeam_node_prop_chain, "chain_list",
                           ob.data.jbeam_node_prop_chain, "active_index")
 
         col = row.column(align=True)
@@ -161,15 +164,41 @@ class DATA_PT_jbeam(Panel):
             sub.operator(BeamPropChain_Select.bl_idname, text="Select").select = True
             sub.operator(BeamPropChain_Select.bl_idname, text="Deselect").select = False
 
+        # ============= triangles
+        layout.label('Triangle chain of property inheritance')
+        row = layout.row()
+        row.template_list("MESH_UL_jbeam_triangle_chain", "", ob.data.jbeam_triangle_prop_chain, "chain_list",
+                          ob.data.jbeam_triangle_prop_chain, "active_index")
+
+        col = row.column(align=True)
+        col.operator(TrianglePropChain_Add.bl_idname, icon='ZOOMIN', text="")
+        col.operator(TrianglePropChain_Remove.bl_idname, icon='ZOOMOUT', text="")
+        col.separator()
+        col.operator(TrianglePropChain_Move.bl_idname, icon='TRIA_UP', text="").direction = 'UP'
+        col.operator(TrianglePropChain_Move.bl_idname, icon='TRIA_DOWN', text="").direction = 'DOWN'
+
+        if ob.data.jbeam_triangle_prop_chain.chain_list and ob.mode == 'EDIT':
+            row = layout.row()
+
+            sub = row.row(align=True)
+            sub.operator(TrianglePropChain_Assign.bl_idname, text="Assign")
+            sub.operator(TrianglePropChain_Free.bl_idname, text="Free")
+
+            sub = row.row(align=True)
+            sub.operator(TrianglePropChain_Select.bl_idname, text="Select").select = True
+            sub.operator(TrianglePropChain_Select.bl_idname, text="Deselect").select = False
+
     @staticmethod
     def register():
         bpy.types.Mesh.jbeam_node_prop_chain = PointerProperty(type=JbeamPropsInheritance)
         bpy.types.Mesh.jbeam_beam_prop_chain = PointerProperty(type=JbeamPropsInheritance)
+        bpy.types.Mesh.jbeam_triangle_prop_chain = PointerProperty(type=JbeamPropsInheritance)
 
     @staticmethod
     def unregister():
         del bpy.types.Mesh.jbeam_node_prop_chain
         del bpy.types.Mesh.jbeam_beam_prop_chain
+        del bpy.types.Mesh.jbeam_triangle_prop_chain
 
 
 class PropSetBase:
@@ -334,9 +363,9 @@ class NodesOpMixin(PropSetBase):
 
     @staticmethod
     def get_datalayer(bm):
-        dlayer = bm.verts.layers.int.get('jbeam_prop_chain_id', None)
+        dlayer = bm.verts.layers.int.get(PROP_CHAIN_ID, None)
         if dlayer is None:
-            dlayer = bm.verts.layers.int.new('jbeam_prop_chain_id')
+            dlayer = bm.verts.layers.int.new(PROP_CHAIN_ID)
         return dlayer
 
     @staticmethod
@@ -351,14 +380,31 @@ class BeamsOpMixin(PropSetBase):
 
     @staticmethod
     def get_datalayer(bm):
-        dlayer = bm.edges.layers.int.get('jbeam_prop_chain_id', None)
+        dlayer = bm.edges.layers.int.get(PROP_CHAIN_ID, None)
         if dlayer is None:
-            dlayer = bm.edges.layers.int.new('jbeam_prop_chain_id')
+            dlayer = bm.edges.layers.int.new(PROP_CHAIN_ID)
         return dlayer
 
     @staticmethod
     def get_bm_elements(bm):
         return bm.edges
+
+
+class TrianglesOpMixin(PropSetBase):
+    @staticmethod
+    def get_props(context):
+        return context.object.data.jbeam_triangle_prop_chain
+
+    @staticmethod
+    def get_datalayer(bm):
+        dlayer = bm.faces.layers.int.get(PROP_CHAIN_ID, None)
+        if dlayer is None:
+            dlayer = bm.faces.layers.int.new(PROP_CHAIN_ID)
+        return dlayer
+
+    @staticmethod
+    def get_bm_elements(bm):
+        return bm.faces
 
 
 # ====================== nodes =========================================================================================
@@ -436,4 +482,43 @@ class BeamPropChain_Free(BeamsOpMixin, PropSet_Free, Operator):
 class BeamPropChain_Select(BeamsOpMixin, PropSet_Select, Operator):
     """Select/deselect all beams assigned to the active property set """
     bl_idname = "object.jbeam_beam_prop_chain_select"
+    bl_label = "Select"
+
+
+# ====================== triangles =====================================================================================
+class TrianglePropChain_Add(TrianglesOpMixin, PropSet_Add, Operator):
+    """Add a new property set to the triangles section of the active object """
+    bl_idname = "object.jbeam_triangle_prop_chain_add"
+    bl_label = "Add a new property set to the triangles section"
+
+
+class TrianglePropChain_Remove(TrianglesOpMixin, PropSet_Remove, Operator):
+    """Delete the active property from the active object and free assigned triangles """
+    bl_idname = "object.jbeam_triangle_prop_chain_remove"
+    bl_label = "Delete the active item"
+
+
+class TrianglePropChain_Move(TrianglesOpMixin, PropSet_Move, Operator):
+    """Move the active property group up/down in the chain list """
+    bl_idname = "object.jbeam_triangle_prop_chain_move"
+    bl_label = "Move property group"
+
+
+class TrianglePropChain_Assign(TrianglesOpMixin, PropSet_Assign, Operator):
+    """Assign the selected triangles to the active property set.
+Note, a triangle can be assigned to only one element of the chain.
+"""
+    bl_idname = "object.jbeam_triangle_prop_chain_assign"
+    bl_label = "Assign"
+
+
+class TrianglePropChain_Free(TrianglesOpMixin, PropSet_Free, Operator):
+    """Free the selected triangles from any inherited property """
+    bl_idname = "object.jbeam_triangle_prop_chain_free"
+    bl_label = "Remove from"
+
+
+class TrianglePropChain_Select(TrianglesOpMixin, PropSet_Select, Operator):
+    """Select/deselect all triangles assigned to the active property set """
+    bl_idname = "object.jbeam_triangle_prop_chain_select"
     bl_label = "Select"

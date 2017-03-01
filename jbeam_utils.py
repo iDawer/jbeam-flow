@@ -268,14 +268,15 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
     # ============================== collision triangles ==============================
 
     def visitSection_Coltris(self, ctx: jbeamParser.Section_ColtrisContext):
-        bm = (yield)[0]
+        bm, me = yield
+        prop_inh = PropInheritanceBuilder(bm.faces, me.jbeam_triangle_prop_chain)
         if ctx.listt is not None:
-            self.visitChildren(ctx.listt, bm)
+            self.visitChildren(ctx.listt, (bm, prop_inh))
         bm.faces.ensure_lookup_table()
         yield self.get_src_text_replaced(ctx, ctx.listt, '${triangles}')
 
     def visitColtri(self, ctx: jbeamParser.ColtriContext):
-        bm = yield
+        bm, prop_inh = yield
         id1 = ctx.id1.string_item
         id2 = ctx.id2.string_item
         id3 = ctx.id3.string_item
@@ -284,6 +285,7 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         if v1 and v2 and v3:
             try:
                 face = bm.faces.new((v1, v2, v3))
+                prop_inh.next_item(face)
                 yield face
             except ValueError as err:
                 print(err, id1, id2, id3)  # ToDo handle duplicates
@@ -294,7 +296,10 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
             yield
 
     def visitColtriProps(self, ctx: jbeamParser.ColtriPropsContext):
-        return None  # ToDo ColtriProps
+        bm, prop_inh = yield
+        src = self.get_src_text_replaced(ctx)
+        prop_inh.next_prop(src)
+        yield
 
     # ============================== unknown section ==============================
 
