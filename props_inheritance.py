@@ -25,6 +25,7 @@ class JbeamProp(PropertyGroup):
     # 'id' is a reference for nodes
     id = IntProperty()
     factor = FloatProperty()
+    assigned_count = IntProperty()
 
 
 class JbeamPropsInheritance(PropertyGroup):
@@ -53,10 +54,24 @@ class JbeamPropsInheritance(PropertyGroup):
             factor = last_inh_prop.factor
         return self.add(factor + 100, "{}")
 
+    def get_assigned_counts_update_gen(self):
+        prop_id_map = {p.id: p for p in self.chain_list}
+        while True:
+            cmd = yield
+            if cmd is None:
+                break
+            prop = prop_id_map.get(cmd[0], None)
+            if prop is not None:
+                if cmd[1] == 'ADD':
+                    prop.assigned_count += 1
+                elif cmd[1] == 'RESET':
+                    prop.assigned_count = 0
+        yield 'END'
+
 
 class PropInheritanceBuilder:
     def __init__(self, bm_elem_seq, props_inh: JbeamPropsInheritance):
-        self._last_prop_id = 0
+        self._last_prop = None
         # property inheritance factor
         # 0 - not affected with property inheritance
         self._current_f = 0.0
@@ -66,12 +81,15 @@ class PropInheritanceBuilder:
         self.props_inh = props_inh  # JbeamPropsInheritance
 
     def next_item(self, bm_elem):
-        bm_elem[self._lyr] = self._last_prop_id
+        prop_id = 0
+        if self._last_prop is not None:
+            prop_id = self._last_prop.id
+            self._last_prop.assigned_count += 1
+        bm_elem[self._lyr] = prop_id
 
     def next_prop(self, src):
         self._current_f += self.step
-        prop = self.props_inh.add(self._current_f, src)
-        self._last_prop_id = prop.id
+        self._last_prop = self.props_inh.add(self._current_f, src)
 
 
 class MESH_UL_jbeam_props(UIList):
@@ -80,6 +98,8 @@ class MESH_UL_jbeam_props(UIList):
 
         row = layout.row(align=True)
         row.prop(jb_prop, "name", text="", emboss=False)
+        if jb_prop.assigned_count:
+            row.label(icon='PINNED')
 
     def draw_filter(self, context, layout):
         # no filter
@@ -234,11 +254,16 @@ class PropSet_Assign(PropSetBase):
 
         bm = bmesh.from_edit_mesh(me)
         inh_prop_layer = self.get_datalayer(bm)
+        count = 0
         for v in bm.verts:
             if v.select:
                 # override old values
                 v[inh_prop_layer] = p_item.id
+                count += 1
+            elif v[inh_prop_layer] == p_item.id:
+                count += 1
 
+        p_item.assigned_count = count
         return {'FINISHED'}
 
 
@@ -247,8 +272,11 @@ class PropSet_Free(PropSetBase):
         me = context.object.data
         bm = bmesh.from_edit_mesh(me)
         inh_prop_layer = self.get_datalayer(bm)
+        count_update = self.get_props(context).get_assigned_counts_update_gen()
+        count_update.send(None)
         for v in bm.verts:
             if v.select:
+                count_update.send((v[inh_prop_layer], 'RESET'))
                 # inherit from root (no props)
                 v[inh_prop_layer] = 0
         return {'FINISHED'}
@@ -273,10 +301,13 @@ class PropSet_Select(PropSetBase):
 
         bm = bmesh.from_edit_mesh(me)
         inh_prop_layer = self.get_datalayer(bm)
+        count = 0
         for v in bm.verts:
             if v[inh_prop_layer] == p_item.id:
                 v.select = self.select
+                count += 1
 
+        p_item.assigned_count = count
         # propagate selection to other selection modes (edge and face)
         bm.select_flush(self.select)
         # force viewport update
