@@ -62,22 +62,30 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         if ctx.listt is not None:
             bm = bmesh.new()
 
-            for section_ctx in ctx.listt.getChildren():
-                result = section_ctx.accept(self)
-                with Switch(type(result)) as case:
+            def handle_result(res):
+                with Switch(type(res)) as case:
                     if case(IDObject):
-                        self.set_parent(result, part_obj)
+                        self.set_parent(res, part_obj)
                     elif case(GeneratorType):
-                        result.send(None)  # charge generator
-                        # generator returns a placeholder text
-                        data_buf.write(result.send(bm))
-                        data_buf.write('\n')
+                        des = res.send(None)  # charge generator
+                        if isinstance(des, Desire):
+                            # There's no shame in it.
+                            res = res.send(des.fulfill_any(locals()))
+                            handle_result(res)
+                        else:
+                            # execute generator and handle result recursively
+                            handle_result(res.send(bm))
                     elif case(str):
                         # other sections
-                        data_buf.write(result)
+                        data_buf.write(res)
                         data_buf.write('\n')
                     else:
                         raise ValueError("Section not implemented")
+
+            for section_ctx in ctx.listt.getChildren():
+                result = section_ctx.accept(self)
+                handle_result(result)
+
             bm.to_mesh(mesh)
 
         mesh['jbeam_part_data'] = data_buf.getvalue()
@@ -93,13 +101,16 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
     # ============================== slots ==============================
 
     def visitSection_Slots(self, ctx: jbeamParser.Section_SlotsContext):
-        slots_empty = bpy.data.objects.new(ctx.name.text.strip('"'), None)
+        part_name = yield Desire.for_variable('part_obj', 'name')
+
+        slot_name = '~'.join((ctx.name.text.strip('"'), part_name))
+        slots_empty = bpy.data.objects.new(slot_name, None)
         # slot section has no transform modifiers
         slots_empty.lock_location = (True, True, True)
         self.lock_rot_scale(slots_empty)
         if ctx.listt is not None:
             self.visitChildren(ctx.listt, slots_empty)
-        return slots_empty
+        yield slots_empty
 
     def visitSlot(self, ctx: jbeamParser.SlotContext):
         slot = bpy.data.objects.new(ctx.stype.string_item, None)
@@ -300,6 +311,28 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
 
     def visitSection_SlotType(self, ctx: jbeamParser.Section_SlotTypeContext):
         return self.visitSection_Unknown(ctx)
+
+
+class Desire:
+    """This is fun!"""
+
+    def __init__(self):
+        self.var_name = None
+        self.member = None
+
+    @staticmethod
+    def for_variable(var_name: str, member: str = None):
+        """Pray tell"""
+        w = Desire()
+        w.var_name = var_name
+        w.member = member
+        return w
+
+    def fulfill_any(self, llocals: dict):
+        var = llocals.get(self.var_name)
+        if self.member is not None:
+            return getattr(var, self.member)
+        return var
 
 
 class NodeCollector(jbeamVisitor):
