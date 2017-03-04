@@ -18,6 +18,7 @@ if "bpy" in locals():
     importlib.reload(op_move_dummies)
     importlib.reload(op_rename_node)
     importlib.reload(display_nodes)
+    importlib.reload(props_inheritance)
     importlib.reload(op_import_vehicle)
     print('Reloaded JBeam plugin')
 else:
@@ -31,6 +32,7 @@ else:
         op_move_dummies,
         op_rename_node,
         display_nodes,
+        props_inheritance,
         op_import_vehicle,
     )
 
