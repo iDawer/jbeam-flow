@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from types import GeneratorType
 from io import StringIO
 
@@ -7,6 +8,7 @@ import bmesh
 
 from antlr4 import *  # ToDo: get rid of the global antlr4 lib
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
+from .props_inheritance import PropInheritanceBuilder
 from .jb import jbeamLexer, jbeamParser, jbeamVisitor
 from .misc import (
     Triangle,
@@ -70,8 +72,12 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
                     elif case(GeneratorType):
                         result.send(None)  # charge generator
                         # generator returns a placeholder text
-                        data_buf.write(result.send(bm))
+                        gen_res = result.send((bm, mesh))
+                        data_buf.write(gen_res[0])
                         data_buf.write('\n')
+                        # if len(gen_res) == 3:
+                        #     # ID property
+                        #     mesh[gen_res[1]] = gen_res[2]
                     elif case(str):
                         # other sections
                         data_buf.write(result)
@@ -171,16 +177,18 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
     # ============================== nodes ==============================
 
     def visitSection_Nodes(self, ctx: jbeamParser.Section_NodesContext):
-        bm = yield  # bmesh
+        bm, me = yield  # bmesh
         id_layer = bm.verts.layers.string.new('jbeamNodeId')
+        prop_inh = PropInheritanceBuilder(bm.verts, me.jbeam_node_prop_chain)
         prop_layer = bm.verts.layers.string.new('jbeamNodeProps')
         if ctx.listt is not None:
-            self.visitChildren(ctx.listt, (bm, id_layer, prop_layer))
+            self.visitChildren(ctx.listt, (bm, id_layer, prop_layer, prop_inh))
         bm.verts.ensure_lookup_table()
-        yield self.get_src_text_replaced(ctx, ctx.listt, '${nodes}')
+        text_replaced = self.get_src_text_replaced(ctx, ctx.listt, '${nodes}')
+        yield text_replaced,
 
     def visitNode(self, ctx: jbeamParser.NodeContext):
-        bm, id_layer, prop_layer = yield  # receive visitChildren's aggregator kwarg
+        bm, id_layer, prop_layer, prop_inh = yield  # receive visitChildren's aggregator kwarg
         vert = bm.verts.new((float(ctx.posX.text), float(ctx.posY.text), float(ctx.posZ.text)))
         _id = ctx.id1.string_item
         vert[id_layer] = _id.encode()  # set node id to the data layer
@@ -188,28 +196,32 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         # node props
         if ctx.props is not None:
             vert[prop_layer] = self.get_src_text_replaced(ctx.props).encode()
+        prop_inh.next_item(vert)
         yield vert
 
     def visitNodeProps(self, ctx: jbeamParser.NodePropsContext):
-        # ToDo Node Props
-        return None
+        bm, id_layer, prop_layer, prop_inh = yield
+        src = self.get_src_text_replaced(ctx)
+        prop_inh.next_prop(src)
+        yield
 
     # ============================== beams ==============================
 
     def visitSection_Beams(self, ctx: jbeamParser.Section_BeamsContext):
-        bm = yield
+        bm, me = yield
         id_layer = bm.verts.layers.string.active
         if id_layer is None:
             # in case if no nodes section, i.e. beams with parent part nodes
             id_layer = bm.verts.layers.string.new('jbeamNodeId')
         beam_layer = bm.edges.layers.int.new('jbeam')
+        prop_inh = PropInheritanceBuilder(bm.edges, me.jbeam_beam_prop_chain)
         if ctx.listt is not None:
-            self.visitChildren(ctx.listt, (bm, id_layer, beam_layer))
+            self.visitChildren(ctx.listt, (bm, id_layer, beam_layer, prop_inh))
         bm.edges.ensure_lookup_table()
-        yield self.get_src_text_replaced(ctx, ctx.listt, '${beams}')
+        yield self.get_src_text_replaced(ctx, ctx.listt, '${beams}'),
 
     def visitBeam(self, ctx: jbeamParser.BeamContext):
-        bm, id_layer, beam_layer = yield
+        bm, id_layer, beam_layer, prop_inh = yield
         id1 = ctx.id1.string_item
         id2 = ctx.id2.string_item
         v1, v2 = self._vertsIndex.get(id1), self._vertsIndex.get(id2)
@@ -227,6 +239,7 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         try:
             edge = bm.edges.new((v1, v2))  # throws on duplicates
             edge[beam_layer] = 1
+            prop_inh.next_item(edge)
             yield edge
         except ValueError as err:
             print(err, id1, id2)  # ToDo handle duplicates
@@ -253,19 +266,23 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         return vert
 
     def visitBeamProps(self, ctx: jbeamParser.BeamPropsContext):
-        return None
+        bm, id_layer, beam_layer, prop_inh = yield
+        src = self.get_src_text_replaced(ctx)
+        prop_inh.next_prop(src)
+        yield
 
     # ============================== collision triangles ==============================
 
     def visitSection_Coltris(self, ctx: jbeamParser.Section_ColtrisContext):
-        bm = yield
+        bm, me = yield
+        prop_inh = PropInheritanceBuilder(bm.faces, me.jbeam_triangle_prop_chain)
         if ctx.listt is not None:
-            self.visitChildren(ctx.listt, bm)
+            self.visitChildren(ctx.listt, (bm, prop_inh))
         bm.faces.ensure_lookup_table()
         yield self.get_src_text_replaced(ctx, ctx.listt, '${triangles}')
 
     def visitColtri(self, ctx: jbeamParser.ColtriContext):
-        bm = yield
+        bm, prop_inh = yield
         id1 = ctx.id1.string_item
         id2 = ctx.id2.string_item
         id3 = ctx.id3.string_item
@@ -274,6 +291,7 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         if v1 and v2 and v3:
             try:
                 face = bm.faces.new((v1, v2, v3))
+                prop_inh.next_item(face)
                 yield face
             except ValueError as err:
                 print(err, id1, id2, id3)  # ToDo handle duplicates
@@ -284,7 +302,10 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
             yield
 
     def visitColtriProps(self, ctx: jbeamParser.ColtriPropsContext):
-        return None  # ToDo ColtriProps
+        bm, prop_inh = yield
+        src = self.get_src_text_replaced(ctx)
+        prop_inh.next_prop(src)
+        yield
 
     # ============================== unknown section ==============================
 
