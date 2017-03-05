@@ -44,6 +44,19 @@ class LoadVehicleConfig(Operator, ImportHelper):
         # parser = jbeamParser(stream)
         # tree = parser.obj()
 
+        scene_parts = bpy.data.scenes.get('parts')
+        if scene_parts is None:
+            self.report({'ERROR'}, "'parts' scene not found")
+            return {'CANCELLED'}
+
+        context.screen.scene = scene_parts
+        # make object data linked copy of 'parts' scene
+        bpy.ops.scene.new(type='LINK_OBJECT_DATA')
+        context.scene.name = self.filename
+        # clear duplicate groups
+        bpy.ops.object.select_all(action='SELECT')
+        bpy.ops.group.objects_remove_all()
+
         part_map = defaultdict(dict)
         part_slots_map = defaultdict(list)
         for ob in context.scene.objects:
@@ -60,27 +73,24 @@ class LoadVehicleConfig(Operator, ImportHelper):
         if main_parts is None or len(main_parts) == 0:
             self.report({'ERROR'}, "main slot not found")
             return {'CANCELLED'}
+        main_p = next(iter(main_parts.values()))
 
         with open(self.filepath, encoding='utf-8') as pc_file:
             pc = json.load(pc_file)
+        fill_slots(part_map, part_slots_map, main_p, pc['parts'], 0)
 
-        main_p = next(iter(main_parts.values()))
-        context.screen.scene = bpy.data.scenes.new(self.filename)
-        fill_slots(context.scene, part_map, part_slots_map, main_p, pc['parts'], 0)
-
-        # vconf = VConf(part_map)
-        # vconf.visit(tree)
-
+        # clean up unused parts
+        for ob in context.scene.objects:
+            if ob.parent is None and ob != main_p:  # checking with 'is' will fail (internal BL object wrapping)
+                bpy.data.objects.remove(ob, do_unlink=True)
         return {'FINISHED'}
 
 
-def fill_slots(scene, part_map: defaultdict(dict), part_slots_map: defaultdict(list), part, slot_part_conf: dict,
+def fill_slots(part_map: defaultdict(dict), part_slots_map: defaultdict(list), part, slot_part_conf: dict,
                depth: int):
     if depth > 50:
         print("WARNING: Slots tree too deep (>50).")
         return
-
-    scene.objects.link(part)
 
     part_name = part.data['jbeam_part']
     for slot_name, default, slot in part_slots_map[part_name]:
@@ -93,10 +103,7 @@ def fill_slots(scene, part_map: defaultdict(dict), part_slots_map: defaultdict(l
 
         if ch_part is not None:
             ch_part.parent = slot
-            scene.objects.link(slot)
-            if slot.parent.name not in scene.objects:
-                scene.objects.link(slot.parent)
-            fill_slots(scene, part_map, part_slots_map, ch_part, slot_part_conf, depth + 1)
+            fill_slots(part_map, part_slots_map, ch_part, slot_part_conf, depth + 1)
 
     pass
 
@@ -105,7 +112,6 @@ def is_slot(ob):
     return ob.parent is not None and 'slots' == ob.parent.name.partition('.')[0]
 
 
-#
 # class Node(anytree.Node):
 #     """Tree node, simple repr()"""
 #

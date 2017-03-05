@@ -108,7 +108,7 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         return slots_empty
 
     def visitSlot(self, ctx: jbeamParser.SlotContext):
-        slot = bpy.data.objects.new(ctx.stype.string_item, None)
+        slot = bpy.data.objects.new(ctx.stype.string_item + '.slot', None)
         slot["description"] = ctx.description.string_item
         slot["default"] = ctx.default.string_item
         self.lock_rot_scale(slot)
