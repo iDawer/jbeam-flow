@@ -320,7 +320,9 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         return self.visitSection_Unknown(ctx)
 
     def visitSection_SlotType(self, ctx: jbeamParser.Section_SlotTypeContext):
-        return self.visitSection_Unknown(ctx)
+        bm, me = yield
+        me['slotType'] = ctx.val.string_item
+        yield self.get_src_text_replaced(ctx, ctx.val, '${slotType}')
 
 
 class NodeCollector(jbeamVisitor):

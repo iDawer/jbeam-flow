@@ -19,12 +19,13 @@ class ImportJBeam(Operator, ImportHelper):  #
     bl_options = {'REGISTER', 'UNDO'}
 
     directory = StringProperty(
-        name="File Path",
-        description="Filepath used for importing the file",
+        name="Vehicle directory",
+        description="Directory used for importing the vehicle",
         maxlen=1024,
         subtype='DIR_PATH',
     )
     _timer = None
+
     files = []
     total = 0
 
@@ -51,11 +52,12 @@ class ImportJBeam(Operator, ImportHelper):  #
         wm.event_timer_remove(self._timer)
 
     def execute(self, context):
+        context.screen.scene = bpy.data.scenes.new('parts')
         self.files = deque((root, f) for root, dirs, files in os.walk(self.directory)
                            for f in files if f.lower().endswith(".jbeam"))
         self.total = len(self.files)
 
         wm = context.window_manager
-        self._timer = wm.event_timer_add(0.5, context.window)
+        self._timer = wm.event_timer_add(0.2, context.window)
         wm.modal_handler_add(self)
         return {'RUNNING_MODAL'}
