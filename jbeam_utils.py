@@ -1,20 +1,20 @@
-from collections import OrderedDict
-from types import GeneratorType
 from io import StringIO
+from types import GeneratorType
 
+import bmesh
 import bpy
 from bpy.types import Object as IDObject
-import bmesh
 
 from antlr4 import *  # ToDo: get rid of the global antlr4 lib
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
-from .props_inheritance import PropInheritanceBuilder
 from .jb import jbeamLexer, jbeamParser, jbeamVisitor
+from .jb.utils import preprocess
 from .misc import (
     Triangle,
     Switch,
     visitor_mixins as vmix,
 )
+from .props_inheritance import PropInheritanceBuilder
 
 
 def to_tree(jbeam_data: str):
@@ -22,6 +22,7 @@ def to_tree(jbeam_data: str):
 
     lexer = jbeamLexer(data_stream)
     stream = CommonTokenStream(lexer)
+    stream = preprocess(stream)
     parser = jbeamParser(stream)
     tree = parser.jbeam()
 
