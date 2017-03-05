@@ -66,7 +66,9 @@ class MoveDummies(Operator):
 def get_jnodes_co(mesh):
     bm = bmesh.new()
     bm.from_mesh(mesh)
-    id_lyr = bm.verts.layers.string['jbeamNodeId']
+    id_lyr = bm.verts.layers.string.get('jbeamNodeId')
+    if id_lyr is None:
+        return
     for v in bm.verts:
         _id = v[id_lyr].decode()  # decode byte array
         if _id:
