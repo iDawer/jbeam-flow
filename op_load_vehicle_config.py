@@ -136,20 +136,4 @@ class VConf(jbeamVisitor):
     #     for slot_part in ctx.obj().keyVal():
     #         pass
 
-    def visitKeyVal(self, ctx: jbeamParser.KeyValContext):
-        return ctx.key.string_item, ctx.val.accept(self)
-
-    def visitObj(self, ctx: jbeamParser.ObjContext):
-        obj = {}
-        for keyValCtx in ctx.keyVal():
-            obj.update((keyValCtx.accept(self),))
-        return obj
-
-    def visitObjectValue(self, ctx: jbeamParser.ObjectValueContext):
-        return ctx.obj().accept(self)
-
-    def visitGenericString(self, ctx: jbeamParser.GenericStringContext):
-        return ctx.string_item
-
-    def visitString(self, ctx: jbeamParser.StringContext):
-        return ctx.genericString().accept(self)
+    pass
