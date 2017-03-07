@@ -27,16 +27,29 @@ class Json(jbeamVisitor):
     def visitString(self, ctx: jbeamParser.StringContext):
         return self.visitGenericString(ctx.genericString())
 
+    def visitArray(self, ctx: jbeamParser.ArrayContext):
+        array = []
+        append = array.append
+        for valCtx in ctx.value():
+            append(valCtx.accept(self))
+        return array
+
     def visitArrayValue(self, ctx: jbeamParser.ArrayValueContext):
         return self.visitArray(ctx.array())
 
-    def aggregateResult(self, aggregate, nextResult):
-        if nextResult is None:
-            return aggregate
-        if aggregate is None:
-            aggregate = []
-        aggregate.append(nextResult)
-        return aggregate
+    def visitKeyVal(self, ctx: jbeamParser.KeyValContext):
+        return ctx.key.accept(self), ctx.val.accept(self)
+
+    def visitObj(self, ctx: jbeamParser.ObjContext):
+        pairs = []
+        append = pairs.append
+        for keyValCtx in ctx.keyVal():
+            append(keyValCtx.accept(self))
+        obj = dict(pairs)
+        return obj
+
+    def visitObjectValue(self, ctx: jbeamParser.ObjectValueContext):
+        return ctx.obj().accept(self)
 
 
 class Helper:

@@ -4,7 +4,6 @@ from antlr4 import *
 from jb import jbeamLexer, jbeamParser, jbeamVisitor
 from misc import visitor_mixins
 
-
 # class Visitor(visitor_mixins.Json, jbeamVisitor): pass
 visitor = visitor_mixins.Json()
 
@@ -30,7 +29,7 @@ class JsonTestCase(unittest.TestCase):
         self.assertEqual(True, result)
         result = get_parser('false').boolean().accept(visitor)
         self.assertEqual(False, result)
-        bad_res = get_parser('qwe').boolean().accept(visitor)
+        bad_res = get_parser('bad').boolean().accept(visitor)
         self.assertIsNone(bad_res)
 
     def test_genericString(self):
@@ -40,14 +39,14 @@ class JsonTestCase(unittest.TestCase):
         self.assertEqual("some text", result)
 
     def test_obj(self):
-        parser = get_parser('{"key": 123}')
+        parser = get_parser('{"key": -12e-3, "array": []}')
         ctx = parser.obj()
         self.assertIsInstance(ctx, jbeamParser.ObjContext)
-        keyVal = ctx.keyVal(0)
-        self.assertIsInstance(keyVal, jbeamParser.KeyValContext)
-        self.assertEqual('key', keyVal.key.string_item)
-        # self.assertEqual('key', keyVal.key.accept(visitor))
-        self.fail('not implemented')
+        result = ctx.accept(visitor)
+        self.assertIn("key", result)
+        self.assertEqual(-12e-3, result["key"])
+        self.assertIn("array", result)
+        self.assertIsInstance(result["array"], list)
 
     def test_atom(self):
         parser = get_parser('234')
@@ -58,11 +57,11 @@ class JsonTestCase(unittest.TestCase):
         self.assertEqual(False, ctx.accept(visitor))
 
     def test_array(self):
-        parser = get_parser('["semi_cargobox_floorframe", ["semi_cargobox_floorframe","semi_cargobox_underride"]]')
+        parser = get_parser('["text", [42, {}]]')
         ctx = parser.array()
-        self.assertIsInstance(ctx, jbeamParser.ArrayContext)
-        print(ctx.accept(visitor))
-
+        result = ctx.accept(visitor)
+        self.assertIsInstance(result, list)
+        self.assertEqual(["text", [42, {}]], result)
 
 
 if __name__ == '__main__':
