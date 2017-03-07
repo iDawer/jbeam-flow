@@ -8,7 +8,7 @@ from bpy.props import StringProperty, BoolProperty, EnumProperty
 from bpy.types import Operator
 
 from antlr4 import *
-from .misc import Switch, anytree
+from .misc import Switch, anytree, visitor_mixins as vmix
 from .jb import jbeamVisitor, jbeamParser, jbeamLexer
 from . import jbeam_utils
 
@@ -76,7 +76,7 @@ class LoadVehicleConfig(Operator, ImportHelper):
         main_p = next(iter(main_parts.values()))
 
         with open(self.filepath, encoding='utf-8') as pc_file:
-            pc = json.load(pc_file)
+            pc = decode_json(pc_file.read())
         fill_slots(part_map, part_slots_map, main_p, pc['parts'], 0)
 
         # clean up unused parts
@@ -120,6 +120,16 @@ def is_slot(ob):
 #
 # class SlotNode(Node):
 #     pass
+
+def decode_json(data: str):
+    data_stream = InputStream(data)
+
+    lexer = jbeamLexer(data_stream)
+    stream = CommonTokenStream(lexer)
+    parser = jbeamParser(stream)
+    obj_ctx = parser.obj()
+    result = obj_ctx.accept(vmix.Json())
+    return result
 
 
 class VConf(jbeamVisitor):
