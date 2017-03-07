@@ -42,19 +42,17 @@ class MoveDummies(Operator):
             if t_node.obj.type == 'MESH':
                 # note jnode id can be overwritten during dic.update(), i.e. part's jnode overrides parent's node!
                 # Is this behavior correct? ToDo check jnode override behavior
-                jnode_map.update(get_jnodes_co(t_node.obj.data))
+                jnode_map.update(get_jnodes_co(t_node.obj))
 
         print("Adjusting dummy nodes position...")
         overall_result = 0, 0
         if self.all_scene_objects:
             for ob in context.scene.objects:
                 if ob.type == 'MESH':
-                    me = ob.data
-                    result = position_dummies(jnode_map, me)
+                    result = position_dummies(jnode_map, ob)
                     overall_result = vector_sum(overall_result, result)
         else:
-            me = active_obj.data
-            overall_result = position_dummies(jnode_map, me)
+            overall_result = position_dummies(jnode_map, active_obj)
 
         rtype = {'WARNING'} if overall_result[1] else {'INFO'}
         self.report(rtype, "Adjusted %d dummies, unbound %d. See console for details" % overall_result)
@@ -64,7 +62,9 @@ class MoveDummies(Operator):
     pass
 
 
-def get_jnodes_co(mesh):
+def get_jnodes_co(obj):
+    mtx_to_world = obj.matrix_world
+    mesh = obj.data
     bm = bmesh.new()
     bm.from_mesh(mesh)
     id_lyr = bm.verts.layers.string.get('jbeamNodeId')
@@ -74,10 +74,11 @@ def get_jnodes_co(mesh):
         _id = v[id_lyr].decode()  # decode byte array
         if _id:
             # jnode id is not None and not empty
-            yield _id, v.co.copy()
+            yield _id, mtx_to_world * v.co.copy()
 
 
-def position_dummies(jnode_map, me):
+def position_dummies(jnode_map, obj):
+    me = obj.data
     print("\t%s:" % me.name, end=" ")
     if me.is_editmode:
         bm = bmesh.from_edit_mesh(me)
@@ -93,11 +94,12 @@ def position_dummies(jnode_map, me):
     dummy_verts = {_id.lstrip('~'): v for _id, v in ((v[id_lyr].decode(), v) for v in bm.verts)
                    if _id and _id.startswith('~')}
 
+    mtx_w_to_local = obj.matrix_world.inverted()
     reals_found = []
     for _id, dummy_v in dummy_verts.items():
         real_co = jnode_map.get(_id, None)
         if real_co:
-            dummy_v.co = real_co
+            dummy_v.co = mtx_w_to_local * real_co
             reals_found.append(_id)
 
     for _id in reals_found:
