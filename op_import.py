@@ -22,6 +22,13 @@ class ImportJBeam(Operator, ImportHelper):
         maxlen=255,  # Max internal buffer length, longer would be clamped.
     )
 
+    filename = StringProperty(
+        name="File Name",
+        description="Filename used for importing the file",
+        maxlen=255,
+        subtype='FILE_NAME',
+    )
+
     # # List of operator properties, the attributes will be assigned
     # # to the class instance from the operator settings before calling.
     # use_setting = BoolProperty(
@@ -42,14 +49,16 @@ class ImportJBeam(Operator, ImportHelper):
         # profiler = cProfile.Profile()
         # profiler.enable()
         from . import jbeam_utils
-        text_block = bpy.data.texts.load(self.filepath)
-        tree = jbeam_utils.to_tree(text_block.as_string())
+        with open(self.filepath, encoding='utf-8') as file:
+            content = file.read()
 
-        builder = jbeam_utils.PartObjectsBuilder(text_block.name)
+        tree = jbeam_utils.to_tree(content)
+
+        builder = jbeam_utils.PartObjectsBuilder(self.filename)
         parts_group = builder.visit(tree)
 
         # resulting parts_group and text names can be different
-        parts_group['jbeam_textblock'] = text_block.name
+        # parts_group['jbeam_textblock'] = text_block.name
         for obj in builder.get_all_objects():
             context.scene.objects.link(obj)
 

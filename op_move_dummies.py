@@ -1,6 +1,8 @@
 import bpy
 import bmesh
 from bpy.types import Operator
+from bpy.props import BoolProperty
+from mathutils import Vector
 
 from .misc import anytree
 
@@ -10,54 +12,53 @@ class MoveDummies(Operator):
     bl_label = "JBeam: Move dummy nodes to their original position"
     bl_options = {'REGISTER', 'UNDO'}
 
+    all_scene_objects = BoolProperty(
+        name="Scene objects",
+        default=False,
+    )
+
     def execute(self, context):
-        obj = context.active_object
+        active_obj = context.active_object
         # ToDo check context and handle noninitialised data layers
 
-        if not obj:
-            self.report({'ERROR'}, 'There is no active object')
+        if not active_obj:
+            self.report({'ERROR'}, "Select at least one part")
             return {'CANCELLED'}
-        if obj.type != 'MESH':
-            self.report({'ERROR_INVALID_INPUT'}, 'Mesh type object required')
+        if active_obj.type != 'MESH':
+            self.report({'ERROR_INVALID_INPUT'}, "Mesh type object required")
             return {'CANCELLED'}
-        if obj.parent is None:
-            self.report({'ERROR_INVALID_INPUT'}, 'Active object is not parented')
+        if active_obj.parent is None:
+            self.report({'ERROR_INVALID_INPUT'}, "Active object is not parented")
             return {'CANCELLED'}
 
-        me = obj.data
-        if me.is_editmode:
-            bm = bmesh.from_edit_mesh(me)
-        else:
-            bm = bmesh.new()
-            bm.from_mesh(me)
-
-        id_lyr = bm.verts.layers.string['jbeamNodeId']
-        dummy_verts = {_id.lstrip('~'): v for _id, v in ((v[id_lyr].decode(), v) for v in bm.verts)
-                       if _id and _id.startswith('~')}
-
-        if not dummy_verts:
-            self.report({'INFO'}, 'Dummies was not found')
-            return {'FINISHED'}
-
-        slot_node = build_tree_with(context.scene.objects, obj.parent)
+        slot_node = build_tree_with(context.scene.objects, active_obj.parent)
         root = slot_node.root
-        # do not walk into self slot
-        slot_node.parent = None
         # tree walking iterator
         nodes_iter = anytree.PreOrderIter(root)
-        position_dummies(dummy_verts, nodes_iter)
 
-        if len(dummy_verts):
-            self.report({'WARNING'}, 'Some of dummies was not positioned, dumped to the console.')
-            print('Not positioned dummies: ', ', '.join(('~' + _id for _id in sorted(dummy_verts))))
-        else:
-            self.report({'INFO'}, 'All dummies positioned')
+        # collect all jnode ids and coordinates in the object hierarchy
+        jnode_map = {}
+        for t_node in nodes_iter:
+            if t_node.obj.type == 'MESH':
+                # note jnode id can be overwritten during dic.update(), i.e. part's jnode overrides parent's node!
+                # Is this behavior correct? ToDo check jnode override behavior
+                jnode_map.update(get_jnodes_co(t_node.obj.data))
 
-        if me.is_editmode:
-            bmesh.update_edit_mesh(me, destructive=False)
+        print("Adjusting dummy nodes position...")
+        overall_result = 0, 0
+        if self.all_scene_objects:
+            for ob in context.scene.objects:
+                if ob.type == 'MESH':
+                    me = ob.data
+                    result = position_dummies(jnode_map, me)
+                    overall_result = vector_sum(overall_result, result)
         else:
-            bm.to_mesh(me)
-        me.update()
+            me = active_obj.data
+            overall_result = position_dummies(jnode_map, me)
+
+        rtype = {'WARNING'} if overall_result[1] else {'INFO'}
+        self.report(rtype, "Adjusted %d dummies, unbound %d. See console for details" % overall_result)
+
         return {'FINISHED'}
 
     pass
@@ -66,7 +67,9 @@ class MoveDummies(Operator):
 def get_jnodes_co(mesh):
     bm = bmesh.new()
     bm.from_mesh(mesh)
-    id_lyr = bm.verts.layers.string['jbeamNodeId']
+    id_lyr = bm.verts.layers.string.get('jbeamNodeId')
+    if id_lyr is None:
+        return
     for v in bm.verts:
         _id = v[id_lyr].decode()  # decode byte array
         if _id:
@@ -74,17 +77,21 @@ def get_jnodes_co(mesh):
             yield _id, v.co.copy()
 
 
-def position_dummies(dummy_verts, tree_nodes):
-    """Visit all nodes of the tree and position dummies at their reals.
-    After return dummy_verts contains dummies whose reals was not found"""
+def position_dummies(jnode_map, me):
+    print("\t%s:" % me.name, end=" ")
+    if me.is_editmode:
+        bm = bmesh.from_edit_mesh(me)
+    else:
+        bm = bmesh.new()
+        bm.from_mesh(me)
 
-    # collect all jnode ids and coordinates in the object hierarchy
-    jnode_map = {}
-    for t_node in tree_nodes:
-        if t_node.obj.type == 'MESH':
-            # note jnode id can be overwritten during dic.update(), i.e. part's jnode overrides parent's node!
-            # Is this behavior correct? ToDo check jnode override behavior
-            jnode_map.update(get_jnodes_co(t_node.obj.data))
+    id_lyr = bm.verts.layers.string.get('jbeamNodeId')
+    if not id_lyr:
+        print('No id data')
+        return 0, 0
+
+    dummy_verts = {_id.lstrip('~'): v for _id, v in ((v[id_lyr].decode(), v) for v in bm.verts)
+                   if _id and _id.startswith('~')}
 
     reals_found = []
     for _id, dummy_v in dummy_verts.items():
@@ -95,6 +102,19 @@ def position_dummies(dummy_verts, tree_nodes):
 
     for _id in reals_found:
         dummy_verts.pop(_id)
+
+    if me.is_editmode:
+        bmesh.update_edit_mesh(me, destructive=False)
+    else:
+        bm.to_mesh(me)
+    me.update()
+
+    if dummy_verts:
+        print("Some dummies was not positioned: ", ', '.join(('~' + _id for _id in sorted(dummy_verts))))
+    else:
+        print("ok")
+
+    return len(reals_found), len(dummy_verts)
 
 
 def build_tree_with(obj_map, specific_obj):
@@ -115,6 +135,10 @@ def build_tree_with(obj_map, specific_obj):
 
     spec_node = node_map[specific_obj.name]
     return spec_node
+
+
+def vector_sum(t1, t2):
+    return tuple(p + q for p, q in zip(t1, t2))
 
 
 class Node(anytree.Node):
