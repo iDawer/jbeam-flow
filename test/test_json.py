@@ -2,7 +2,11 @@ import unittest
 
 from antlr4 import *
 from jb import jbeamLexer, jbeamParser, jbeamVisitor
-from misc import visitor_mixins
+
+try:
+    from misc import visitor_mixins
+except ValueError as ex:
+    raise ImportError(r"to run the tests replace relative import '..jb' with 'jb' in misc\visitor_mixins.py") from ex
 
 # class Visitor(visitor_mixins.Json, jbeamVisitor): pass
 visitor = visitor_mixins.Json()
@@ -62,6 +66,20 @@ class JsonTestCase(unittest.TestCase):
         result = ctx.accept(visitor)
         self.assertIsInstance(result, list)
         self.assertEqual(["text", [42, {}]], result)
+
+    def test_comment_line(self):
+        parser = get_parser('//comment \n {"k": //inline\n1}')
+        ctx = parser.obj()
+        result = ctx.accept(visitor)
+        self.assertIsInstance(result, object)
+        self.assertEqual({"k": 1}, result)
+
+    def test_comment_block(self):
+        parser = get_parser('/*comment \n*/ {"k": /*inline*/ 1\n}')
+        ctx = parser.obj()
+        result = ctx.accept(visitor)
+        self.assertIsInstance(result, object)
+        self.assertEqual({"k": 1}, result)
 
 
 if __name__ == '__main__':
