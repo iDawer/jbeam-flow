@@ -1,8 +1,6 @@
-import itertools as iter
 import bpy
 from bpy.props import StringProperty, BoolProperty, EnumProperty
 from bpy.types import Operator
-from bpy import path
 from bpy_extras.io_utils import ImportHelper
 import cProfile
 
@@ -13,13 +11,19 @@ class ImportJBeam(Operator, ImportHelper):
     bl_label = "Import JBeam (.jbeam)"
     bl_options = {'REGISTER', 'UNDO'}
 
-    # ImportHelper mixin class uses this
     filename_ext = ".jbeam"
 
     filter_glob = StringProperty(
         default="*.jbeam",
         options={'HIDDEN'},
         maxlen=255,  # Max internal buffer length, longer would be clamped.
+    )
+
+    filename = StringProperty(
+        name="File Name",
+        description="Filename used for importing the file",
+        maxlen=255,
+        subtype='FILE_NAME',
     )
 
     # # List of operator properties, the attributes will be assigned
@@ -42,15 +46,17 @@ class ImportJBeam(Operator, ImportHelper):
         # profiler = cProfile.Profile()
         # profiler.enable()
         from . import jbeam_utils
-        text_block = bpy.data.texts.load(self.filepath)
-        tree = jbeam_utils.to_tree(text_block.as_string())
+        print("File:", self.filename)
+        with open(self.filepath, encoding='utf-8') as file:
+            content = file.read()
 
-        builder = jbeam_utils.PartObjectsBuilder(text_block.name)
-        parts_group = builder.visit(tree)
+        tree = jbeam_utils.to_tree(content)
 
-        # resulting parts_group and text names can be different
-        parts_group['jbeam_textblock'] = text_block.name
-        for obj in iter.chain(parts_group.objects, builder.helper_objects):
+        builder = jbeam_utils.PartObjectsBuilder(self.filename)
+        builder.console_indent = 1
+        builder.visit(tree)
+
+        for obj in builder.get_all_objects():
             context.scene.objects.link(obj)
 
         # profiler.disable()

@@ -1,20 +1,20 @@
-from collections import OrderedDict
-from types import GeneratorType
 from io import StringIO
+from types import GeneratorType
 
+import bmesh
 import bpy
 from bpy.types import Object as IDObject
-import bmesh
 
 from antlr4 import *  # ToDo: get rid of the global antlr4 lib
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
-from .props_inheritance import PropInheritanceBuilder
 from .jb import jbeamLexer, jbeamParser, jbeamVisitor
+from .jb.utils import preprocess
 from .misc import (
     Triangle,
     Switch,
     visitor_mixins as vmix,
 )
+from .props_inheritance import PropInheritanceBuilder
 
 
 def to_tree(jbeam_data: str):
@@ -22,6 +22,7 @@ def to_tree(jbeam_data: str):
 
     lexer = jbeamLexer(data_stream)
     stream = CommonTokenStream(lexer)
+    stream = preprocess(stream)
     parser = jbeamParser(stream)
     tree = parser.jbeam()
 
@@ -29,11 +30,18 @@ def to_tree(jbeam_data: str):
 
 
 class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
+    lock_part_transform = True
+    console_indent = 0
+
     def __init__(self, name='JBeam file'):
         self.name = name
         self.parts_group = None
         self.helper_objects = []
         self._vertsIndex = None
+
+    def get_all_objects(self):
+        from itertools import chain
+        return chain(self.parts_group.objects, self.helper_objects)
 
     def visitJbeam(self, ctx: jbeamParser.JbeamContext):
         jbeam_group = bpy.data.groups.new(self.name)
@@ -46,13 +54,17 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
 
     def visitPart(self, ctx: jbeamParser.PartContext):
         part_name = ctx.name.string_item
-        print('part: ' + part_name)
+        self.print("part:", part_name)
         self._vertsIndex = {}
 
         mesh = bpy.data.meshes.new(part_name)
         # Save part name explicitly, due Blender avoids names collision by appending '.001'
         mesh['jbeam_part'] = part_name
         part_obj = bpy.data.objects.new(part_name, mesh)
+        part_obj.show_wire = True
+        part_obj.show_all_edges = True
+        if self.lock_part_transform:
+            self.lock_transform(part_obj)
 
         data_buf = StringIO()
         if ctx.listt is not None:
@@ -84,6 +96,9 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         mesh.update()
         return part_obj
 
+    def print(self, *args):
+        print('\t' * self.console_indent, *args)
+
     def set_parent(self, obj, parent, prn_type='OBJECT'):
         obj.parent = parent
         obj.parent_type = prn_type
@@ -95,14 +110,13 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
     def visitSection_Slots(self, ctx: jbeamParser.Section_SlotsContext):
         slots_empty = bpy.data.objects.new(ctx.name.text.strip('"'), None)
         # slot section has no transform modifiers
-        slots_empty.lock_location = (True, True, True)
-        self.lock_rot_scale(slots_empty)
+        self.lock_transform(slots_empty)
         if ctx.listt is not None:
             self.visitChildren(ctx.listt, slots_empty)
         return slots_empty
 
     def visitSlot(self, ctx: jbeamParser.SlotContext):
-        slot = bpy.data.objects.new(ctx.stype.string_item, None)
+        slot = bpy.data.objects.new(ctx.stype.string_item + '.slot', None)
         slot["description"] = ctx.description.string_item
         slot["default"] = ctx.default.string_item
         self.lock_rot_scale(slot)
@@ -203,43 +217,40 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
 
     def visitSection_Beams(self, ctx: jbeamParser.Section_BeamsContext):
         bm, me = yield
-        id_layer = bm.verts.layers.string.active
-        if id_layer is None:
-            # in case if no nodes section, i.e. beams with parent part nodes
-            id_layer = bm.verts.layers.string.new('jbeamNodeId')
         beam_layer = bm.edges.layers.int.new('jbeam')
         prop_inh = PropInheritanceBuilder(bm.edges, me.jbeam_beam_prop_chain)
         if ctx.listt is not None:
-            self.visitChildren(ctx.listt, (bm, id_layer, beam_layer, prop_inh))
+            self.visitChildren(ctx.listt, (bm, beam_layer, prop_inh))
         bm.edges.ensure_lookup_table()
         yield self.get_src_text_replaced(ctx, ctx.listt, '${beams}'),
 
     def visitBeam(self, ctx: jbeamParser.BeamContext):
-        bm, id_layer, beam_layer, prop_inh = yield
+        bm, beam_layer, prop_inh = yield
         id1 = ctx.id1.string_item
         id2 = ctx.id2.string_item
         v1, v2 = self._vertsIndex.get(id1), self._vertsIndex.get(id2)
         # check for attaching to parent
         if not (v1 or v2):
             # both belong to parent? ok
-            v1 = self.new_dummy_node(bm, id_layer, id1)
-            v2 = self.new_dummy_node(bm, id_layer, id2, v1.co)
+            v1 = self.new_dummy_node(bm, id1)
+            v2 = self.new_dummy_node(bm, id2, v1.co)
         elif not v1:
             # v1 belongs to parent
-            v1 = self.new_dummy_node(bm, id_layer, id1, v2.co)
+            v1 = self.new_dummy_node(bm, id1, v2.co)
         elif not v2:
-            v2 = self.new_dummy_node(bm, id_layer, id2, v1.co)
+            v2 = self.new_dummy_node(bm, id2, v1.co)
 
         try:
             edge = bm.edges.new((v1, v2))  # throws on duplicates
+            # set explicitly cuz triangles can have 'non beam' edges
             edge[beam_layer] = 1
             prop_inh.next_item(edge)
             yield edge
         except ValueError as err:
-            print(err, id1, id2)  # ToDo handle duplicates
+            self.print('\t', err, [id1, id2])  # ToDo handle duplicates
             yield
 
-    def new_dummy_node(self, bm, id_layer, dummy_id: str, co=None):
+    def new_dummy_node(self, bm, dummy_id: str, co=None):
         """
         Add parent node representation to be able to store attaching beams.
         Adds '~' to the beginning of id, but _vertsIndex keeps original id.
@@ -249,6 +260,11 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         :param co: mathutils.Vector
         :return: bmesh.types.BMVert
         """
+        id_layer = bm.verts.layers.string.active
+        if id_layer is None:
+            # in case if no nodes section, i.e. beams with parent part nodes
+            # Beware this kill existing verts in '_vertsIndex' map.
+            id_layer = bm.verts.layers.string.new('jbeamNodeId')
         if co:
             vert = bm.verts.new(co)
             # hang dummy node
@@ -260,7 +276,7 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         return vert
 
     def visitBeamProps(self, ctx: jbeamParser.BeamPropsContext):
-        bm, id_layer, beam_layer, prop_inh = yield
+        bm, beam_layer, prop_inh = yield
         src = self.get_src_text_replaced(ctx)
         prop_inh.next_prop(src)
         yield
@@ -282,17 +298,26 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         id3 = ctx.id3.string_item
         v_cache = self._vertsIndex
         v1, v2, v3 = v_cache.get(id1), v_cache.get(id2), v_cache.get(id3)
-        if v1 and v2 and v3:
-            try:
-                face = bm.faces.new((v1, v2, v3))
-                prop_inh.next_item(face)
-                yield face
-            except ValueError as err:
-                print(err, id1, id2, id3)  # ToDo handle duplicates
-                yield
-        else:
-            # coltri with parent nodes?? ok
-            print('Skipped triangle with parent nodes [{} {} {}]: not implemented')
+
+        # handle dummy nodes (which not in the beams section)
+        any_tnode = v1 or v2 or v3
+        has_dummies = not (v1 and v2 and v3)
+        if has_dummies:
+            if not any_tnode:
+                any_tnode = v1 = self.new_dummy_node(bm, id1)
+            if not v1:
+                v1 = self.new_dummy_node(bm, id1, any_tnode.co)
+            if not v2:
+                v2 = self.new_dummy_node(bm, id2, any_tnode.co)
+            if not v3:
+                v3 = self.new_dummy_node(bm, id3, any_tnode.co)
+
+        try:
+            face = bm.faces.new((v1, v2, v3))
+            prop_inh.next_item(face)
+            yield face
+        except ValueError as err:
+            self.print('\t', err, [id1, id2, id3])  # ToDo handle duplicates
             yield
 
     def visitColtriProps(self, ctx: jbeamParser.ColtriPropsContext):
@@ -314,7 +339,9 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         return self.visitSection_Unknown(ctx)
 
     def visitSection_SlotType(self, ctx: jbeamParser.Section_SlotTypeContext):
-        return self.visitSection_Unknown(ctx)
+        bm, me = yield
+        me['slotType'] = ctx.val.string_item
+        yield self.get_src_text_replaced(ctx, ctx.val, '${slotType}')
 
 
 class NodeCollector(jbeamVisitor):
