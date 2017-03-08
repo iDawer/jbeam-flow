@@ -8,41 +8,30 @@ from .misc import anytree
 
 
 class MoveDummies(Operator):
-    bl_idname = "object.jbeam_move_dummies"
-    bl_label = "JBeam: Move dummy nodes to their original position"
+    bl_idname = "scene.jbeam_adjust_dummies"
+    bl_label = "JBeam: Move dummy nodes to position of their originals"
     bl_options = {'REGISTER', 'UNDO'}
 
     all_scene_objects = BoolProperty(
-        name="Scene objects",
-        default=False,
+        name="Whole scene",
+        description="Perform adjusting for whole scene or active object only",
+        default=True,
     )
 
     def execute(self, context):
-        active_obj = context.active_object
-        # ToDo check context and handle noninitialised data layers
 
-        if not active_obj:
-            self.report({'ERROR'}, "Select at least one part")
-            return {'CANCELLED'}
-        if active_obj.type != 'MESH':
-            self.report({'ERROR_INVALID_INPUT'}, "Mesh type object required")
-            return {'CANCELLED'}
-        if active_obj.parent is None:
-            self.report({'ERROR_INVALID_INPUT'}, "Active object is not parented")
-            return {'CANCELLED'}
-
-        slot_node = build_tree_with(context.scene.objects, active_obj.parent)
-        root = slot_node.root
-        # tree walking iterator
-        nodes_iter = anytree.PreOrderIter(root)
+        # slot_node = build_tree_with(context.scene.objects, active_obj.parent)
+        # root = slot_node.root
+        # # tree walking iterator
+        # nodes_iter = anytree.PreOrderIter(root)
 
         # collect all jnode ids and coordinates in the object hierarchy
         jnode_map = {}
-        for t_node in nodes_iter:
-            if t_node.obj.type == 'MESH':
+        for ob in context.scene.objects:
+            if ob.type == 'MESH':
                 # note jnode id can be overwritten during dic.update(), i.e. part's jnode overrides parent's node!
                 # Is this behavior correct? ToDo check jnode override behavior
-                jnode_map.update(get_jnodes_co(t_node.obj))
+                jnode_map.update(get_jnodes_co(ob))
 
         print("Adjusting dummy nodes position...")
         overall_result = 0, 0
@@ -52,6 +41,16 @@ class MoveDummies(Operator):
                     result = position_dummies(jnode_map, ob)
                     overall_result = vector_sum(overall_result, result)
         else:
+            active_obj = context.active_object
+            if not active_obj:
+                self.report({'ERROR'}, "Select a part")
+                return {'CANCELLED'}
+            if active_obj.type != 'MESH':
+                self.report({'ERROR_INVALID_INPUT'}, "Mesh type object required")
+                return {'CANCELLED'}
+            if active_obj.parent is None:
+                self.report({'ERROR_INVALID_INPUT'}, "Active object is not parented")
+                return {'CANCELLED'}
             overall_result = position_dummies(jnode_map, active_obj)
 
         rtype = {'WARNING'} if overall_result[1] else {'INFO'}
@@ -79,7 +78,7 @@ def get_jnodes_co(obj):
 
 def position_dummies(jnode_map, obj):
     me = obj.data
-    print("\t%s:" % me.name, end=" ")
+    print("\t{:40}|".format(me.name), end=" ")
     if me.is_editmode:
         bm = bmesh.from_edit_mesh(me)
     else:
@@ -112,7 +111,7 @@ def position_dummies(jnode_map, obj):
     me.update()
 
     if dummy_verts:
-        print("Some dummies was not positioned: ", ', '.join(('~' + _id for _id in sorted(dummy_verts))))
+        print("Unbound dummies: ", ', '.join(('~' + _id for _id in sorted(dummy_verts))))
     else:
         print("ok")
 
