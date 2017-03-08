@@ -96,6 +96,8 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         mesh.update()
         return part_obj
 
+    # ============================== utility ==============================
+
     def print(self, *args):
         print('\t' * self.console_indent, *args)
 
@@ -104,6 +106,13 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         obj.parent_type = prn_type
         self.helper_objects.append(obj)
         return obj
+
+    @staticmethod
+    def process_comments_before(ctx, prop_inh):
+        stream = ctx.parser.getTokenStream()
+        for token in stream.getHiddenTokensToLeft(ctx.start.tokenIndex):
+            if token.type == jbeamParser.COMMENT_LINE or token.type == jbeamParser.COMMENT_BLOCK:
+                prop_inh.next_prop(token.text)
 
     # ============================== slots ==============================
 
@@ -197,6 +206,7 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
 
     def visitNode(self, ctx: jbeamParser.NodeContext):
         bm, id_layer, prop_layer, prop_inh = yield  # receive visitChildren's aggregator kwarg
+        self.process_comments_before(ctx, prop_inh)
         vert = bm.verts.new((float(ctx.posX.text), float(ctx.posY.text), float(ctx.posZ.text)))
         _id = ctx.id1.string_item
         vert[id_layer] = _id.encode()  # set node id to the data layer
@@ -208,7 +218,8 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         yield vert
 
     def visitNodeProps(self, ctx: jbeamParser.NodePropsContext):
-        bm, id_layer, prop_layer, prop_inh = yield
+        _, _, _, prop_inh = yield
+        self.process_comments_before(ctx, prop_inh)
         src = self.get_src_text_replaced(ctx)
         prop_inh.next_prop(src)
         yield
@@ -226,6 +237,7 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
 
     def visitBeam(self, ctx: jbeamParser.BeamContext):
         bm, beam_layer, prop_inh = yield
+        self.process_comments_before(ctx, prop_inh)
         id1 = ctx.id1.string_item
         id2 = ctx.id2.string_item
         v1, v2 = self._vertsIndex.get(id1), self._vertsIndex.get(id2)
@@ -277,6 +289,7 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
 
     def visitBeamProps(self, ctx: jbeamParser.BeamPropsContext):
         bm, beam_layer, prop_inh = yield
+        self.process_comments_before(ctx, prop_inh)
         src = self.get_src_text_replaced(ctx)
         prop_inh.next_prop(src)
         yield
@@ -293,6 +306,7 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
 
     def visitColtri(self, ctx: jbeamParser.ColtriContext):
         bm, prop_inh = yield
+        self.process_comments_before(ctx, prop_inh)
         id1 = ctx.id1.string_item
         id2 = ctx.id2.string_item
         id3 = ctx.id3.string_item
@@ -322,6 +336,7 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
 
     def visitColtriProps(self, ctx: jbeamParser.ColtriPropsContext):
         bm, prop_inh = yield
+        self.process_comments_before(ctx, prop_inh)
         src = self.get_src_text_replaced(ctx)
         prop_inh.next_prop(src)
         yield
