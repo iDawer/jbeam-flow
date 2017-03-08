@@ -30,6 +30,8 @@ def to_tree(jbeam_data: str):
 
 
 class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
+    lock_part_transform = True
+
     def __init__(self, name='JBeam file'):
         self.name = name
         self.parts_group = None
@@ -60,6 +62,8 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         part_obj = bpy.data.objects.new(part_name, mesh)
         part_obj.show_wire = True
         part_obj.show_all_edges = True
+        if self.lock_part_transform:
+            self.lock_transform(part_obj)
 
         data_buf = StringIO()
         if ctx.listt is not None:
@@ -102,8 +106,7 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
     def visitSection_Slots(self, ctx: jbeamParser.Section_SlotsContext):
         slots_empty = bpy.data.objects.new(ctx.name.text.strip('"'), None)
         # slot section has no transform modifiers
-        slots_empty.lock_location = (True, True, True)
-        self.lock_rot_scale(slots_empty)
+        self.lock_transform(slots_empty)
         if ctx.listt is not None:
             self.visitChildren(ctx.listt, slots_empty)
         return slots_empty
