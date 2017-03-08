@@ -31,6 +31,7 @@ def to_tree(jbeam_data: str):
 
 class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
     lock_part_transform = True
+    console_indent = 0
 
     def __init__(self, name='JBeam file'):
         self.name = name
@@ -53,7 +54,7 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
 
     def visitPart(self, ctx: jbeamParser.PartContext):
         part_name = ctx.name.string_item
-        print('part: ' + part_name)
+        self.print("part:", part_name)
         self._vertsIndex = {}
 
         mesh = bpy.data.meshes.new(part_name)
@@ -94,6 +95,9 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
         mesh['jbeam_part_data'] = data_buf.getvalue()
         mesh.update()
         return part_obj
+
+    def print(self, *args):
+        print('\t' * self.console_indent, *args)
 
     def set_parent(self, obj, parent, prn_type='OBJECT'):
         obj.parent = parent
@@ -243,7 +247,7 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
             prop_inh.next_item(edge)
             yield edge
         except ValueError as err:
-            print(err, id1, id2)  # ToDo handle duplicates
+            self.print('\t', err, [id1, id2])  # ToDo handle duplicates
             yield
 
     def new_dummy_node(self, bm, dummy_id: str, co=None):
@@ -313,7 +317,7 @@ class PartObjectsBuilder(vmix.Json, vmix.Helper, jbeamVisitor):
             prop_inh.next_item(face)
             yield face
         except ValueError as err:
-            print(err, (id1, id2, id3))  # ToDo handle duplicates
+            self.print('\t', err, [id1, id2, id3])  # ToDo handle duplicates
             yield
 
     def visitColtriProps(self, ctx: jbeamParser.ColtriPropsContext):

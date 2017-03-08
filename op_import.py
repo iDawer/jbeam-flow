@@ -1,8 +1,6 @@
-import itertools as iter
 import bpy
 from bpy.props import StringProperty, BoolProperty, EnumProperty
 from bpy.types import Operator
-from bpy import path
 from bpy_extras.io_utils import ImportHelper
 import cProfile
 
@@ -13,7 +11,6 @@ class ImportJBeam(Operator, ImportHelper):
     bl_label = "Import JBeam (.jbeam)"
     bl_options = {'REGISTER', 'UNDO'}
 
-    # ImportHelper mixin class uses this
     filename_ext = ".jbeam"
 
     filter_glob = StringProperty(
@@ -49,16 +46,16 @@ class ImportJBeam(Operator, ImportHelper):
         # profiler = cProfile.Profile()
         # profiler.enable()
         from . import jbeam_utils
+        print("File:", self.filename)
         with open(self.filepath, encoding='utf-8') as file:
             content = file.read()
 
         tree = jbeam_utils.to_tree(content)
 
         builder = jbeam_utils.PartObjectsBuilder(self.filename)
-        parts_group = builder.visit(tree)
+        builder.console_indent = 1
+        builder.visit(tree)
 
-        # resulting parts_group and text names can be different
-        # parts_group['jbeam_textblock'] = text_block.name
         for obj in builder.get_all_objects():
             context.scene.objects.link(obj)
 
