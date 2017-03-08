@@ -34,16 +34,6 @@ class LoadVehicleConfig(Operator, ImportHelper):
     )
 
     def execute(self, context):
-        # with open(self.filepath, encoding='utf-8') as pc_file:
-        #     content = pc_file.read()
-
-        # data_stream = FileStream(self.filepath, 'utf-8')
-        #
-        # lexer = jbeamLexer(data_stream)
-        # stream = CommonTokenStream(lexer)
-        # parser = jbeamParser(stream)
-        # tree = parser.obj()
-
         scene_parts = bpy.data.scenes.get('parts')
         if scene_parts is None:
             self.report({'ERROR'}, "'parts' scene not found")
@@ -89,23 +79,21 @@ class LoadVehicleConfig(Operator, ImportHelper):
 def fill_slots(part_map: defaultdict(dict), part_slots_map: defaultdict(list), part, slot_part_conf: dict,
                depth: int):
     if depth > 50:
-        print("WARNING: Slots tree too deep (>50).")
+        print("WARNING: Slots tree too deep (>50). Current part: '{}'".format(part.name))
         return
 
     part_name = part.data['jbeam_part']
-    for slot_name, default, slot in part_slots_map[part_name]:
-        child_part_name = slot_part_conf.get(slot_name)
-        if child_part_name is None:
-            # not specified by config, try to set default
-            ch_part = part_map[slot_name].get(default)
-        else:
-            ch_part = part_map[slot_name].get(child_part_name)
-
-        if ch_part is not None:
-            ch_part.parent = slot
-            fill_slots(part_map, part_slots_map, ch_part, slot_part_conf, depth + 1)
-
-    pass
+    for slot_name, default, slot_obj in part_slots_map[part_name]:
+        ch_part_name = slot_part_conf.get(slot_name) or default
+        if ch_part_name:
+            # child part specified by 'pc' or default
+            ch_part = part_map[slot_name].get(ch_part_name)
+            if ch_part is not None:  # child part found
+                ch_part.parent = slot_obj
+                fill_slots(part_map, part_slots_map, ch_part, slot_part_conf, depth + 1)
+            else:
+                # child part specified but not found
+                print("Part '{}' for slot [{}] not found".format(ch_part_name, slot_name))
 
 
 def is_slot(ob):
