@@ -1,14 +1,14 @@
 import unittest
 
 from antlr4 import *
-from ext_json import ExtJSONLexer, ExtJSONParser
+from ext_json import ExtJSONLexer, ExtJSONParser, ExtJSONEvaluator
 
 try:
     from misc import visitor_mixins
 except ValueError as ex:
     raise ImportError(r"to run the tests replace relative import '..jb' with 'jb' in misc\visitor_mixins.py") from ex
 
-visitor = visitor_mixins.Json()
+visitor = ExtJSONEvaluator()
 
 
 def get_stream(str: str):
