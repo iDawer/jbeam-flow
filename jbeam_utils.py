@@ -7,6 +7,7 @@ from bpy.types import Object as IDObject
 
 from antlr4 import *  # ToDo: get rid of the global antlr4 lib
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
+from .ext_json import Lexer, Parser, Visitor
 from .jb import jbeamLexer, jbeamParser, jbeamVisitor
 from .jb.utils import preprocess
 from .misc import (

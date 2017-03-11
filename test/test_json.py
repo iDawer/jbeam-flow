@@ -1,19 +1,18 @@
 import unittest
 
 from antlr4 import *
-from jb import jbeamLexer, jbeamParser, jbeamVisitor
+from ext_json import ExtJSONLexer, ExtJSONParser
 
 try:
     from misc import visitor_mixins
 except ValueError as ex:
     raise ImportError(r"to run the tests replace relative import '..jb' with 'jb' in misc\visitor_mixins.py") from ex
 
-# class Visitor(visitor_mixins.Json, jbeamVisitor): pass
 visitor = visitor_mixins.Json()
 
 
 def get_stream(str: str):
-    lexer = jbeamLexer(InputStream(str))
+    lexer = ExtJSONLexer(InputStream(str))
     stream = CommonTokenStream(lexer)
     stream.fill()  # force lazy init
     return stream
@@ -21,31 +20,29 @@ def get_stream(str: str):
 
 def get_parser(str: str):
     stream = get_stream(str)
-    parser = jbeamParser(stream)
+    parser = ExtJSONParser(stream)
     return parser
 
 
-class JsonTestCase(unittest.TestCase):
+class JsonVisitorTestCase(unittest.TestCase):
     def test_boolean(self):
         p = get_parser('true')
-        ctx = p.boolean()
+        ctx = p.value()
         result = ctx.accept(visitor)
         self.assertEqual(True, result)
-        result = get_parser('false').boolean().accept(visitor)
+        result = get_parser('false').value().accept(visitor)
         self.assertEqual(False, result)
-        bad_res = get_parser('bad').boolean().accept(visitor)
-        self.assertIsNone(bad_res)
 
-    def test_genericString(self):
+    def test_string(self):
         parser = get_parser('"some text"')
-        ctx = parser.genericString()
+        ctx = parser.value()
         result = ctx.accept(visitor)
         self.assertEqual("some text", result)
 
     def test_obj(self):
         parser = get_parser('{"key": -12e-3, "array": []}')
-        ctx = parser.obj()
-        self.assertIsInstance(ctx, jbeamParser.ObjContext)
+        ctx = parser.object()
+        self.assertIsInstance(ctx, ExtJSONParser.ObjectContext)
         result = ctx.accept(visitor)
         self.assertIn("key", result)
         self.assertEqual(-12e-3, result["key"])
@@ -55,7 +52,7 @@ class JsonTestCase(unittest.TestCase):
     def test_atom(self):
         parser = get_parser('234')
         ctx = parser.value()
-        self.assertIsInstance(ctx, jbeamParser.AtomContext)
+        self.assertIsInstance(ctx, ExtJSONParser.ValueAtomContext)
         self.assertEqual(234, ctx.accept(visitor))
         ctx = get_parser('false').value()
         self.assertEqual(False, ctx.accept(visitor))
@@ -69,17 +66,37 @@ class JsonTestCase(unittest.TestCase):
 
     def test_comment_line(self):
         parser = get_parser('//comment \n {"k": //inline\n1}')
-        ctx = parser.obj()
+        ctx = parser.object()
         result = ctx.accept(visitor)
         self.assertIsInstance(result, object)
         self.assertEqual({"k": 1}, result)
 
     def test_comment_block(self):
         parser = get_parser('/*comment \n*/ {"k": /*inline*/ 1\n}')
-        ctx = parser.obj()
+        ctx = parser.object()
         result = ctx.accept(visitor)
         self.assertIsInstance(result, object)
         self.assertEqual({"k": 1}, result)
+
+    def test_bad_object(self):
+        parser = get_parser('{123: "abc"}')
+        ctx = parser.object()
+        from antlr4.error.Errors import InputMismatchException
+        self.assertIsNotNone(ctx.exception)
+        self.assertIsInstance(ctx.exception, InputMismatchException)
+
+    def test_recover_bad_middle_pair(self):
+        parser = get_parser('{"foo": "bar", 123: null "key": "abc"}')
+        ctx = parser.object()
+        result = ctx.accept(visitor)
+        self.assertEqual({"foo": "bar", "key": "abc"}, result)
+
+    @unittest.skip('need proper recovery')
+    def test_recover_array_bad_first_object(self):
+        parser = get_parser('[{123: null "key": "abc"}, {}]')
+        ctx = parser.array()
+        result = ctx.accept(visitor)
+        self.assertEqual([{"key": "abc"}, {}], result)
 
 
 if __name__ == '__main__':

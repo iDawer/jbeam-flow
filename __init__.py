@@ -11,6 +11,7 @@ if "bpy" in locals():
     import importlib
 
     importlib.reload(jb)
+    importlib.reload(ext_json)
     importlib.reload(misc)
     importlib.reload(jbeam_utils)
     importlib.reload(op_import)
@@ -26,6 +27,7 @@ if "bpy" in locals():
 else:
     import bpy
     from . import (
+        ext_json,
         jb,
         misc,
         jbeam_utils,

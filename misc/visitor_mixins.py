@@ -1,55 +1,60 @@
-from ..jb import jbeamParser, jbeamVisitor
+from antlr4.tree.Tree import TerminalNodeImpl
+# from ..jb import jbeamParser, jbeamVisitor
+from ..ext_json import ExtJSONVisitor, ExtJSONParser
+from . import Switch
 
 
-class Json(jbeamVisitor):
-    def visitBoolean(self, ctx: jbeamParser.BooleanContext):
-        if ctx.exception is not None:
-            return None
-        return ctx.val.type == jbeamParser.TRUE
+class Json(ExtJSONVisitor):
+    def visitObject(self, ctx: ExtJSONParser.ObjectContext):
+        ctx_pairs = ctx.pairs()
+        if ctx_pairs:
+            pairs = self.visitPairs(ctx_pairs)
+            return dict(pairs)
+        return {}
 
-    def visitGenericString(self, ctx: jbeamParser.GenericStringContext):
-        if ctx.exception is not None:
-            return None
-        return ctx.string_item
-
-    def visitAtom(self, ctx: jbeamParser.AtomContext):
-        if ctx.exception is not None:
-            raise ValueError("bad atom value: '%s'" % ctx.getText())
-        if ctx.NULL() is not None:
-            return None
-        node = ctx.NUMBER()
-        if node is not None:
-            return float(node.getText())
-        node = ctx.boolean()
-        if node is not None:
-            return self.visitBoolean(node)
-
-    def visitString(self, ctx: jbeamParser.StringContext):
-        return self.visitGenericString(ctx.genericString())
-
-    def visitArray(self, ctx: jbeamParser.ArrayContext):
-        array = []
-        append = array.append
-        for valCtx in ctx.value():
-            append(valCtx.accept(self))
-        return array
-
-    def visitArrayValue(self, ctx: jbeamParser.ArrayValueContext):
-        return self.visitArray(ctx.array())
-
-    def visitKeyVal(self, ctx: jbeamParser.KeyValContext):
-        return ctx.key.accept(self), ctx.val.accept(self)
-
-    def visitObj(self, ctx: jbeamParser.ObjContext):
+    def visitPairs(self, ctx: ExtJSONParser.PairsContext):
         pairs = []
         append = pairs.append
-        for keyValCtx in ctx.keyVal():
-            append(keyValCtx.accept(self))
-        obj = dict(pairs)
-        return obj
+        for pairCtx in ctx.pair():
+            append(pairCtx.accept(self))
+        return pairs
 
-    def visitObjectValue(self, ctx: jbeamParser.ObjectValueContext):
-        return ctx.obj().accept(self)
+    def visitPair(self, ctx: ExtJSONParser.PairContext):
+        return ctx.STRING().accept(self), ctx.val.accept(self)
+
+    def visitArray(self, ctx: ExtJSONParser.ArrayContext):
+        ctx_values = ctx.values()
+        if ctx_values:
+            return self.visitValues(ctx_values)
+        return []
+
+    def visitValues(self, ctx: ExtJSONParser.ValuesContext):
+        array = []
+        append = array.append
+        for val_ctx in ctx.value():
+            append(val_ctx.accept(self))
+        return array
+
+    def visitValueObject(self, ctx: ExtJSONParser.ValueObjectContext):
+        return self.visitObject(ctx.object())
+
+    def visitValueArray(self, ctx: ExtJSONParser.ValueArrayContext):
+        return self.visitArray(ctx.array())
+
+    def visitTerminal(self, tnode: TerminalNodeImpl):
+        token = tnode.symbol
+        with Switch(token.type) as case:
+            if case(ExtJSONParser.STRING):
+                return token.text.strip('"')
+            elif case(ExtJSONParser.NUMBER):
+                return float(token.text)
+            elif case(ExtJSONParser.TRUE):
+                return True
+            elif case(ExtJSONParser.FALSE):
+                return False
+            elif case(ExtJSONParser.NULL):
+                return None
+        return super().visitTerminal(tnode)
 
 
 class Helper:
