@@ -4,7 +4,7 @@ from ExtJSONLexer import ExtJSONLexer as Lexer
 from ExtJSONParser import ExtJSONParser as Parser
 
 
-def get_stream(str: str):
+def get_stream(str: str) -> CommonTokenStream:
     lexer = Lexer(InputStream(str))
     stream = CommonTokenStream(lexer)
     stream.fill()  # force lazy init
@@ -74,7 +74,7 @@ class TestLexer(unittest.TestCase):
         self.assertEqual(stream.LA(2), Lexer.NUMBER, 'NUMBER was consumed by comment')
 
 
-def get_parser(str: str):
+def get_parser(str: str) -> Parser:
     stream = get_stream(str)
     parser = Parser(stream)
 
