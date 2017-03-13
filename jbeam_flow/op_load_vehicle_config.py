@@ -8,7 +8,8 @@ from bpy.props import StringProperty, BoolProperty, EnumProperty
 from bpy.types import Operator
 
 from antlr4 import *
-from .misc import Switch, anytree, visitor_mixins as vmix
+from .jbeam.ext_json import ExtJSONEvaluator
+from .jbeam.misc import Switch, anytree, visitor_mixins as vmix
 from .jb import jbeamVisitor, jbeamParser, jbeamLexer
 from . import jbeam_utils
 
@@ -136,5 +137,5 @@ def decode_json(data: str):
     stream = CommonTokenStream(lexer)
     parser = jbeamParser(stream)
     obj_ctx = parser.obj()
-    result = obj_ctx.accept(vmix.Json())
+    result = obj_ctx.accept(ExtJSONEvaluator())
     return result
