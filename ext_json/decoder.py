@@ -1,9 +1,40 @@
+from antlr4 import CommonTokenStream, InputStream
 from antlr4.tree.Tree import TerminalNodeImpl
-from ext_json import ExtJSONVisitor, ExtJSONParser
-from misc import Switch
+
+if '.' in __name__:
+    from . import ExtJSONVisitor, ExtJSONParser, ExtJSONLexer
+    from ..misc import Switch
+else:
+    # from ext_json import ExtJSONVisitor, ExtJSONParser, ExtJSONLexer
+    from ExtJSONLexer import ExtJSONLexer
+    from ExtJSONParser import ExtJSONParser
+    from ExtJSONVisitor import ExtJSONVisitor
+    from misc import Switch
+
+
+def get_parse_tree(s: str) -> ExtJSONParser.JsonContext:
+    lexer = ExtJSONLexer(InputStream(s))
+    stream = CommonTokenStream(lexer)
+    parser = ExtJSONParser(stream)
+    return parser.json()
+
+
+def load(s: str):
+    json_ctx = get_parse_tree(s)
+    result = json_ctx.accept(ExtJSONEvaluator())
+    return result
 
 
 class ExtJSONEvaluator(ExtJSONVisitor):
+    def visitJson(self, ctx: ExtJSONParser.JsonContext):
+        child_ctx = ctx.array()
+        if child_ctx:
+            return self.visitArray(child_ctx)
+        child_ctx = ctx.object()
+        if child_ctx:
+            return self.visitObject(child_ctx)
+        return None
+
     def visitObject(self, ctx: ExtJSONParser.ObjectContext):
         ctx_pairs = ctx.pairs()
         if ctx_pairs:

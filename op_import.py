@@ -46,15 +46,16 @@ class ImportJBeam(Operator, ImportHelper):
         # profiler = cProfile.Profile()
         # profiler.enable()
         from . import jbeam_utils
+        from .ext_json import decoder
         print("File:", self.filename)
         with open(self.filepath, encoding='utf-8') as file:
             content = file.read()
 
-        tree = jbeam_utils.to_tree(content)
+        tree = decoder.get_parse_tree(content)
 
         builder = jbeam_utils.PartObjectsBuilder(self.filename)
         builder.console_indent = 1
-        builder.visit(tree)
+        builder.jbeam(tree)
 
         for obj in builder.get_all_objects():
             context.scene.objects.link(obj)

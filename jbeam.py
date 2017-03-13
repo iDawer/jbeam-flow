@@ -7,16 +7,16 @@ if '.' in __name__:
     from .misc import Switch
 else:
     # for testing purpose
-    from ExtJSONParser import ExtJSONParser
-    from decoder import ExtJSONEvaluator
+    from ext_json import ExtJSONParser, ExtJSONEvaluator
     from misc import Switch
 
 # fast links
-ValueContext = ExtJSONParser.ValueContext
-ValueArrayContext = ExtJSONParser.ValueArrayContext
-ValueObjectContext = ExtJSONParser.ValueObjectContext
+_ValuesContext = ExtJSONParser.ValuesContext
+_ValueContext = ExtJSONParser.ValueContext
+_ValueArrayContext = ExtJSONParser.ValueArrayContext
+_ValueObjectContext = ExtJSONParser.ValueObjectContext
 # ValueAtomContext = ExtJSONParser.ValueAtomContext
-ValueStringContext = ExtJSONParser.ValueStringContext
+_ValueStringContext = ExtJSONParser.ValueStringContext
 
 
 class JbeamVisitor(ExtJSONEvaluator):
@@ -43,24 +43,17 @@ class JbeamVisitor(ExtJSONEvaluator):
 
 
 class JbeamBase(ExtJSONEvaluator):
-    def table(self, rows: List[ValueContext], row_handler, args):
-        r_iter = enumerate(rows)
-        _, header = next(r_iter)
-        header = header.accept(self)
-        for idx, row_ctx in r_iter:
-            with Switch.Inst(row_ctx) as case:
-                if case(ValueArrayContext):
-                    row = row_ctx.accept(self)
-                    map = self.row_to_map(header, row)
-                elif case(ValueObjectContext):
-                    map = row_ctx.accept(self)
-                else:
-                    # other types in a table not supported, ignore them
-                    continue
-                row_handler(map, *args)
+    def table(self, rows_ctx: ExtJSONParser.ValuesContext):
+        rows = rows_ctx.value()
+        rows_iter = iter(rows)
+        header = next(rows_iter).accept(self)
+        assert isinstance(header, list)
+        return header, rows_iter
+        # for idx, row_ctx in rows_iter:
+        #     row_handler(header, row_ctx, *args)
 
     @staticmethod
-    def row_to_map(header, row):
+    def row_to_map(header: list, row: list) -> dict:
         map = dict(zip(header, row))
         sliced = islice(row, len(header), None)
         inlined_maps = filter(lambda x: isinstance(x, dict), sliced)
@@ -124,8 +117,17 @@ if '.' not in __name__:
 
     class JbeamBaseTestCase(unittest.TestCase):
         @staticmethod
-        def row_handler(row, array: list):
-            array.append(row)
+        def row_handler(header, row_ctx, array: list):
+            with Switch.Inst(row_ctx) as case:
+                if case(_ValueArrayContext):
+                    row = row_ctx.accept(j_base)
+                    map = j_base.row_to_map(header, row)
+                elif case(_ValueObjectContext):
+                    map = row_ctx.accept(j_base)
+                else:
+                    # other types in a table not supported, ignore them
+                    return
+            array.append(map)
 
         def test_table(self):
             parser = get_parser('''

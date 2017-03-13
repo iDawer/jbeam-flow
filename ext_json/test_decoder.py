@@ -1,12 +1,7 @@
 import unittest
 
 from antlr4 import *
-from ext_json import ExtJSONLexer, ExtJSONParser, ExtJSONEvaluator
-
-try:
-    from misc import visitor_mixins
-except ValueError as ex:
-    raise ImportError(r"to run the tests replace relative import '..jb' with 'jb' in misc\visitor_mixins.py") from ex
+from decoder import ExtJSONLexer, ExtJSONParser, ExtJSONEvaluator, load
 
 visitor = ExtJSONEvaluator()
 
@@ -25,6 +20,12 @@ def get_parser(str: str):
 
 
 class JsonVisitorTestCase(unittest.TestCase):
+    def test_json(self):
+        parser = get_parser('{"foo": 42}')
+        ctx = parser.json()
+        result = ctx.accept(visitor)
+        self.assertEqual({"foo": 42}, result)
+
     def test_boolean(self):
         p = get_parser('true')
         ctx = p.value()
@@ -97,6 +98,28 @@ class JsonVisitorTestCase(unittest.TestCase):
         ctx = parser.array()
         result = ctx.accept(visitor)
         self.assertEqual([{"key": "abc"}, {}], result)
+
+
+class LoadTestCase(unittest.TestCase):
+    def test_empty(self):
+        res = load('')
+        self.assertIsNone(res)
+
+    def test_object(self):
+        result = load('{"foo": 1e4 "bar":null}')
+        self.assertEqual({"foo": 1e4, "bar": None}, result)
+
+    def test_object_empty(self):
+        result = load('{}')
+        self.assertEqual({}, result)
+
+    def test_array(self):
+        result = load('[{"foo": -1e-4 "bar":null}{}, true]')
+        self.assertEqual([{"foo": -1e-4, "bar": None}, {}, True], result)
+
+    def test_array_empty(self):
+        result = load('[  \n\t\n ]')
+        self.assertEqual([], result)
 
 
 if __name__ == '__main__':

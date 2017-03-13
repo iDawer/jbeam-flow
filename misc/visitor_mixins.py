@@ -1,3 +1,6 @@
+from itertools import islice
+
+
 class Helper:
     @staticmethod
     def lock_rot_scale(obj):
@@ -24,3 +27,16 @@ class Helper:
         else:
             src.append(stream.getText(src_int).replace('$', '$$'))
         return ''.join(src)
+
+    @staticmethod
+    def get_inlined_props_src(header: list, row_ctx):
+        val_ctxs = row_ctx.array().values().value()
+        inl_prop_ctxs = list(islice(val_ctxs, len(header), None))
+        if inl_prop_ctxs:
+            first = inl_prop_ctxs[0]
+            last = inl_prop_ctxs[-1]
+            src_int = first.start.tokenIndex, last.stop.tokenIndex
+            stream = row_ctx.parser.getTokenStream()
+            src = stream.getText(src_int).replace('$', '$$')
+            return src
+        return None
