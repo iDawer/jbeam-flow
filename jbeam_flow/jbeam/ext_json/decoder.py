@@ -1,15 +1,8 @@
 from antlr4 import CommonTokenStream, InputStream
 from antlr4.tree.Tree import TerminalNodeImpl
 
-if '.' in __name__:
-    from . import ExtJSONVisitor, ExtJSONParser, ExtJSONLexer
-    from ..misc import Switch
-else:
-    # from ext_json import ExtJSONVisitor, ExtJSONParser, ExtJSONLexer
-    from ExtJSONLexer import ExtJSONLexer
-    from ExtJSONParser import ExtJSONParser
-    from ExtJSONVisitor import ExtJSONVisitor
-    from misc import Switch
+from . import ExtJSONVisitor, ExtJSONParser, ExtJSONLexer
+from ..misc import Switch
 
 
 def get_parse_tree(s: str) -> ExtJSONParser.JsonContext:

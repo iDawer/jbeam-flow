@@ -1,7 +1,7 @@
 import unittest
 from antlr4 import InputStream, CommonTokenStream
-from ExtJSONLexer import ExtJSONLexer as Lexer
-from ExtJSONParser import ExtJSONParser as Parser
+from jbeam.ext_json.ExtJSONLexer import ExtJSONLexer as Lexer
+from jbeam.ext_json.ExtJSONParser import ExtJSONParser as Parser
 
 
 def get_stream(str: str) -> CommonTokenStream:

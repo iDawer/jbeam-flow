@@ -1,22 +1,7 @@
-import unittest
 from itertools import islice
-from typing import List
 
-if '.' in __name__:
-    from .ext_json import ExtJSONParser, ExtJSONEvaluator
-    from .misc import Switch
-else:
-    # for testing purpose
-    from ext_json import ExtJSONParser, ExtJSONEvaluator
-    from misc import Switch
-
-# fast links
-_ValuesContext = ExtJSONParser.ValuesContext
-_ValueContext = ExtJSONParser.ValueContext
-_ValueArrayContext = ExtJSONParser.ValueArrayContext
-_ValueObjectContext = ExtJSONParser.ValueObjectContext
-# ValueAtomContext = ExtJSONParser.ValueAtomContext
-_ValueStringContext = ExtJSONParser.ValueStringContext
+from .ext_json import ExtJSONParser, ExtJSONEvaluator
+from .misc import Switch
 
 
 class JbeamVisitor(ExtJSONEvaluator):
@@ -77,88 +62,3 @@ class JbeamBase(ExtJSONEvaluator):
     #
     # def visit_value_row(self, ctx: ExtJSONParser.ValueArrayContext):
     #     return super().visitValueArray(ctx)
-
-
-# define tests if on top level
-# probably buggy hack
-if '.' not in __name__:
-    Parser = ExtJSONParser
-
-    from ext_json.test_ExtJSON import get_parser
-
-    jbv = JbeamVisitor()
-    j_base = JbeamBase()
-
-
-    def fast_res(src, parser_method, visitor_method):
-        parser = get_parser(src)
-        ctx = getattr(parser, getattr(parser_method, '__name__'))()
-        return visitor_method(ctx)
-
-
-    class JbeamVisitorTestCase(unittest.TestCase):
-        def test_jbeam(self):
-            result = fast_res('{"p1":{}, "p2":{}}', Parser.object, jbv.visit_jbeam)
-            self.assertEqual({"p1": {}, "p2": {}}, result)
-
-        def test_parts(self):
-            result = fast_res('"p1":{}, "p2":{}', Parser.pairs, jbv.visit_parts)
-            self.assertEqual([("p1", {}), ("p2", {})], result)
-
-        def test_part(self):
-            res = fast_res('"part": {}', Parser.pair, jbv.visit_part)
-            self.assertEqual(("part", {}), res)
-
-        def test_part_value(self):
-            res = fast_res('{"slotType": "abc"}', Parser.value, jbv.visit_part_value)
-            self.assertEqual({"slotType": "abc"}, res)
-            pass
-
-
-    class JbeamBaseTestCase(unittest.TestCase):
-        @staticmethod
-        def row_handler(header, row_ctx, array: list):
-            with Switch.Inst(row_ctx) as case:
-                if case(_ValueArrayContext):
-                    row = row_ctx.accept(j_base)
-                    map = j_base.row_to_map(header, row)
-                elif case(_ValueObjectContext):
-                    map = row_ctx.accept(j_base)
-                else:
-                    # other types in a table not supported, ignore them
-                    return
-            array.append(map)
-
-        def test_table(self):
-            parser = get_parser('''
-            ["foo", "bar"],
-            [1, 2, 3],
-            ''')
-            ctx = parser.values()
-            rows = ctx.value()
-            result = []
-            j_base.table(rows, self.row_handler, (result,))
-            self.assertEqual([{"foo": 1, "bar": 2}], result)
-
-        def test_row_inlined_map(self):
-            parser = get_parser('''
-            ["foo", "bar"],
-            [1, 2, {"zab": 3}],
-            ''')
-            ctx = parser.values()
-            rows = ctx.value()
-            result = []
-            j_base.table(rows, self.row_handler, (result,))
-            self.assertEqual([{"foo": 1, "bar": 2, "zab": 3}], result)
-
-        def test_row(self):
-            res = j_base.row_to_map(["foo", "bar"], [1, 2])
-            self.assertEqual({"foo": 1, "bar": 2}, res)
-
-        def test_row_inlined(self):
-            res = j_base.row_to_map(["foo"], [1, {"bar": 2}])
-            self.assertEqual({"foo": 1, "bar": 2}, res)
-
-
-    if __name__ == '__main__':
-        unittest.main()

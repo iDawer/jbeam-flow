@@ -46,7 +46,7 @@ class ImportJBeam(Operator, ImportHelper):
         # profiler = cProfile.Profile()
         # profiler.enable()
         from . import jbeam_utils
-        from .ext_json import decoder
+        from .jbeam.ext_json import decoder
         print("File:", self.filename)
         with open(self.filepath, encoding='utf-8') as file:
             content = file.read()

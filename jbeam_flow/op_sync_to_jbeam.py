@@ -5,7 +5,7 @@ import bpy
 from bpy.types import Operator
 
 from . import jbeam_utils
-from .misc import Triangle
+from .jbeam.misc import Triangle
 
 use_profile = True
 

@@ -1,7 +1,7 @@
 import unittest
 
 from antlr4 import *
-from decoder import ExtJSONLexer, ExtJSONParser, ExtJSONEvaluator, load
+from jbeam.ext_json.decoder import ExtJSONLexer, ExtJSONParser, ExtJSONEvaluator, load
 
 visitor = ExtJSONEvaluator()
 

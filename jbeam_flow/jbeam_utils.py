@@ -8,11 +8,11 @@ from bpy.types import Object as IDObject
 
 from antlr4 import *  # ToDo: get rid of the global antlr4 lib
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
-from .ext_json import ExtJSONLexer, ExtJSONParser, ExtJSONEvaluator
 from .jb import jbeamLexer, jbeamParser, jbeamVisitor
 from .jb.utils import preprocess
 from .jbeam import JbeamBase
-from .misc import (
+from .jbeam.ext_json import ExtJSONParser
+from .jbeam.misc import (
     Triangle,
     Switch,
     visitor_mixins as vmix,

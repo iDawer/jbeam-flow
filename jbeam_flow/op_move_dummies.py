@@ -4,7 +4,7 @@ from bpy.types import Operator
 from bpy.props import BoolProperty
 from mathutils import Vector
 
-from .misc import anytree
+from .jbeam.misc import anytree
 
 
 class MoveDummies(Operator):
