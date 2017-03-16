@@ -323,7 +323,6 @@ class PartObjectsBuilder(JbeamBase, vmix.Helper, jbeamVisitor):
         Add parent node representation to be able to store attaching beams.
         Adds '~' to the beginning of id, but _vertsIndex keeps original id.
         :param bm: bmesh
-        :param id_layer: bmesh.types.BMLayerItem
         :param dummy_id: string
         :param co: mathutils.Vector
         :return: bmesh.types.BMVert
