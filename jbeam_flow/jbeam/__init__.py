@@ -28,23 +28,21 @@ class JbeamVisitor(ExtJSONEvaluator):
 
 
 class JbeamBase(ExtJSONEvaluator):
-    def table(self, rows_ctx: ExtJSONParser.ValuesContext):
+    def table(self, rows_ctx: ExtJSONParser.ValuesContext) -> (list, list):
         rows = rows_ctx.value()
         rows_iter = iter(rows)
         header = next(rows_iter).accept(self)
         assert isinstance(header, list)
         return header, rows_iter
-        # for idx, row_ctx in rows_iter:
-        #     row_handler(header, row_ctx, *args)
 
     @staticmethod
     def row_to_map(header: list, row: list) -> dict:
-        map = dict(zip(header, row))
+        map_ = dict(zip(header, row))
         sliced = islice(row, len(header), None)
         inlined_maps = filter(lambda x: isinstance(x, dict), sliced)
         for imap in inlined_maps:
-            map.update(imap)
-        return map
+            map_.update(imap)
+        return map_
 
     pass
 

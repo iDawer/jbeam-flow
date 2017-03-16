@@ -61,10 +61,10 @@ class _JbeamBaseTestCase(unittest.TestCase):
         [1, 2, 3],
         ''')
         ctx = parser.values()
-        rows = ctx.value()
-        result = []
-        _j_base.table(rows, self.row_handler, (result,))
-        self.assertEqual([{"foo": 1, "bar": 2}], result)
+        header, rows_iter = _j_base.table(ctx)
+        self.assertEqual(["foo", "bar"], header)
+        result = list(map(_j_base.visit, rows_iter))
+        self.assertEqual([[1, 2, 3]], result)
 
     def test_row_inlined_map(self):
         parser = test_ExtJSON.get_parser('''
@@ -72,10 +72,10 @@ class _JbeamBaseTestCase(unittest.TestCase):
         [1, 2, {"zab": 3}],
         ''')
         ctx = parser.values()
-        rows = ctx.value()
-        result = []
-        _j_base.table(rows, self.row_handler, (result,))
-        self.assertEqual([{"foo": 1, "bar": 2, "zab": 3}], result)
+        header, rows_iter = _j_base.table(ctx)
+        self.assertEqual(["foo", "bar"], header)
+        result = list(map(_j_base.visit, rows_iter))
+        self.assertEqual([[1, 2, {"zab": 3}]], result)
 
     def test_row(self):
         res = _j_base.row_to_map(["foo", "bar"], [1, 2])
