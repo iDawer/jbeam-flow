@@ -1,4 +1,5 @@
 from itertools import islice
+from typing import Iterator, Tuple
 
 from .ext_json import ExtJSONParser, ExtJSONEvaluator
 from .misc import Switch, visitor_mixins
@@ -68,7 +69,7 @@ class Table:
 
 
 class JbeamBase(ExtJSONEvaluator, visitor_mixins.Helper):
-    def table(self, rows_ctx: ExtJSONParser.ValuesContext, table: Table = None) -> (dict, str):
+    def table(self, rows_ctx: ExtJSONParser.ValuesContext, table: Table = None) -> Iterator[Tuple[dict, str]]:
         table = table or Table()
 
         rows = rows_ctx.value()

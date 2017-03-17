@@ -186,19 +186,21 @@ class PartObjectsBuilder(JbeamBase):
     # ============================== beams ==============================
 
     def section_beams(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_):
-        beam_layer = bm.edges.layers.int.new('jbeam')
-        # todo, inlined props data layer here
+        type_lyr = bm.edges.layers.int.new('jbeam_type')
+        inl_props_lyr = bm.edges.layers.string.new('jbeam_prop')
         beams_ctx = ctx.array().values()
         if beams_ctx:
             with get_table_storage_ctxman(me, bm.edges) as ptable:  # type: PropsTable
                 for beam_props, inl_prop_src in self.table(beams_ctx, ptable):
-                    beam = self.beam(beam_props, inl_prop_src, bm, beam_layer)
+                    beam = self.beam(beam_props, bm, type_lyr)
                     if beam is not None:
                         ptable.assign_to_last_prop(beam)
+                        if inl_prop_src:
+                            beam[inl_props_lyr] = inl_prop_src.encode()
         bm.edges.ensure_lookup_table()
         return '${beams}'
 
-    def beam(self, props: dict, inlined_props_src: str, bm, beam_layer):
+    def beam(self, props: dict, bm, beam_layer):
         id1 = props['id1:']
         id2 = props['id2:']
         v1, v2 = self._vertsIndex.get(id1), self._vertsIndex.get(id2)
@@ -250,18 +252,20 @@ class PartObjectsBuilder(JbeamBase):
     # ============================== collision triangles ==============================
 
     def section_triangles(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_):
-        # todo, inlined props data layer here
+        inl_props_lyr = bm.faces.layers.string.new('jbeam_prop')
         triangles_ctx = ctx.array().values()
         if triangles_ctx:
             with get_table_storage_ctxman(me, bm.faces) as ptable:  # type: PropsTable
                 for tri_prop, inl_prop_src in self.table(triangles_ctx, ptable):
-                    tri = self.triangle(tri_prop, inl_prop_src, bm)
+                    tri = self.triangle(tri_prop, bm)
                     if tri is not None:
                         ptable.assign_to_last_prop(tri)
+                        if inl_prop_src:
+                            tri[inl_props_lyr] = inl_prop_src.encode()
         bm.faces.ensure_lookup_table()
         return '${triangles}'
 
-    def triangle(self, props: dict, inl_prop_src: str, bm):
+    def triangle(self, props: dict, bm):
         id1 = props['id1:']
         id2 = props['id2:']
         id3 = props['id3:']
