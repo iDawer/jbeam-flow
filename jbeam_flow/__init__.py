@@ -12,6 +12,7 @@ if "bpy" in locals():
 
     importlib.reload(jb)
     importlib.reload(jbeam)
+    importlib.reload(bl_jbeam)
     importlib.reload(jbeam_utils)
     importlib.reload(op_import)
     importlib.reload(op_sync_to_jbeam)
@@ -28,6 +29,7 @@ else:
     from . import (
         jb,
         jbeam,
+        bl_jbeam,
         jbeam_utils,
         op_import,
         op_sync_to_jbeam,
@@ -50,10 +52,12 @@ else:
 def register():
     bpy.utils.register_module(__name__)
     display_nodes.register()
+    bl_jbeam.register()
     print("REGISTERED  JBeam plugin")
 
 
 def unregister():
     bpy.utils.unregister_module(__name__)
     display_nodes.unregister()
+    bl_jbeam.unregister()
     print("UNREGISTERED  JBeam plugin")

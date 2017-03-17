@@ -1,10 +1,8 @@
 from io import StringIO
-from types import GeneratorType
 from typing import Tuple, List, Union
 
 import bmesh
 import bpy
-from bpy.types import Object as IDObject
 
 from antlr4 import *  # ToDo: get rid of the global antlr4 lib
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
@@ -14,14 +12,8 @@ from .jbeam import JbeamBase
 from .jbeam.ext_json import ExtJSONParser
 from .jbeam.misc import (
     Triangle,
-    Switch,
-    visitor_mixins as vmix,
 )
-from .props_inheritance import (
-    PropInheritanceBuilder,
-    JbeamPropsInheritance,
-    get_table_storage_ctxman,
-)
+from .bl_jbeam import PropsTable, get_table_storage_ctxman
 
 _ValueContext = ExtJSONParser.ValueContext
 _ValueArrayContext = ExtJSONParser.ValueArrayContext
@@ -169,10 +161,10 @@ class PartObjectsBuilder(JbeamBase):
         prop_layer = bm.verts.layers.string.new('jbeamNodeProps')
         nodes_ctx = ctx.array().values()
         if nodes_ctx:
-            with get_table_storage_ctxman(me, bm.verts) as prop_inh:  # type: JbeamPropsInheritance
-                for node_props, inlined_props_src in self.table(nodes_ctx, prop_inh):
+            with get_table_storage_ctxman(me, bm.verts) as ptable:  # type: PropsTable
+                for node_props, inlined_props_src in self.table(nodes_ctx, ptable):
                     node = self.node(node_props, inlined_props_src, bm, id_layer, prop_layer)
-                    prop_inh.assign_to_last_prop(node)
+                    ptable.assign_to_last_prop(node)
         bm.verts.ensure_lookup_table()
         return '${nodes}'
 
@@ -198,11 +190,11 @@ class PartObjectsBuilder(JbeamBase):
         # todo, inlined props data layer here
         beams_ctx = ctx.array().values()
         if beams_ctx:
-            with get_table_storage_ctxman(me, bm.edges) as pt_storage:  # type: JbeamPropsInheritance
-                for beam_props, inl_prop_src in self.table(beams_ctx, pt_storage):
+            with get_table_storage_ctxman(me, bm.edges) as ptable:  # type: PropsTable
+                for beam_props, inl_prop_src in self.table(beams_ctx, ptable):
                     beam = self.beam(beam_props, inl_prop_src, bm, beam_layer)
                     if beam is not None:
-                        pt_storage.assign_to_last_prop(beam)
+                        ptable.assign_to_last_prop(beam)
         bm.edges.ensure_lookup_table()
         return '${beams}'
 
@@ -261,11 +253,11 @@ class PartObjectsBuilder(JbeamBase):
         # todo, inlined props data layer here
         triangles_ctx = ctx.array().values()
         if triangles_ctx:
-            with get_table_storage_ctxman(me, bm.faces) as pt_storage:  # type: JbeamPropsInheritance
-                for tri_prop, inl_prop_src in self.table(triangles_ctx, pt_storage):
+            with get_table_storage_ctxman(me, bm.faces) as ptable:  # type: PropsTable
+                for tri_prop, inl_prop_src in self.table(triangles_ctx, ptable):
                     tri = self.triangle(tri_prop, inl_prop_src, bm)
                     if tri is not None:
-                        pt_storage.assign_to_last_prop(tri)
+                        ptable.assign_to_last_prop(tri)
         bm.faces.ensure_lookup_table()
         return '${triangles}'
 
