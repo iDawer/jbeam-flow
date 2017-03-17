@@ -1,7 +1,7 @@
 from itertools import islice
 
 from .ext_json import ExtJSONParser, ExtJSONEvaluator
-from .misc import Switch
+from .misc import Switch, visitor_mixins
 
 
 class JbeamVisitor(ExtJSONEvaluator):
@@ -27,13 +27,77 @@ class JbeamVisitor(ExtJSONEvaluator):
         return super().visitValueObject(ctx)
 
 
-class JbeamBase(ExtJSONEvaluator):
-    def table(self, rows_ctx: ExtJSONParser.ValuesContext) -> (list, list):
+class Table:
+    class Prop:
+        id = 0
+        src = ""
+
+    class PropList(list):
+        def add(self):
+            """
+
+            :rtype: Table.Prop
+            """
+            prop = Table.Prop()
+            self.append(prop)
+            return prop
+
+    def __init__(self):
+        self.chain_list = self.PropList()
+        self._pid_key = "prop_id"
+        self.max_id = 0
+
+    def add_prop(self, src):
+        """
+        Adds next shared property to and tracks it's id.
+        Ids start from 1, default 0 is a root of the chain.
+        """
+        self.max_id += 1
+        prop_item = self.chain_list.add()
+        prop_item.id = self.max_id
+        prop_item.src = src
+        return prop_item
+
+    def assign_to_last_prop(self, item):
+        item[self._pid_key] = self.max_id
+
+    # @property
+    # def pid_key(self):
+    #     """Item's access key to shared property id"""
+    #     return self._pid_key
+
+
+class JbeamBase(ExtJSONEvaluator, visitor_mixins.Helper):
+    def table(self, rows_ctx: ExtJSONParser.ValuesContext, table: Table = None) -> (dict, str):
+        table = table or Table()
+
         rows = rows_ctx.value()
         rows_iter = iter(rows)
         header = next(rows_iter).accept(self)
         assert isinstance(header, list)
-        return header, rows_iter
+        _ValueArrayContext = ExtJSONParser.ValueArrayContext
+        _ValueObjectContext = ExtJSONParser.ValueObjectContext
+        for row_ctx in rows_iter:
+            self.process_comments_before(row_ctx, table)
+            with Switch.Inst(row_ctx) as case:
+                if case(_ValueArrayContext):
+                    row = row_ctx.accept(self)
+                    prop_map = self.row_to_map(header, row)
+                    inlined_props_src = self.get_inlined_props_src(header, row_ctx)
+                    yield (prop_map, inlined_props_src)
+                elif case(_ValueObjectContext):
+                    src = self.get_src_text_replaced(row_ctx)
+                    table.add_prop(src)
+                else:
+                    # other types in the table not supported, ignore them
+                    pass
+
+    @staticmethod
+    def process_comments_before(ctx, table):
+        stream = ctx.parser.getTokenStream()
+        for token in stream.getHiddenTokensToLeft(ctx.start.tokenIndex):
+            if token.type == ExtJSONParser.COMMENT_LINE or token.type == ExtJSONParser.COMMENT_BLOCK:
+                table.add_prop(token.text)
 
     @staticmethod
     def row_to_map(header: list, row: list) -> dict:

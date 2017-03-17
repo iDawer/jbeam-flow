@@ -1,6 +1,6 @@
 import unittest
 
-from jbeam import ExtJSONParser, JbeamVisitor, JbeamBase, Switch
+from jbeam import ExtJSONParser, JbeamVisitor, JbeamBase, Switch, Table
 from jbeam.test import test_ExtJSON
 
 # fast links
@@ -42,40 +42,48 @@ class _JbeamVisitorTestCase(unittest.TestCase):
 
 
 class _JbeamBaseTestCase(unittest.TestCase):
-    @staticmethod
-    def row_handler(header, row_ctx, array: list):
-        with Switch.Inst(row_ctx) as case:
-            if case(_ValueArrayContext):
-                row = row_ctx.accept(_j_base)
-                map = _j_base.row_to_map(header, row)
-            elif case(_ValueObjectContext):
-                map = row_ctx.accept(_j_base)
-            else:
-                # other types in a table not supported, ignore them
-                return
-        array.append(map)
-
     def test_table(self):
         parser = test_ExtJSON.get_parser('''
         ["foo", "bar"],
         [1, 2, 3],
         ''')
         ctx = parser.values()
-        header, rows_iter = _j_base.table(ctx)
-        self.assertEqual(["foo", "bar"], header)
-        result = list(map(_j_base.visit, rows_iter))
-        self.assertEqual([[1, 2, 3]], result)
+        prop_map, inlined_src = next(_j_base.table(ctx, Table()))
+        self.assertEqual({'foo': 1, 'bar': 2}, prop_map)
+        # exra values treated as inlined props:
+        self.assertEqual('3', inlined_src)
 
-    def test_row_inlined_map(self):
+    def test_table_shared_prop(self):
+        parser = test_ExtJSON.get_parser('''
+        [/*header*/ "foo", "bar"],
+        // #1 comment
+        {/* #2 shared prop*/ "zab": "cat"}
+        [1, 2, 3],
+        ''')
+        ctx = parser.values()
+        table = Table()
+        prop_map, inlined_src = next(_j_base.table(ctx, table))
+
+        shared_prop = table.chain_list[0]
+        self.assertEqual(1, shared_prop.id)
+        self.assertEqual('// #1 comment', shared_prop.src)
+
+        shared_prop = table.chain_list[1]
+        self.assertEqual(2, shared_prop.id)
+        self.assertEqual('{/* #2 shared prop*/ "zab": "cat"}', shared_prop.src)
+
+        self.assertEqual({'foo': 1, 'bar': 2}, prop_map)
+        self.assertEqual('3', inlined_src)
+
+    def test_table_inlined_prop(self):
         parser = test_ExtJSON.get_parser('''
         ["foo", "bar"],
         [1, 2, {"zab": 3}],
         ''')
         ctx = parser.values()
-        header, rows_iter = _j_base.table(ctx)
-        self.assertEqual(["foo", "bar"], header)
-        result = list(map(_j_base.visit, rows_iter))
-        self.assertEqual([[1, 2, {"zab": 3}]], result)
+        prop_map, inlined_src = next(_j_base.table(ctx, Table()))
+        self.assertEqual({"foo": 1, "bar": 2, "zab": 3}, prop_map)
+        self.assertEqual('{"zab": 3}', inlined_src)
 
     def test_row(self):
         res = _j_base.row_to_map(["foo", "bar"], [1, 2])
@@ -84,6 +92,23 @@ class _JbeamBaseTestCase(unittest.TestCase):
     def test_row_inlined(self):
         res = _j_base.row_to_map(["foo"], [1, {"bar": 2}])
         self.assertEqual({"foo": 1, "bar": 2}, res)
+
+
+from jbeam import Table
+
+
+class TableTestCase(unittest.TestCase):
+    def test(self):
+        t = Table()
+        item = {'foo': 1}
+        t.assign_to_last_prop(item)
+        pkey = t._pid_key
+        self.assertEqual(0, item[pkey])
+        t.add_prop('//comment row')
+        item2 = {'bar': {}}
+        t.assign_to_last_prop(item2)
+        self.assertEqual(1, item2[pkey])
+        pass
 
 
 if __name__ == '__main__':

@@ -17,7 +17,11 @@ from .jbeam.misc import (
     Switch,
     visitor_mixins as vmix,
 )
-from .props_inheritance import PropInheritanceBuilder
+from .props_inheritance import (
+    PropInheritanceBuilder,
+    JbeamPropsInheritance,
+    get_table_storage_ctxman,
+)
 
 _ValueContext = ExtJSONParser.ValueContext
 _ValueArrayContext = ExtJSONParser.ValueArrayContext
@@ -37,7 +41,7 @@ def to_tree(jbeam_data: str):
     return tree
 
 
-class PartObjectsBuilder(JbeamBase, vmix.Helper, jbeamVisitor):
+class PartObjectsBuilder(JbeamBase):
     lock_part_transform = True
     console_indent = 0
 
@@ -94,24 +98,8 @@ class PartObjectsBuilder(JbeamBase, vmix.Helper, jbeamVisitor):
                 # expecting type
                 exp_type = build_section.__annotations__['ctx']
                 if isinstance(value_ctx, exp_type):
-                    result = build_section(value_ctx)
-                    with Switch(type(result)) as case:
-                        if case(tuple):  # IDObject
-                            self._set_parent(result[0], part_obj)
-                            result = result[1]
-                        elif case(GeneratorType):
-                            result.send(None)  # charge generator
-                            # generator returns a placeholder text
-                            gen_res = result.send((bm, mesh))
-                            result = gen_res[0]
-                            # if len(gen_res) == 3:
-                            #     # ID property
-                            #     mesh[gen_res[1]] = gen_res[2]
-                        elif case(str):
-                            # other sections
-                            pass
-                        else:
-                            raise ValueError("Section not implemented")
+                    result = build_section(ctx=value_ctx, part=part_obj, me=mesh, bm=bm)
+                    assert isinstance(result, str)
                 else:
                     self._print("Section fallback: %s, expected %s, got %s" % (s_name, exp_type, type(value_ctx)))
                     result = self.generic_section(value_ctx)
@@ -132,6 +120,8 @@ class PartObjectsBuilder(JbeamBase, vmix.Helper, jbeamVisitor):
     ]:
         return ctx.STRING().accept(self), ctx.val
 
+    # ============================== utility ==============================
+
     def _print(self, *args):
         print('\t' * self.console_indent, *args)
 
@@ -150,20 +140,18 @@ class PartObjectsBuilder(JbeamBase, vmix.Helper, jbeamVisitor):
 
     # ============================== slots ==============================
 
-    def section_slots(self, ctx: _ValueArrayContext):
+    def section_slots(self, ctx: _ValueArrayContext = None, part=None, **_):
         slots_empty = bpy.data.objects.new('slots', None)
         # slot section has no transform modifiers
         self.lock_transform(slots_empty)
         slot_values_ctx = ctx.array().values()
         if slot_values_ctx:
-            header, row_ctx_iter = self.table(slot_values_ctx)
-            for row_ctx in row_ctx_iter:
-                self.slot(header, row_ctx, slots_empty)
-        return slots_empty, '${slots}'
+            for prop_map, _ in self.table(slot_values_ctx):
+                self.slot(prop_map, slots_empty)
+        self._set_parent(slots_empty, part)
+        return '${slots}'
 
-    def slot(self, header, ctx: _ValueArrayContext, slots_obj):
-        slot_row = ctx.accept(self)
-        props = self.row_to_map(header, slot_row)
+    def slot(self, props, slots_obj):
         name = props.pop('type') + '.slot'
         slot = bpy.data.objects.new(name, None)  # 'Empty' object
         offset = props.pop('nodeOffset', None)
@@ -174,127 +162,53 @@ class PartObjectsBuilder(JbeamBase, vmix.Helper, jbeamVisitor):
         self._set_parent(slot, slots_obj)
         return slot
 
-    def _asdasdvisitChildren(self, node, aggregator=None):
-        for c in node.getChildren():
-            if not self.shouldVisitNextChild(node, aggregator):
-                return
-
-            child_result = c.accept(self)
-            if child_result is None:
-                continue
-            with Switch(type(child_result)) as case:
-                if case(GeneratorType):
-                    child_result.send(None)  # charge generator
-                    child_result.send(aggregator)
-                elif case(tuple):
-                    # treat as key val setter
-                    if aggregator is None:
-                        aggregator = {}
-                    if len(child_result) == 3:
-                        # attr setter
-                        rna, attr, val = child_result
-                        setattr(aggregator, attr, val)
-                    else:
-                        # dict
-                        key, val = child_result
-                        aggregator[key] = val
-                elif case(IDObject):
-                    # suppose aggregator is IDObject too
-                    self._set_parent(child_result, aggregator)
-                else:
-                    if aggregator is None:
-                        aggregator = []
-                    aggregator.append(child_result)
-
-        return aggregator
-
-    def visitSlotProp_CoreSlot(self, ctx: jbeamParser.SlotProp_CoreSlotContext):
-        return 'coreSlot', ctx.core.accept(self)
-
-    def visitSlotProp_NodeOffset(self, ctx: jbeamParser.SlotProp_NodeOffsetContext):
-        return 'RNA', 'location', ctx.node_offset.accept(self)
-
-    def visitOffset(self, ctx: jbeamParser.OffsetContext):
-        offset = {'x': 0, 'y': 0, 'z': 0}
-
-        def blabla(axis):
-            if isinstance(axis, jbeamParser.OffsetAxisXContext):
-                offset['x'] = float(axis.x.text)
-            elif isinstance(axis, jbeamParser.OffsetAxisYContext):
-                offset['y'] = float(axis.y.text)
-            elif isinstance(axis, jbeamParser.OffsetAxisZContext):
-                offset['z'] = float(axis.z.text)
-
-        blabla(ctx.ax1)
-        blabla(ctx.ax2)
-        blabla(ctx.ax3)
-        return offset['x'], offset['y'], offset['z']
-
     # ============================== nodes ==============================
 
-    def section_nodes(self, ctx: _ValueArrayContext):
-        bm, me = yield  # bmesh
+    def section_nodes(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_):
         id_layer = bm.verts.layers.string.new('jbeamNodeId')
-        prop_inh = PropInheritanceBuilder(bm.verts, me.jbeam_node_prop_chain)
         prop_layer = bm.verts.layers.string.new('jbeamNodeProps')
         nodes_ctx = ctx.array().values()
         if nodes_ctx:
-            header, row_ctx_iter = self.table(nodes_ctx)
-            for row_ctx in row_ctx_iter:
-                with Switch.Inst(row_ctx) as case:
-                    if case(_ValueArrayContext):
-                        self.node(header, row_ctx, bm, id_layer, prop_layer, prop_inh)
-                    elif case(_ValueObjectContext):
-                        self.row_shared_prop(row_ctx, prop_inh)
-                    else:
-                        # other types in a table not supported, ignore them
-                        return
+            with get_table_storage_ctxman(me, bm.verts) as prop_inh:  # type: JbeamPropsInheritance
+                for node_props, inlined_props_src in self.table(nodes_ctx, prop_inh):
+                    node = self.node(node_props, inlined_props_src, bm, id_layer, prop_layer)
+                    prop_inh.assign_to_last_prop(node)
         bm.verts.ensure_lookup_table()
-        yield '${nodes}'
+        return '${nodes}'
 
-    def node(self, header, ctx: _ValueArrayContext, bm, id_layer, prop_layer, prop_inh):
-        row = ctx.accept(self)
-        prop = self.row_to_map(header, row)
-        vert = bm.verts.new((prop['posX'], prop['posY'], prop['posZ']))
-        _id = prop['id']
+    def node(self, props: dict, inlined_props_src: str, bm, id_layer, iprop_layer):
+        vert = bm.verts.new((props['posX'], props['posY'], props['posZ']))
+        _id = props['id']
         vert[id_layer] = _id.encode()  # set node id to the data layer
         self._vertsIndex[_id] = vert
         # inlined node props
-        iprop_src = self.get_inlined_props_src(header, ctx)
-        if iprop_src is not None:
-            vert[prop_layer] = iprop_src.encode()
-        prop_inh.next_item(vert)
+        if inlined_props_src is not None:
+            vert[iprop_layer] = inlined_props_src.encode()
         return vert
 
     def row_shared_prop(self, ctx: _ValueObjectContext, prop_inh):
+        self.process_comments_before(ctx, prop_inh)
         src = self.get_src_text_replaced(ctx)
         prop_inh.next_prop(src)
 
     # ============================== beams ==============================
 
-    def section_beams(self, ctx: _ValueArrayContext):
-        bm, me = yield
+    def section_beams(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_):
         beam_layer = bm.edges.layers.int.new('jbeam')
-        prop_inh = PropInheritanceBuilder(bm.edges, me.jbeam_beam_prop_chain)
+        # todo, inlined props data layer here
         beams_ctx = ctx.array().values()
         if beams_ctx:
-            header, row_ctx_iter = self.table(beams_ctx)
-            for row_ctx in row_ctx_iter:
-                with Switch.Inst(row_ctx) as case:
-                    if case(_ValueArrayContext):
-                        self.beam(header, row_ctx, bm, beam_layer, prop_inh)
-                    elif case(_ValueObjectContext):
-                        self.row_shared_prop(row_ctx, prop_inh)
-                    else:
-                        pass  # ignore other types
+            with get_table_storage_ctxman(me, bm.edges) as pt_storage:  # type: JbeamPropsInheritance
+                for beam_props, inl_prop_src in self.table(beams_ctx, pt_storage):
+                    beam = self.beam(beam_props, inl_prop_src, bm, beam_layer)
+                    if beam is not None:
+                        pt_storage.assign_to_last_prop(beam)
         bm.edges.ensure_lookup_table()
-        yield '${beams}'
+        return '${beams}'
 
-    def beam(self, header, ctx: _ValueArrayContext, bm, beam_layer, prop_inh):
-        row = ctx.accept(self)
-        prop = self.row_to_map(header, row)
-        id1 = prop['id1:']
-        id2 = prop['id2:']
+    def beam(self, props: dict, inlined_props_src: str, bm, beam_layer):
+        id1 = props['id1:']
+        id2 = props['id2:']
         v1, v2 = self._vertsIndex.get(id1), self._vertsIndex.get(id2)
         # check for attaching to parent
         if not (v1 or v2):
@@ -312,7 +226,6 @@ class PartObjectsBuilder(JbeamBase, vmix.Helper, jbeamVisitor):
             # set explicitly cuz triangles can have 'non beam' edges
             edge[beam_layer] = 1
             # todo beam inlined props
-            prop_inh.next_item(edge)
             return edge
         except ValueError as err:
             self._print('\t', err, [id1, id2])  # ToDo handle duplicates
@@ -344,27 +257,22 @@ class PartObjectsBuilder(JbeamBase, vmix.Helper, jbeamVisitor):
 
     # ============================== collision triangles ==============================
 
-    def section_triangles(self, ctx: _ValueArrayContext):
-        bm, me = yield
-        prop_inh = PropInheritanceBuilder(bm.faces, me.jbeam_triangle_prop_chain)
+    def section_triangles(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_):
+        # todo, inlined props data layer here
         triangles_ctx = ctx.array().values()
         if triangles_ctx:
-            header, row_ctx_iter = self.table(triangles_ctx)
-            for row_ctx in row_ctx_iter:
-                with Switch.Inst(row_ctx) as case:
-                    if case(_ValueArrayContext):
-                        self.triangle(header, row_ctx, bm, prop_inh)
-                    elif case(_ValueObjectContext):
-                        self.row_shared_prop(row_ctx, prop_inh)
+            with get_table_storage_ctxman(me, bm.faces) as pt_storage:  # type: JbeamPropsInheritance
+                for tri_prop, inl_prop_src in self.table(triangles_ctx, pt_storage):
+                    tri = self.triangle(tri_prop, inl_prop_src, bm)
+                    if tri is not None:
+                        pt_storage.assign_to_last_prop(tri)
         bm.faces.ensure_lookup_table()
-        yield '${triangles}'
+        return '${triangles}'
 
-    def triangle(self, header, ctx: _ValueArrayContext, bm, prop_inh):
-        row = ctx.accept(self)
-        prop = self.row_to_map(header, row)
-        id1 = prop['id1:']
-        id2 = prop['id2:']
-        id3 = prop['id3:']
+    def triangle(self, props: dict, inl_prop_src: str, bm):
+        id1 = props['id1:']
+        id2 = props['id2:']
+        id3 = props['id3:']
         v_cache = self._vertsIndex
         v1, v2, v3 = v_cache.get(id1), v_cache.get(id2), v_cache.get(id3)
 
@@ -383,7 +291,6 @@ class PartObjectsBuilder(JbeamBase, vmix.Helper, jbeamVisitor):
 
         try:
             face = bm.faces.new((v1, v2, v3))
-            prop_inh.next_item(face)
             return face
         except ValueError as err:
             self._print('\t', err, [id1, id2, id3])  # ToDo handle duplicates
@@ -391,11 +298,10 @@ class PartObjectsBuilder(JbeamBase, vmix.Helper, jbeamVisitor):
 
     # ============================== another sections ==============================
 
-    def section_slottype(self, ctx: _ValueStringContext):
-        bm, me = yield
+    def section_slottype(self, ctx: _ValueStringContext = None, me=None, **_):
         stype = ctx.accept(self)
         me['slotType'] = stype
-        yield '${slotType}'
+        return '${slotType}'
 
 
 def update_id_object(id_object, props: dict):

@@ -1,17 +1,11 @@
-import json
 from collections import defaultdict
-from itertools import takewhile
 
 import bpy
-from bpy_extras.io_utils import ImportHelper
-from bpy.props import StringProperty, BoolProperty, EnumProperty
+from bpy.props import StringProperty
 from bpy.types import Operator
+from bpy_extras.io_utils import ImportHelper
 
-from antlr4 import *
-from .jbeam.ext_json import ExtJSONEvaluator
-from .jbeam.misc import Switch, anytree, visitor_mixins as vmix
-from .jb import jbeamVisitor, jbeamParser, jbeamLexer
-from . import jbeam_utils
+from .jbeam import ext_json
 
 
 class LoadVehicleConfig(Operator, ImportHelper):
@@ -61,26 +55,56 @@ class LoadVehicleConfig(Operator, ImportHelper):
                 part_slots_map[part_name].append((ob.name.partition('.')[0], ob['default'], ob))
 
         main_parts = part_map.get('main')
-        if main_parts is None or len(main_parts) == 0:
-            self.report({'ERROR'}, "main slot not found")
+        if not main_parts:
+            self.report({'ERROR'}, "Part with slot type 'main' not found")
             return {'CANCELLED'}
         main_p = next(iter(main_parts.values()))
 
+        print("Loading vehicle config '{}'".format(self.filename))
         with open(self.filepath, encoding='utf-8') as pc_file:
-            pc = decode_json(pc_file.read())
-        fill_slots(part_map, part_slots_map, main_p, pc['parts'], 0)
+            pc = PC.load_from(pc_file)
+        fill_slots(part_map, part_slots_map, main_p, pc.parts, 0)
 
         # clean up unused parts
         for ob in context.scene.objects:
-            if ob.parent is None and ob != main_p:  # checking with 'is' will fail (internal BL object wrapping)
+            if ob.parent is None and ob != main_p:  # checking with 'is not' will fail (internal BL object wrapping)
                 bpy.data.objects.remove(ob, do_unlink=True)
         return {'FINISHED'}
+
+
+class PC:
+    @staticmethod
+    def load_from(file):
+        data = ext_json.load(file.read())
+        ft = data.get('format')
+        if ft:
+            p = PC.Format2(data)
+            p.format = ft
+            return p
+        return PC.Default(data)
+
+    class Default:
+        format = 1
+
+        def __init__(self, pc_data: dict):
+            self.data = pc_data
+
+        @property
+        def parts(self):
+            return self.data
+
+    class Format2(Default):
+        format = 2
+
+        @property
+        def parts(self):
+            return self.data['parts']
 
 
 def fill_slots(part_map: defaultdict(dict), part_slots_map: defaultdict(list), part, slot_part_conf: dict,
                depth: int):
     if depth > 50:
-        print("WARNING: Slots tree too deep (>50). Current part: '{}'".format(part.name))
+        print("\tWARNING: Slots tree too deep (>50). Current part: '{}'".format(part.name))
         return
 
     part_name = part.data['jbeam_part']
@@ -94,45 +118,8 @@ def fill_slots(part_map: defaultdict(dict), part_slots_map: defaultdict(list), p
                 fill_slots(part_map, part_slots_map, ch_part, slot_part_conf, depth + 1)
             else:
                 # child part specified but not found
-                print("Part '{}' for slot [{}] not found".format(ch_part_name, slot_name))
+                print("\tPart '{}' for slot [{}] not found".format(ch_part_name, slot_name))
 
 
 def is_slot(ob):
     return ob.parent is not None and 'slots' == ob.parent.name.partition('.')[0]
-
-
-# class Node(anytree.Node):
-#     """Tree node, simple repr()"""
-#
-#     def __repr__(self):
-#         return self.name
-#
-# class SlotNode(Node):
-#     pass
-
-def decode_json(data: str):
-    data_stream = InputStream(data)
-
-    lexer = jbeamLexer(data_stream)
-    stream = CommonTokenStream(lexer)
-    parser = jbeamParser(stream)
-    obj_ctx = parser.obj()
-    result = obj_ctx.accept(ExtJSONEvaluator())
-    return result
-
-
-class VConf(jbeamVisitor):
-    def __init__(self, part_map):
-        self.part_map = part_map
-
-    # def visit_pc(self, ctx: jbeamParser.ObjContext):
-    #     for keyValCtx in ctx.keyVal():
-    #         with Switch(keyValCtx.key.string_item) as case:
-    #             if case('parts'):
-    #                 self.visit_parts(keyValCtx.val)
-    #
-    # def visit_parts(self, ctx: jbeamParser.ObjectValueContext):
-    #     for slot_part in ctx.obj().keyVal():
-    #         pass
-
-    pass
