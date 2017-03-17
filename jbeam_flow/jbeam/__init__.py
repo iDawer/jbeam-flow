@@ -68,7 +68,7 @@ class Table:
 
 
 class JbeamBase(ExtJSONEvaluator, visitor_mixins.Helper):
-    def table(self, rows_ctx: ExtJSONParser.ValuesContext, table: Table = None) -> (list, list):
+    def table(self, rows_ctx: ExtJSONParser.ValuesContext, table: Table = None) -> (dict, str):
         table = table or Table()
 
         rows = rows_ctx.value()

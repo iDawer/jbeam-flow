@@ -98,24 +98,8 @@ class PartObjectsBuilder(JbeamBase):
                 # expecting type
                 exp_type = build_section.__annotations__['ctx']
                 if isinstance(value_ctx, exp_type):
-                    result = build_section(value_ctx)
-                    with Switch(type(result)) as case:
-                        if case(tuple):  # IDObject
-                            self._set_parent(result[0], part_obj)
-                            result = result[1]
-                        elif case(GeneratorType):
-                            result.send(None)  # charge generator
-                            # generator returns a placeholder text
-                            gen_res = result.send((bm, mesh))
-                            result = gen_res[0]
-                            # if len(gen_res) == 3:
-                            #     # ID property
-                            #     mesh[gen_res[1]] = gen_res[2]
-                        elif case(str):
-                            # other sections
-                            pass
-                        else:
-                            raise ValueError("Section not implemented")
+                    result = build_section(ctx=value_ctx, part=part_obj, me=mesh, bm=bm)
+                    assert isinstance(result, str)
                 else:
                     self._print("Section fallback: %s, expected %s, got %s" % (s_name, exp_type, type(value_ctx)))
                     result = self.generic_section(value_ctx)
@@ -156,7 +140,7 @@ class PartObjectsBuilder(JbeamBase):
 
     # ============================== slots ==============================
 
-    def section_slots(self, ctx: _ValueArrayContext):
+    def section_slots(self, ctx: _ValueArrayContext = None, part=None, **_):
         slots_empty = bpy.data.objects.new('slots', None)
         # slot section has no transform modifiers
         self.lock_transform(slots_empty)
@@ -164,7 +148,8 @@ class PartObjectsBuilder(JbeamBase):
         if slot_values_ctx:
             for prop_map, _ in self.table(slot_values_ctx):
                 self.slot(prop_map, slots_empty)
-        return slots_empty, '${slots}'
+        self._set_parent(slots_empty, part)
+        return '${slots}'
 
     def slot(self, props, slots_obj):
         name = props.pop('type') + '.slot'
@@ -179,8 +164,7 @@ class PartObjectsBuilder(JbeamBase):
 
     # ============================== nodes ==============================
 
-    def section_nodes(self, ctx: _ValueArrayContext):
-        bm, me = yield  # bmesh
+    def section_nodes(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_):
         id_layer = bm.verts.layers.string.new('jbeamNodeId')
         prop_layer = bm.verts.layers.string.new('jbeamNodeProps')
         nodes_ctx = ctx.array().values()
@@ -190,7 +174,7 @@ class PartObjectsBuilder(JbeamBase):
                     node = self.node(node_props, inlined_props_src, bm, id_layer, prop_layer)
                     prop_inh.assign_to_last_prop(node)
         bm.verts.ensure_lookup_table()
-        yield '${nodes}'
+        return '${nodes}'
 
     def node(self, props: dict, inlined_props_src: str, bm, id_layer, iprop_layer):
         vert = bm.verts.new((props['posX'], props['posY'], props['posZ']))
@@ -209,8 +193,7 @@ class PartObjectsBuilder(JbeamBase):
 
     # ============================== beams ==============================
 
-    def section_beams(self, ctx: _ValueArrayContext):
-        bm, me = yield
+    def section_beams(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_):
         beam_layer = bm.edges.layers.int.new('jbeam')
         # todo, inlined props data layer here
         beams_ctx = ctx.array().values()
@@ -221,7 +204,7 @@ class PartObjectsBuilder(JbeamBase):
                     if beam is not None:
                         pt_storage.assign_to_last_prop(beam)
         bm.edges.ensure_lookup_table()
-        yield '${beams}'
+        return '${beams}'
 
     def beam(self, props: dict, inlined_props_src: str, bm, beam_layer):
         id1 = props['id1:']
@@ -274,9 +257,7 @@ class PartObjectsBuilder(JbeamBase):
 
     # ============================== collision triangles ==============================
 
-    def section_triangles(self, ctx: _ValueArrayContext):
-        bm, me = yield
-        # prop_inh = PropInheritanceBuilder(bm.faces, me.jbeam_triangle_prop_chain)
+    def section_triangles(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_):
         # todo, inlined props data layer here
         triangles_ctx = ctx.array().values()
         if triangles_ctx:
@@ -286,7 +267,7 @@ class PartObjectsBuilder(JbeamBase):
                     if tri is not None:
                         pt_storage.assign_to_last_prop(tri)
         bm.faces.ensure_lookup_table()
-        yield '${triangles}'
+        return '${triangles}'
 
     def triangle(self, props: dict, inl_prop_src: str, bm):
         id1 = props['id1:']
@@ -317,11 +298,10 @@ class PartObjectsBuilder(JbeamBase):
 
     # ============================== another sections ==============================
 
-    def section_slottype(self, ctx: _ValueStringContext):
-        bm, me = yield
+    def section_slottype(self, ctx: _ValueStringContext = None, me=None, **_):
         stype = ctx.accept(self)
         me['slotType'] = stype
-        yield '${slotType}'
+        return '${slotType}'
 
 
 def update_id_object(id_object, props: dict):
