@@ -1,5 +1,5 @@
 from io import StringIO
-from typing import Tuple, List, Union
+from typing import Dict, Tuple, List, Union, Sequence
 
 import bmesh
 import bpy
@@ -41,7 +41,7 @@ class PartObjectsBuilder(JbeamBase):
         self.name = name
         self.parts_group = None
         self.helper_objects = []
-        self._vertsIndex = None
+        self._vertsIndex = {}
 
     def get_all_objects(self):
         from itertools import chain
@@ -123,12 +123,51 @@ class PartObjectsBuilder(JbeamBase):
         self.helper_objects.append(obj)
         return obj
 
-    def generic_section(self, ctx: ExtJSONParser.ValueContext):
+    @staticmethod
+    def generic_section(ctx: ExtJSONParser.ValueContext):
         # return source text
         src = ctx.parser.getTokenStream().getText(ctx.getSourceInterval())
         # escape for templating
         src = src.replace('$', '$$')
         return src
+
+    def ensure_nodes(self, ids, bm):
+        get_node = self._vertsIndex.get
+        nodes = [get_node(id_) for id_ in ids]
+        # handle dummy nodes (which not defined in prev sections)
+        any_node = next((n for n in nodes if n is not None), None)  # type: bmesh.types.BMVert
+        has_dummies = not all(nodes)
+        if has_dummies:
+            new_dummy = self.new_dummy_node
+            if not any_node:
+                any_node = nodes[0] = new_dummy(bm, ids[0])
+            # ensure all nodes created
+            nodes = [n or new_dummy(bm, ids[i], any_node.co) for i, n in enumerate(nodes)]
+        return nodes
+
+    def new_dummy_node(self, bm, dummy_id: str, co=None):
+        """
+        Add parent node representation to be able to store attaching beams.
+        Adds '~' to the beginning of id, but _vertsIndex keeps original id.
+        :param bm: bmesh
+        :param dummy_id: string
+        :param co: mathutils.Vector
+        :return: bmesh.types.BMVert
+        """
+        id_layer = bm.verts.layers.string.active
+        if id_layer is None:
+            # in case if no nodes section, i.e. beams with parent part nodes
+            # Beware this kill existing verts in '_vertsIndex' map.
+            id_layer = bm.verts.layers.string.new('jbeamNodeId')
+        if co:
+            vert = bm.verts.new(co)
+            # hang dummy node
+            vert.co.z -= .3
+        else:
+            vert = bm.verts.new((.0, .0, .0))
+        vert[id_layer] = ''.join(('~', dummy_id)).encode()
+        self._vertsIndex[dummy_id] = vert
+        return vert
 
     # ============================== slots ==============================
 
@@ -178,11 +217,6 @@ class PartObjectsBuilder(JbeamBase):
             vert[iprop_layer] = inlined_props_src.encode()
         return vert
 
-    def row_shared_prop(self, ctx: _ValueObjectContext, prop_inh):
-        self.process_comments_before(ctx, prop_inh)
-        src = self.get_src_text_replaced(ctx)
-        prop_inh.next_prop(src)
-
     # ============================== beams ==============================
 
     def section_beams(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_):
@@ -193,7 +227,7 @@ class PartObjectsBuilder(JbeamBase):
             with get_table_storage_ctxman(me, bm.edges) as ptable:  # type: PropsTable
                 for beam_props, inl_prop_src in self.table(beams_ctx, ptable):
                     beam = self.beam(beam_props, bm, type_lyr)
-                    if beam is not None:
+                    if beam:
                         ptable.assign_to_last_prop(beam)
                         if inl_prop_src:
                             beam[inl_props_lyr] = inl_prop_src.encode()
@@ -203,51 +237,15 @@ class PartObjectsBuilder(JbeamBase):
     def beam(self, props: dict, bm, beam_layer):
         id1 = props['id1:']
         id2 = props['id2:']
-        v1, v2 = self._vertsIndex.get(id1), self._vertsIndex.get(id2)
-        # check for attaching to parent
-        if not (v1 or v2):
-            # both belong to parent? ok
-            v1 = self.new_dummy_node(bm, id1)
-            v2 = self.new_dummy_node(bm, id2, v1.co)
-        elif not v1:
-            # v1 belongs to parent
-            v1 = self.new_dummy_node(bm, id1, v2.co)
-        elif not v2:
-            v2 = self.new_dummy_node(bm, id2, v1.co)
-
+        nodes = self.ensure_nodes((id1, id2), bm)
         try:
-            edge = bm.edges.new((v1, v2))  # throws on duplicates
+            edge = bm.edges.new(nodes)  # throws on duplicates
             # set explicitly cuz triangles can have 'non beam' edges
             edge[beam_layer] = 1
-            # todo beam inlined props
             return edge
         except ValueError as err:
             self._print('\t', err, [id1, id2])  # ToDo handle duplicates
             return None
-
-    def new_dummy_node(self, bm, dummy_id: str, co=None):
-        """
-        Add parent node representation to be able to store attaching beams.
-        Adds '~' to the beginning of id, but _vertsIndex keeps original id.
-        :param bm: bmesh
-        :param dummy_id: string
-        :param co: mathutils.Vector
-        :return: bmesh.types.BMVert
-        """
-        id_layer = bm.verts.layers.string.active
-        if id_layer is None:
-            # in case if no nodes section, i.e. beams with parent part nodes
-            # Beware this kill existing verts in '_vertsIndex' map.
-            id_layer = bm.verts.layers.string.new('jbeamNodeId')
-        if co:
-            vert = bm.verts.new(co)
-            # hang dummy node
-            vert.co.z -= .3
-        else:
-            vert = bm.verts.new((.0, .0, .0))
-        vert[id_layer] = ''.join(('~', dummy_id)).encode()
-        self._vertsIndex[dummy_id] = vert
-        return vert
 
     # ============================== collision triangles ==============================
 
@@ -258,7 +256,7 @@ class PartObjectsBuilder(JbeamBase):
             with get_table_storage_ctxman(me, bm.faces) as ptable:  # type: PropsTable
                 for tri_prop, inl_prop_src in self.table(triangles_ctx, ptable):
                     tri = self.triangle(tri_prop, bm)
-                    if tri is not None:
+                    if tri:
                         ptable.assign_to_last_prop(tri)
                         if inl_prop_src:
                             tri[inl_props_lyr] = inl_prop_src.encode()
@@ -269,27 +267,15 @@ class PartObjectsBuilder(JbeamBase):
         id1 = props['id1:']
         id2 = props['id2:']
         id3 = props['id3:']
-        v_cache = self._vertsIndex
-        v1, v2, v3 = v_cache.get(id1), v_cache.get(id2), v_cache.get(id3)
+        return self.face((id1, id2, id3), bm)
 
-        # handle dummy nodes (which not in the beams section)
-        any_tnode = v1 or v2 or v3
-        has_dummies = not (v1 and v2 and v3)
-        if has_dummies:
-            if not any_tnode:
-                any_tnode = v1 = self.new_dummy_node(bm, id1)
-            if not v1:
-                v1 = self.new_dummy_node(bm, id1, any_tnode.co)
-            if not v2:
-                v2 = self.new_dummy_node(bm, id2, any_tnode.co)
-            if not v3:
-                v3 = self.new_dummy_node(bm, id3, any_tnode.co)
-
+    def face(self, ids: Sequence[str], bm: bmesh.types.BMesh):
+        nodes = self.ensure_nodes(ids, bm)
         try:
-            face = bm.faces.new((v1, v2, v3))
+            face = bm.faces.new(nodes)
             return face
         except ValueError as err:
-            self._print('\t', err, [id1, id2, id3])  # ToDo handle duplicates
+            self._print('\t', err, ids)  # ToDo handle duplicates
             return None
 
     # ============================== another sections ==============================
