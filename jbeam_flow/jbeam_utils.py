@@ -278,6 +278,20 @@ class PartObjectsBuilder(JbeamBase):
             self._print('\t', err, ids)  # ToDo handle duplicates
             return None
 
+    # ============================== quads ==============================
+
+    def section_quads(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_):
+        inl_props_lyr = bm.faces.layers.string.new('jbeam_prop')  # todo fix: OVERWRITES triangle's prop
+        quads_ctx = ctx.array().values()
+        if quads_ctx:
+            # todo, shared props table
+            for prop, inl_prop_src in self.table(quads_ctx):
+                quad = self.face((prop['id1:'], prop['id2:'], prop['id3:'], prop['id4:']), bm)
+                if quad and inl_prop_src:
+                    quad[inl_props_lyr] = inl_prop_src.encode()
+        bm.faces.ensure_lookup_table()
+        return '${triangles}'
+
     # ============================== another sections ==============================
 
     def section_slottype(self, ctx: _ValueStringContext = None, me=None, **_):

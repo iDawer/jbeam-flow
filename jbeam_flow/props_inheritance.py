@@ -14,7 +14,7 @@ from bpy.types import (
 from .bl_jbeam import PROP_CHAIN_ID
 
 
-class ChainListMixin:
+class PropsMixin:
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         jb_prop = item
 
@@ -27,15 +27,19 @@ class ChainListMixin:
 
 
 # list shares events between his instances, so we need to create different classes per section
-class MESH_UL_jbeam_node_chain(ChainListMixin, UIList):
+class MESH_UL_jbeam_nodes(PropsMixin, UIList):
     pass
 
 
-class MESH_UL_jbeam_beam_chain(ChainListMixin, UIList):
+class MESH_UL_jbeam_beams(PropsMixin, UIList):
     pass
 
 
-class MESH_UL_jbeam_triangle_chain(ChainListMixin, UIList):
+class MESH_UL_jbeam_triangles(PropsMixin, UIList):
+    pass
+
+
+class MESH_UL_jbeam_quads(PropsMixin, UIList):
     pass
 
 
@@ -57,7 +61,7 @@ class DATA_PT_jbeam(Panel):
         # ============= nodes
         layout.label('Node chain of property inheritance')
         row = layout.row()
-        row.template_list("MESH_UL_jbeam_node_chain", "", ob.data.jbeam_node_prop_chain, "chain_list",
+        row.template_list(MESH_UL_jbeam_nodes.__name__, "", ob.data.jbeam_node_prop_chain, "chain_list",
                           ob.data.jbeam_node_prop_chain, "active_index")
 
         col = row.column(align=True)
@@ -81,7 +85,7 @@ class DATA_PT_jbeam(Panel):
         # ============= beams
         layout.label('Beam chain of property inheritance')
         row = layout.row()
-        row.template_list("MESH_UL_jbeam_beam_chain", "", ob.data.jbeam_beam_prop_chain, "chain_list",
+        row.template_list(MESH_UL_jbeam_beams.__name__, "", ob.data.jbeam_beam_prop_chain, "chain_list",
                           ob.data.jbeam_beam_prop_chain, "active_index")
 
         col = row.column(align=True)
@@ -105,7 +109,7 @@ class DATA_PT_jbeam(Panel):
         # ============= triangles
         layout.label('Triangle chain of property inheritance')
         row = layout.row()
-        row.template_list("MESH_UL_jbeam_triangle_chain", "", ob.data.jbeam_triangle_prop_chain, "chain_list",
+        row.template_list(MESH_UL_jbeam_triangles.__name__, "", ob.data.jbeam_triangle_prop_chain, "chain_list",
                           ob.data.jbeam_triangle_prop_chain, "active_index")
 
         col = row.column(align=True)
