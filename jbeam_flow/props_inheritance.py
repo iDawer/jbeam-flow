@@ -11,6 +11,7 @@ from bpy.types import (
     Operator,
 )
 
+from . import bl_jbeam
 from .bl_jbeam import PROP_CHAIN_ID
 
 
@@ -129,6 +130,30 @@ class DATA_PT_jbeam(Panel):
             sub = row.row(align=True)
             sub.operator(TrianglePropChain_Select.bl_idname, text="Select").select = True
             sub.operator(TrianglePropChain_Select.bl_idname, text="Deselect").select = False
+
+        # ============= quads
+        layout.label('Quad chain of property inheritance')
+        row = layout.row()
+        row.template_list(MESH_UL_jbeam_quads.__name__, "", ob.data.jbeam_quads_ptable, "chain_list",
+                          ob.data.jbeam_quads_ptable, "active_index")
+
+        col = row.column(align=True)
+        col.operator(QuadPropChain_Add.bl_idname, icon='ZOOMIN', text="")
+        col.operator(QuadPropChain_Remove.bl_idname, icon='ZOOMOUT', text="")
+        col.separator()
+        col.operator(QuadPropChain_Move.bl_idname, icon='TRIA_UP', text="").direction = 'UP'
+        col.operator(QuadPropChain_Move.bl_idname, icon='TRIA_DOWN', text="").direction = 'DOWN'
+
+        if ob.data.jbeam_quads_ptable.chain_list and ob.mode == 'EDIT':
+            row = layout.row()
+
+            sub = row.row(align=True)
+            sub.operator(QuadPropChain_Assign.bl_idname, text="Assign")
+            sub.operator(QuadPropChain_Free.bl_idname, text="Free")
+
+            sub = row.row(align=True)
+            sub.operator(QuadPropChain_Select.bl_idname, text="Select").select = True
+            sub.operator(QuadPropChain_Select.bl_idname, text="Deselect").select = False
 
 
 class PropSetBase:
@@ -337,6 +362,20 @@ class TrianglesOpMixin(PropSetBase):
         return bm.faces
 
 
+class QuadsOpMixin(PropSetBase):
+    @staticmethod
+    def get_props(context):
+        return context.object.data.jbeam_quads_ptable
+
+    @staticmethod
+    def get_datalayer(bm: bmesh.types.BMesh):
+        return bl_jbeam.QuadsPropTable.get_id_layer(bm.faces)
+
+    @staticmethod
+    def get_bm_elements(bm):
+        return bm.faces
+
+
 # ====================== nodes =========================================================================================
 class NodePropChain_Add(NodesOpMixin, PropSet_Add, Operator):
     """Add a new property set to the nodes section of the active object """
@@ -451,4 +490,44 @@ class TrianglePropChain_Free(TrianglesOpMixin, PropSet_Free, Operator):
 class TrianglePropChain_Select(TrianglesOpMixin, PropSet_Select, Operator):
     """Select/deselect all triangles assigned to the active property set """
     bl_idname = "object.jbeam_triangle_prop_chain_select"
+    bl_label = "Select"
+
+
+# ====================== quads =====================================================================================
+
+class QuadPropChain_Add(QuadsOpMixin, PropSet_Add, Operator):
+    """Add a new property set to the quads section of the active object """
+    bl_idname = "object.jbeam_quad_prop_chain_add"
+    bl_label = "Add a new property set to the quads section"
+
+
+class QuadPropChain_Remove(QuadsOpMixin, PropSet_Remove, Operator):
+    """Delete the active property from the active object and free assigned quads """
+    bl_idname = "object.jbeam_quad_prop_chain_remove"
+    bl_label = "Delete the active item"
+
+
+class QuadPropChain_Move(QuadsOpMixin, PropSet_Move, Operator):
+    """Move the active property group up/down in the chain list """
+    bl_idname = "object.jbeam_quad_prop_chain_move"
+    bl_label = "Move property group"
+
+
+class QuadPropChain_Assign(QuadsOpMixin, PropSet_Assign, Operator):
+    """Assign the selected quads to the active property set.
+Note, a quad can be assigned to only one element of the chain.
+"""
+    bl_idname = "object.jbeam_quad_prop_chain_assign"
+    bl_label = "Assign"
+
+
+class QuadPropChain_Free(QuadsOpMixin, PropSet_Free, Operator):
+    """Free the selected quads from any inherited property """
+    bl_idname = "object.jbeam_quad_prop_chain_free"
+    bl_label = "Remove from"
+
+
+class QuadPropChain_Select(QuadsOpMixin, PropSet_Select, Operator):
+    """Select/deselect all quads assigned to the active property set """
+    bl_idname = "object.jbeam_quad_prop_chain_select"
     bl_label = "Select"

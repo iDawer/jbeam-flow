@@ -13,7 +13,7 @@ from .jbeam.ext_json import ExtJSONParser
 from .jbeam.misc import (
     Triangle,
 )
-from .bl_jbeam import PropsTable, get_table_storage_ctxman
+from .bl_jbeam import PropsTable, get_table_storage_ctxman, QuadsPropTable
 
 _ValueContext = ExtJSONParser.ValueContext
 _ValueArrayContext = ExtJSONParser.ValueArrayContext
@@ -149,7 +149,7 @@ class PartObjectsBuilder(JbeamBase):
         """
         Add parent node representation to be able to store attaching beams.
         Adds '~' to the beginning of id, but _vertsIndex keeps original id.
-        :param bm: bmesh
+        :type bm: bmesh.types.BMesh
         :param dummy_id: string
         :param co: mathutils.Vector
         :return: bmesh.types.BMVert
@@ -250,7 +250,7 @@ class PartObjectsBuilder(JbeamBase):
     # ============================== collision triangles ==============================
 
     def section_triangles(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_):
-        inl_props_lyr = bm.faces.layers.string.new('jbeam_prop')
+        inl_props_lyr = bm.faces.layers.string.active or bm.faces.layers.string.new('jbeam_prop')
         triangles_ctx = ctx.array().values()
         if triangles_ctx:
             with get_table_storage_ctxman(me, bm.faces) as ptable:  # type: PropsTable
@@ -280,15 +280,18 @@ class PartObjectsBuilder(JbeamBase):
 
     # ============================== quads ==============================
 
-    def section_quads(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_):
-        inl_props_lyr = bm.faces.layers.string.new('jbeam_prop')  # todo fix: OVERWRITES triangle's prop
+    def section_quads(self, ctx: _ValueArrayContext = None, me=None, bm: bmesh.types.BMesh = None,
+                      **_):
+        inl_props_lyr = bm.faces.layers.string.active or bm.faces.layers.string.new('jbeam_prop')
         quads_ctx = ctx.array().values()
         if quads_ctx:
-            # todo, shared props table
-            for prop, inl_prop_src in self.table(quads_ctx):
-                quad = self.face((prop['id1:'], prop['id2:'], prop['id3:'], prop['id4:']), bm)
-                if quad and inl_prop_src:
-                    quad[inl_props_lyr] = inl_prop_src.encode()
+            with QuadsPropTable.get_from(me).init(bm.faces) as ptable:  # type: QuadsPropTable
+                for prop, inl_prop_src in self.table(quads_ctx, ptable):
+                    quad = self.face((prop['id1:'], prop['id2:'], prop['id3:'], prop['id4:']), bm)
+                    if quad:
+                        ptable.assign_to_last_prop(quad)
+                        if inl_prop_src:
+                            quad[inl_props_lyr] = inl_prop_src.encode()
         bm.faces.ensure_lookup_table()
         return '${triangles}'
 

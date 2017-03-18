@@ -1,6 +1,7 @@
 from contextlib import contextmanager
+from typing import Union
 
-from bmesh.types import BMVertSeq, BMEdgeSeq, BMFaceSeq
+from bmesh.types import BMVertSeq, BMEdgeSeq, BMFaceSeq, BMLayerItem, BMesh
 from bpy.props import IntProperty, StringProperty, CollectionProperty, PointerProperty
 from bpy.types import PropertyGroup, Mesh
 
@@ -9,7 +10,7 @@ from .jbeam import Table, Switch
 PROP_CHAIN_ID = 'jbeam_prop_chain_id'
 
 
-class PropsTable(PropertyGroup, Table):
+class PropsTableBase(Table):
     """
     Represents properties inheritance chaining.
     Position in the chain described with factor (float number).
@@ -26,21 +27,44 @@ class PropsTable(PropertyGroup, Table):
     active_index = IntProperty(default=-1)
     max_id = IntProperty()
 
+    ptable_id_layer_name = None  # type: str
+
     @contextmanager
-    def init(self, bm_elem_seq):
-        """Initialises table for creating shared properties
-        :param bm_elem_seq: BMVertSeq|BMEdgeSeq|BMFaceSeq
-        """
+    def init(self, bm_elem_seq: Union[BMVertSeq, BMEdgeSeq, BMFaceSeq]):
+        """Initialises table for creating shared properties"""
         # RNA props are already initialised.
-        self._pid_key = bm_elem_seq.layers.int.new(PROP_CHAIN_ID)
+        self._pid_key = self.get_id_layer(bm_elem_seq)
         # we should clean up bmesh stuff after exit
         try:
             yield self
         finally:
-            del self._pid_key
+            self._pid_key = None
 
     def new(self):
         return self.add_prop("{}")
+
+    @classmethod
+    def get_id_layer(cls, bm_elem_seq: Union[BMVertSeq, BMEdgeSeq, BMFaceSeq]) -> BMLayerItem:
+        lyrs_int = bm_elem_seq.layers.int
+        try:
+            return lyrs_int[cls.ptable_id_layer_name]
+        except KeyError:
+            return lyrs_int.new(cls.ptable_id_layer_name)
+
+
+class PropsTable(PropertyGroup, PropsTableBase):
+    ptable_id_layer_name = PROP_CHAIN_ID
+
+
+class QuadsPropTable(PropertyGroup, PropsTableBase):
+    ptable_id_layer_name = 'JBEAM_QUADS_PTABLE_ID'
+
+    @staticmethod
+    def get_from(mesh: Mesh):
+        """
+        :rtype: QuadsPropTable
+        """
+        return mesh.jbeam_quads_ptable
 
 
 def get_table_storage_ctxman(me, bm_elem_seq):
@@ -88,9 +112,11 @@ def register():
     Mesh.jbeam_node_prop_chain = PointerProperty(type=PropsTable)
     Mesh.jbeam_beam_prop_chain = PointerProperty(type=PropsTable)
     Mesh.jbeam_triangle_prop_chain = PointerProperty(type=PropsTable)
+    Mesh.jbeam_quads_ptable = PointerProperty(type=QuadsPropTable)
 
 
 def unregister():
     del Mesh.jbeam_node_prop_chain
     del Mesh.jbeam_beam_prop_chain
     del Mesh.jbeam_triangle_prop_chain
+    del Mesh.jbeam_quads_ptable
