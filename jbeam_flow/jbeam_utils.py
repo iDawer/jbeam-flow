@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from io import StringIO
 from typing import Dict, Tuple, List, Union, Sequence
 
@@ -6,6 +7,7 @@ import bpy
 
 from antlr4 import *  # ToDo: get rid of the global antlr4 lib
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
+from antlr4.tree.Tree import TerminalNodeImpl
 from .jb import jbeamLexer, jbeamParser, jbeamVisitor
 from .jb.utils import preprocess
 from .jbeam import JbeamBase
@@ -42,6 +44,8 @@ class PartObjectsBuilder(JbeamBase):
         self.parts_group = None
         self.helper_objects = []
         self._vertsIndex = {}
+        self._part_variables = {}
+        self._vars_initialised = False
 
     def get_all_objects(self):
         from itertools import chain
@@ -61,6 +65,7 @@ class PartObjectsBuilder(JbeamBase):
         part_name, part_value_ctx = self._unpack_pair(ctx)
         self._print("part:", part_name)
         self._vertsIndex = {}
+        self._part_variables = {}
 
         mesh = bpy.data.meshes.new(part_name)
         # Save part name explicitly, due Blender avoids names collision by appending '.001'
@@ -80,10 +85,20 @@ class PartObjectsBuilder(JbeamBase):
         mesh.update()
         return part_obj
 
-    def sections(self, sections_ctx: ExtJSONParser.PairsContext, part_obj, mesh, data_buf):
+    def sections(self, sections_ctx: ExtJSONParser.PairsContext, part_obj, mesh, data_buf: StringIO):
         bm = bmesh.new()
-        for section_ctx in sections_ctx.pair():
-            s_name, value_ctx = self._unpack_pair(section_ctx)
+        sections = OrderedDict((name, (value_ctx, section_ctx)) for (name, value_ctx), section_ctx in
+                               ((self._unpack_pair(section_ctx), section_ctx) for section_ctx in sections_ctx.pair()))
+        data_pairs = OrderedDict.fromkeys(sections.keys())
+
+        # process variables section first
+        vars_item = sections.pop('variables', default=None)
+        if vars_item:
+            value_ctx, section_ctx = vars_item
+            self.section_variables(ctx=value_ctx)
+            data_pairs['variables'] = self.get_src_text_replaced(section_ctx) + ',\n'
+
+        for s_name, (value_ctx, section_ctx) in sections.items():
             # find section builder method
             build_section = getattr(self, 'section_' + s_name.lower(), None)
             if build_section:
@@ -97,12 +112,13 @@ class PartObjectsBuilder(JbeamBase):
                     result = self.generic_section(value_ctx)
             else:
                 result = self.generic_section(value_ctx)
+            data_pairs[s_name] = self.get_src_text_replaced(section_ctx, value_ctx, result) + ',\n'
 
-            data = self.get_src_text_replaced(section_ctx, value_ctx, result)
-            data_buf.write(data)
-            data_buf.write('\n')
+        data_buf.writelines(data_pairs.values())
 
         bm.to_mesh(mesh)
+
+    # ============================== utility ==============================
 
     def _unpack_pair(self, ctx: ExtJSONParser.PairContext) -> Tuple[str, Union[
         ExtJSONParser.ValueArrayContext,
@@ -111,8 +127,6 @@ class PartObjectsBuilder(JbeamBase):
         ExtJSONParser.ValueAtomContext]
     ]:
         return ctx.STRING().accept(self), ctx.val
-
-    # ============================== utility ==============================
 
     def _print(self, *args):
         print('\t' * self.console_indent, *args)
@@ -169,6 +183,22 @@ class PartObjectsBuilder(JbeamBase):
         self._vertsIndex[dummy_id] = vert
         return vert
 
+    # ============================== variables ===============================
+
+    def section_variables(self, ctx: _ValueArrayContext, **_):
+        self._vars_initialised = False
+        vars_ctx = ctx.array().values()
+        if vars_ctx:
+            self._part_variables.update((var['name'], var) for var, _ in self.table(vars_ctx))
+        self._vars_initialised = True
+        return  # '${variables}'
+
+    def visitTerminal(self, tnode: TerminalNodeImpl):
+        value = super().visitTerminal(tnode)
+        if self._vars_initialised and tnode.symbol.type == ExtJSONParser.STRING and value.startswith('$'):
+            return self._part_variables[value]['default']
+        return value
+
     # ============================== slots ==============================
 
     def section_slots(self, ctx: _ValueArrayContext = None, part=None, **_):
@@ -186,7 +216,7 @@ class PartObjectsBuilder(JbeamBase):
         name = props.pop('type') + '.slot'
         slot = bpy.data.objects.new(name, None)  # 'Empty' object
         offset = props.pop('nodeOffset', None)
-        if offset is not None:
+        if offset is not None and isinstance(offset, dict):
             slot.location = offset['x'], offset['y'], offset['z']
         update_id_object(slot, props)
         self.lock_rot_scale(slot)
