@@ -92,8 +92,8 @@ class PartObjectsBuilder(JbeamBase):
         data_pairs = OrderedDict.fromkeys(sections.keys())
 
         # process variables section first
-        vars_item = sections.pop('variables', default=None)
-        if vars_item:
+        if 'variables' in sections:
+            vars_item = sections.pop('variables')
             value_ctx, section_ctx = vars_item
             self.section_variables(ctx=value_ctx)
             data_pairs['variables'] = self.get_src_text_replaced(section_ctx) + ',\n'
@@ -208,20 +208,19 @@ class PartObjectsBuilder(JbeamBase):
         slot_values_ctx = ctx.array().values()
         if slot_values_ctx:
             for prop_map, _ in self.table(slot_values_ctx):
-                self.slot(prop_map, slots_empty)
+                self._set_parent(self.slot(prop_map), slots_empty)
         self._set_parent(slots_empty, part)
         return '${slots}'
 
-    def slot(self, props, slots_obj):
+    def slot(self, props):
         name = props.pop('type') + '.slot'
-        slot = bpy.data.objects.new(name, None)  # 'Empty' object
-        offset = props.pop('nodeOffset', None)
-        if offset is not None and isinstance(offset, dict):
-            slot.location = offset['x'], offset['y'], offset['z']
-        update_id_object(slot, props)
-        self.lock_rot_scale(slot)
-        self._set_parent(slot, slots_obj)
-        return slot
+        empty_obj = bpy.data.objects.new(name, None)  # 'Empty' object
+        if 'nodeOffset' in props and isinstance(props['nodeOffset'], dict):
+            offset = props.pop('nodeOffset')
+            empty_obj.location = offset['x'], offset['y'], offset['z']
+        update_id_object(empty_obj, props)
+        self.lock_rot_scale(empty_obj)
+        return empty_obj
 
     # ============================== nodes ==============================
 

@@ -104,7 +104,7 @@ class JbeamBase(ExtJSONEvaluator, visitor_mixins.Helper):
     def row_to_map(header: list, row: list) -> dict:
         map_ = dict(zip(header, row))
         sliced = islice(row, len(header), None)
-        inlined_maps = filter(lambda x: isinstance(x, dict), sliced)
+        inlined_maps = (x for x in sliced if isinstance(x, dict))
         for imap in inlined_maps:
             map_.update(imap)
         return map_
