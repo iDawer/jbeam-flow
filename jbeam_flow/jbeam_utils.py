@@ -14,6 +14,7 @@ from .jbeam import JbeamBase
 from .jbeam.ext_json import ExtJSONParser
 from .jbeam.misc import (
     Triangle,
+    ExtDict,
 )
 from .bl_jbeam import PropsTable, get_table_storage_ctxman, QuadsPropTable
 
@@ -212,12 +213,12 @@ class PartObjectsBuilder(JbeamBase):
         self._set_parent(slots_empty, part)
         return '${slots}'
 
-    def slot(self, props):
+    def slot(self, props: ExtDict):
         name = props.pop('type') + '.slot'
         empty_obj = bpy.data.objects.new(name, None)  # 'Empty' object
         if 'nodeOffset' in props and isinstance(props['nodeOffset'], dict):
             offset = props.pop('nodeOffset')
-            empty_obj.location = offset['x'], offset['y'], offset['z']
+            empty_obj.location = offset['x', 'y', 'z']
         update_id_object(empty_obj, props)
         self.lock_rot_scale(empty_obj)
         return empty_obj
@@ -236,8 +237,8 @@ class PartObjectsBuilder(JbeamBase):
         bm.verts.ensure_lookup_table()
         return '${nodes}'
 
-    def node(self, props: dict, inlined_props_src: str, bm, id_layer, iprop_layer):
-        vert = bm.verts.new((props['posX'], props['posY'], props['posZ']))
+    def node(self, props: ExtDict, inlined_props_src: str, bm, id_layer, iprop_layer):
+        vert = bm.verts.new(props['posX', 'posY', 'posZ'])
         _id = props['id']
         vert[id_layer] = _id.encode()  # set node id to the data layer
         self._vertsIndex[_id] = vert
@@ -263,17 +264,16 @@ class PartObjectsBuilder(JbeamBase):
         bm.edges.ensure_lookup_table()
         return '${beams}'
 
-    def beam(self, props: dict, bm, beam_layer):
-        id1 = props['id1:']
-        id2 = props['id2:']
-        nodes = self.ensure_nodes((id1, id2), bm)
+    def beam(self, props: ExtDict, bm, beam_layer):
+        ids = props['id1:', 'id2:']
+        nodes = self.ensure_nodes(ids, bm)
         try:
             edge = bm.edges.new(nodes)  # throws on duplicates
             # set explicitly cuz triangles can have 'non beam' edges
             edge[beam_layer] = 1
             return edge
         except ValueError as err:
-            self._print('\t', err, [id1, id2])  # ToDo handle duplicates
+            self._print('\t', err, list(ids))  # ToDo handle duplicates
             return None
 
     # ============================== collision triangles ==============================
@@ -284,19 +284,13 @@ class PartObjectsBuilder(JbeamBase):
         if triangles_ctx:
             with get_table_storage_ctxman(me, bm.faces) as ptable:  # type: PropsTable
                 for tri_prop, inl_prop_src in self.table(triangles_ctx, ptable):
-                    tri = self.triangle(tri_prop, bm)
+                    tri = self.face(tri_prop['id1:', 'id2:', 'id3:'], bm)
                     if tri:
                         ptable.assign_to_last_prop(tri)
                         if inl_prop_src:
                             tri[inl_props_lyr] = inl_prop_src.encode()
         bm.faces.ensure_lookup_table()
         return '${triangles}'
-
-    def triangle(self, props: dict, bm):
-        id1 = props['id1:']
-        id2 = props['id2:']
-        id3 = props['id3:']
-        return self.face((id1, id2, id3), bm)
 
     def face(self, ids: Sequence[str], bm: bmesh.types.BMesh):
         nodes = self.ensure_nodes(ids, bm)
@@ -316,7 +310,7 @@ class PartObjectsBuilder(JbeamBase):
         if quads_ctx:
             with QuadsPropTable.get_from(me).init(bm.faces) as ptable:  # type: QuadsPropTable
                 for prop, inl_prop_src in self.table(quads_ctx, ptable):
-                    quad = self.face((prop['id1:'], prop['id2:'], prop['id3:'], prop['id4:']), bm)
+                    quad = self.face(prop['id1:', 'id2:', 'id3:', 'id4:'], bm)
                     if quad:
                         ptable.assign_to_last_prop(quad)
                         if inl_prop_src:

@@ -2,7 +2,7 @@ from itertools import islice
 from typing import Iterator, Tuple
 
 from .ext_json import ExtJSONParser, ExtJSONEvaluator
-from .misc import Switch, visitor_mixins
+from .misc import Switch, visitor_mixins, ExtDict
 
 
 class JbeamVisitor(ExtJSONEvaluator):
@@ -69,7 +69,7 @@ class Table:
 
 
 class JbeamBase(ExtJSONEvaluator, visitor_mixins.Helper):
-    def table(self, rows_ctx: ExtJSONParser.ValuesContext, table: Table = None) -> Iterator[Tuple[dict, str]]:
+    def table(self, rows_ctx: ExtJSONParser.ValuesContext, table: Table = None) -> Iterator[Tuple[ExtDict, str]]:
         table = table or Table()
 
         rows = rows_ctx.value()
@@ -101,13 +101,21 @@ class JbeamBase(ExtJSONEvaluator, visitor_mixins.Helper):
                 table.add_prop(token.text)
 
     @staticmethod
-    def row_to_map(header: list, row: list) -> dict:
-        map_ = dict(zip(header, row))
+    def row_to_map(header: list, row: list) -> ExtDict:
+        map_ = ExtDict(zip(header, row))
         sliced = islice(row, len(header), None)
         inlined_maps = (x for x in sliced if isinstance(x, dict))
         for imap in inlined_maps:
             map_.update(imap)
         return map_
+
+    # override ExtJSONEvaluator.visitObject to use ExtDict instead of dict
+    def visitObject(self, ctx: ExtJSONParser.ObjectContext) -> ExtDict:
+        ctx_pairs = ctx.pairs()
+        if ctx_pairs:
+            pairs = self.visitPairs(ctx_pairs)
+            return ExtDict(pairs)
+        return ExtDict()
 
     pass
 
