@@ -1,4 +1,4 @@
-from collections import Counter
+import collections
 from contextlib import contextmanager
 from typing import Union
 
@@ -9,6 +9,22 @@ from bpy.types import PropertyGroup, Mesh
 from .jbeam import Table, Switch
 
 PROP_CHAIN_ID = 'jbeam_prop_chain_id'
+
+
+class Counter(PropertyGroup):
+    """Mimic collections.Counter, underlying data stored as ID property"""
+    update = collections.Counter.update
+
+    # Define our own method cuz dict.clear requires dict (sub)class
+    def clear(self):
+        ptable = getattr(self.id_data, self.path_from_id().partition('.')[0])  # type: PropsTable
+        ptable['counter'] = {}
+
+    def __getitem__(self, item):
+        # Blender does not call __missing__ on missing key. Thus Counter.__missing__ logic inlined here:
+        if item not in self:
+            return 0
+        return super().__getitem__(item)
 
 
 class PropsTableBase(Table):
@@ -27,6 +43,7 @@ class PropsTableBase(Table):
     chain_list = CollectionProperty(type=Prop)
     active_index = IntProperty(default=-1)
     max_id = IntProperty()
+    counter = PointerProperty(type=Counter)
 
     ptable_id_layer_name = None  # type: str
 
@@ -35,7 +52,6 @@ class PropsTableBase(Table):
         """Initialises table for creating shared properties"""
         # RNA props are already initialised.
         self._pid_key = self.get_id_layer(bm_elem_seq)
-        self['counter'] = Counter()  # stored as dict (ID property)
         # we should clean up bmesh stuff after exit
         try:
             yield self
@@ -52,10 +68,6 @@ class PropsTableBase(Table):
             return lyrs_int[cls.ptable_id_layer_name]
         except KeyError:
             return lyrs_int.new(cls.ptable_id_layer_name)
-
-    @property
-    def counter(self):
-        return self['counter']
 
 
 class PropsTable(PropertyGroup, PropsTableBase):
