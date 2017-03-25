@@ -16,11 +16,18 @@ from .bl_jbeam import PROP_CHAIN_ID
 
 
 class PropsMixin:
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
+    def draw_item(self, context, layout: bpy.types.UILayout, data: bl_jbeam.PropsTable, item: bl_jbeam.PropsTable.Prop,
+                  icon, active_data, active_propname):
         jb_prop = item
 
         row = layout.row(align=True)
         row.prop(jb_prop, "src", text="", emboss=False)
+        # counter
+        str_id = str(item.id)
+        if str_id in data.counter:
+            split = row.split()
+            split.alignment = 'RIGHT'
+            split.label(text=str(data.counter[str_id]), icon='PINNED')
 
     def draw_filter(self, context, layout):
         # no filter
@@ -160,7 +167,7 @@ class PropSetBase:
     bl_options = {'REGISTER', 'UNDO'}
 
     @staticmethod
-    def get_props(context):
+    def get_props(context) -> bl_jbeam.PropsTable:
         raise NotImplementedError('Abstract method call')
 
     @staticmethod
@@ -261,11 +268,14 @@ class PropSet_Assign(PropSetBase):
 
         bm = bmesh.from_edit_mesh(me)
         inh_prop_layer = self.get_datalayer(bm)
+        ids = []
         for elem in self.get_bm_elements(bm):
             if elem.select:
                 # override old values
                 elem[inh_prop_layer] = p_item.id
+            ids.append(str(elem[inh_prop_layer]))
 
+        props.update_counter(ids)
         return {'FINISHED'}
 
 
@@ -274,10 +284,14 @@ class PropSet_Free(PropSetBase):
         me = context.object.data
         bm = bmesh.from_edit_mesh(me)
         inh_prop_layer = self.get_datalayer(bm)
+        ids = []
         for elem in self.get_bm_elements(bm):
             if elem.select:
                 # inherit from root (no props)
                 elem[inh_prop_layer] = 0
+            ids.append(str(elem[inh_prop_layer]))
+
+        self.get_props(context).update_counter(ids)
         return {'FINISHED'}
 
 
@@ -300,10 +314,13 @@ class PropSet_Select(PropSetBase):
 
         bm = bmesh.from_edit_mesh(me)
         inh_prop_layer = self.get_datalayer(bm)
+        ids = []
         for elem in self.get_bm_elements(bm):
             if elem[inh_prop_layer] == p_item.id:
                 elem.select = self.select
+            ids.append(str(elem[inh_prop_layer]))
 
+        props.update_counter(ids)
         # propagate selection to other selection modes (edge and face)
         # bm.select_flush(self.select)
         # force viewport update

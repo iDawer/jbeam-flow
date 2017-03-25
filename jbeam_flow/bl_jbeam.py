@@ -1,3 +1,4 @@
+from collections import Counter
 from contextlib import contextmanager
 from typing import Union
 
@@ -34,6 +35,7 @@ class PropsTableBase(Table):
         """Initialises table for creating shared properties"""
         # RNA props are already initialised.
         self._pid_key = self.get_id_layer(bm_elem_seq)
+        self['counter'] = Counter()  # stored as dict (ID property)
         # we should clean up bmesh stuff after exit
         try:
             yield self
@@ -50,6 +52,10 @@ class PropsTableBase(Table):
             return lyrs_int[cls.ptable_id_layer_name]
         except KeyError:
             return lyrs_int.new(cls.ptable_id_layer_name)
+
+    @property
+    def counter(self):
+        return self['counter']
 
 
 class PropsTable(PropertyGroup, PropsTableBase):

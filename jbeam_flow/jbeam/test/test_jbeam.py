@@ -110,6 +110,29 @@ class TableTestCase(unittest.TestCase):
         self.assertEqual(1, item2[pkey])
         pass
 
+    def test_counter(self):
+        t = Table()
+        item = {'foo': 1}
+        t.assign_to_last_prop(item)
+        pkey = t._pid_key
+        prop_id = item[pkey]
+        self.assertEqual(0, prop_id)
+        self.assertEqual(1, t.counter[str(prop_id)])
+
+        t.add_prop('//comment row')
+        item2 = {'bar': {}}
+        t.assign_to_last_prop(item2)
+        prop_id = item2[pkey]
+        self.assertEqual(1, prop_id)
+        self.assertEqual(1, t.counter[str(prop_id)])
+
+        item3 = {'zab': 123}
+        t.assign_to_last_prop(item3)
+        prop_id = item3[pkey]
+        self.assertEqual(1, prop_id)
+        self.assertEqual(2, t.counter[str(prop_id)])
+        pass
+
 
 if __name__ == '__main__':
     unittest.main()
