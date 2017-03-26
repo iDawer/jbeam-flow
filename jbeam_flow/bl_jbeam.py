@@ -18,7 +18,7 @@ class Counter(PropertyGroup):
     # Define our own method cuz dict.clear requires dict (sub)class
     def clear(self):
         ptable = getattr(self.id_data, self.path_from_id().partition('.')[0])  # type: PropsTable
-        ptable['counter'] = {}
+        ptable['counter'].clear()  # RNA does not expose underlying ID dict property methods
 
     def __getitem__(self, item):
         # Blender does not call __missing__ on missing key. Thus Counter.__missing__ logic inlined here:
