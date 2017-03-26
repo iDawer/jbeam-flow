@@ -51,23 +51,25 @@ class MESH_UL_jbeam_quads(PropsMixin, UIList):
     pass
 
 
-class DATA_PT_jbeam(Panel):
-    bl_label = "JBeam"
-    bl_space_type = 'PROPERTIES'
-    bl_region_type = 'WINDOW'
+class JbeamPanel:
     bl_context = "data"
+    bl_region_type = 'WINDOW'
+    bl_space_type = 'PROPERTIES'
 
     @classmethod
     def poll(cls, context):
         obj = context.object
         return obj and obj.type in {'MESH'}
 
+
+class DATA_PT_jbeam_nodes(JbeamPanel, Panel):
+    bl_label = "JBeam Nodes"
+
     def draw(self, context):
         layout = self.layout
         ob = context.object
 
         # ============= nodes
-        layout.label('Node chain of property inheritance')
         row = layout.row()
         row.template_list(MESH_UL_jbeam_nodes.__name__, "", ob.data.jbeam_node_prop_chain, "chain_list",
                           ob.data.jbeam_node_prop_chain, "active_index")
@@ -90,8 +92,15 @@ class DATA_PT_jbeam(Panel):
             sub.operator(NodePropChain_Select.bl_idname, text="Select").select = True
             sub.operator(NodePropChain_Select.bl_idname, text="Deselect").select = False
 
+
+class DATA_PT_jbeam_beams(JbeamPanel, Panel):
+    bl_label = "JBeam Beams"
+
+    def draw(self, context):
+        layout = self.layout
+        ob = context.object
+
         # ============= beams
-        layout.label('Beam chain of property inheritance')
         row = layout.row()
         row.template_list(MESH_UL_jbeam_beams.__name__, "", ob.data.jbeam_beam_prop_chain, "chain_list",
                           ob.data.jbeam_beam_prop_chain, "active_index")
@@ -114,8 +123,15 @@ class DATA_PT_jbeam(Panel):
             sub.operator(BeamPropChain_Select.bl_idname, text="Select").select = True
             sub.operator(BeamPropChain_Select.bl_idname, text="Deselect").select = False
 
+
+class DATA_PT_jbeam_triangles(JbeamPanel, Panel):
+    bl_label = "JBeam Triangles"
+
+    def draw(self, context):
+        layout = self.layout
+        ob = context.object
+
         # ============= triangles
-        layout.label('Triangle chain of property inheritance')
         row = layout.row()
         row.template_list(MESH_UL_jbeam_triangles.__name__, "", ob.data.jbeam_triangle_prop_chain, "chain_list",
                           ob.data.jbeam_triangle_prop_chain, "active_index")
@@ -138,8 +154,15 @@ class DATA_PT_jbeam(Panel):
             sub.operator(TrianglePropChain_Select.bl_idname, text="Select").select = True
             sub.operator(TrianglePropChain_Select.bl_idname, text="Deselect").select = False
 
+
+class DATA_PT_jbeam_quads(JbeamPanel, Panel):
+    bl_label = "JBeam Quads"
+
+    def draw(self, context):
+        layout = self.layout
+        ob = context.object
+
         # ============= quads
-        layout.label('Quad chain of property inheritance')
         row = layout.row()
         row.template_list(MESH_UL_jbeam_quads.__name__, "", ob.data.jbeam_quads_ptable, "chain_list",
                           ob.data.jbeam_quads_ptable, "active_index")
