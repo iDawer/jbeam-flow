@@ -1,3 +1,4 @@
+import collections
 from itertools import islice
 from typing import Iterator, Tuple
 
@@ -47,6 +48,7 @@ class Table:
         self.chain_list = self.PropList()
         self._pid_key = "prop_id"
         self.max_id = 0
+        self.counter = collections.Counter()
 
     def add_prop(self, src):
         """
@@ -61,11 +63,16 @@ class Table:
 
     def assign_to_last_prop(self, item):
         item[self._pid_key] = self.max_id
+        self.counter[str(self.max_id)] += 1
 
     # @property
     # def pid_key(self):
     #     """Item's access key to shared property id"""
     #     return self._pid_key
+
+    def update_counter(self, items: list):
+        self.counter.clear()
+        self.counter.update(items)
 
 
 class JbeamBase(ExtJSONEvaluator, visitor_mixins.Helper):

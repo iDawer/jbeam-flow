@@ -1,3 +1,4 @@
+import collections
 from contextlib import contextmanager
 from typing import Union
 
@@ -8,6 +9,22 @@ from bpy.types import PropertyGroup, Mesh
 from .jbeam import Table, Switch
 
 PROP_CHAIN_ID = 'jbeam_prop_chain_id'
+
+
+class Counter(PropertyGroup):
+    """Mimic collections.Counter, underlying data stored as ID property"""
+    update = collections.Counter.update
+
+    # Define our own method cuz dict.clear requires dict (sub)class
+    def clear(self):
+        ptable = getattr(self.id_data, self.path_from_id().partition('.')[0])  # type: PropsTable
+        ptable['counter'].clear()  # RNA does not expose underlying ID dict property methods
+
+    def __getitem__(self, item):
+        # Blender does not call __missing__ on missing key. Thus Counter.__missing__ logic inlined here:
+        if item not in self:
+            return 0
+        return super().__getitem__(item)
 
 
 class PropsTableBase(Table):
@@ -26,6 +43,7 @@ class PropsTableBase(Table):
     chain_list = CollectionProperty(type=Prop)
     active_index = IntProperty(default=-1)
     max_id = IntProperty()
+    counter = PointerProperty(type=Counter)
 
     ptable_id_layer_name = None  # type: str
 
