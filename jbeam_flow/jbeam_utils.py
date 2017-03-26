@@ -316,7 +316,7 @@ class PartObjectsBuilder(JbeamBase):
                         if inl_prop_src:
                             quad[inl_props_lyr] = inl_prop_src.encode()
         bm.faces.ensure_lookup_table()
-        return '${triangles}'
+        return '${quads}'
 
     # ============================== another sections ==============================
 
