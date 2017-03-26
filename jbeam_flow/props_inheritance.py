@@ -61,6 +61,32 @@ class JbeamPanel:
         obj = context.object
         return obj and obj.type in {'MESH'}
 
+    @staticmethod
+    def template_props_table(layout: bpy.types.UILayout, props_table: bl_jbeam.PropsTable, listtype_name: str,
+                             add_operator: str, remove_operator: str, move_operator: str,
+                             object_mode: str, assign_operator: str, free_operator: str, select_operator: str):
+        row = layout.row()
+        row.template_list(listtype_name, "", props_table, "chain_list",
+                          props_table, "active_index")
+
+        col = row.column(align=True)
+        col.operator(add_operator, icon='ZOOMIN', text="")
+        col.operator(remove_operator, icon='ZOOMOUT', text="")
+        col.separator()
+        col.operator(move_operator, icon='TRIA_UP', text="").direction = 'UP'
+        col.operator(move_operator, icon='TRIA_DOWN', text="").direction = 'DOWN'
+
+        if props_table.chain_list and object_mode == 'EDIT':
+            row = layout.row()
+
+            sub = row.row(align=True)
+            sub.operator(assign_operator, text="Assign")
+            sub.operator(free_operator, text="Free")
+
+            sub = row.row(align=True)
+            sub.operator(select_operator, text="Select").select = True
+            sub.operator(select_operator, text="Deselect").select = False
+
 
 class DATA_PT_jbeam_nodes(JbeamPanel, Panel):
     bl_label = "JBeam Nodes"
@@ -69,28 +95,14 @@ class DATA_PT_jbeam_nodes(JbeamPanel, Panel):
         layout = self.layout
         ob = context.object
 
-        # ============= nodes
-        row = layout.row()
-        row.template_list(MESH_UL_jbeam_nodes.__name__, "", ob.data.jbeam_node_prop_chain, "chain_list",
-                          ob.data.jbeam_node_prop_chain, "active_index")
-
-        col = row.column(align=True)
-        col.operator(NodePropChain_Add.bl_idname, icon='ZOOMIN', text="")
-        col.operator(NodePropChain_Remove.bl_idname, icon='ZOOMOUT', text="")
-        col.separator()
-        col.operator(NodePropChain_Move.bl_idname, icon='TRIA_UP', text="").direction = 'UP'
-        col.operator(NodePropChain_Move.bl_idname, icon='TRIA_DOWN', text="").direction = 'DOWN'
-
-        if ob.data.jbeam_node_prop_chain.chain_list and ob.mode == 'EDIT':
-            row = layout.row()
-
-            sub = row.row(align=True)
-            sub.operator(NodePropChain_Assign.bl_idname, text="Assign")
-            sub.operator(NodePropChain_Free.bl_idname, text="Free")
-
-            sub = row.row(align=True)
-            sub.operator(NodePropChain_Select.bl_idname, text="Select").select = True
-            sub.operator(NodePropChain_Select.bl_idname, text="Deselect").select = False
+        self.template_props_table(layout, ob.data.jbeam_node_prop_chain, MESH_UL_jbeam_nodes.__name__,
+                                  NodePropChain_Add.bl_idname,
+                                  NodePropChain_Remove.bl_idname,
+                                  NodePropChain_Move.bl_idname,
+                                  ob.mode,
+                                  NodePropChain_Assign.bl_idname,
+                                  NodePropChain_Free.bl_idname,
+                                  NodePropChain_Select.bl_idname)
 
 
 class DATA_PT_jbeam_beams(JbeamPanel, Panel):
@@ -100,28 +112,14 @@ class DATA_PT_jbeam_beams(JbeamPanel, Panel):
         layout = self.layout
         ob = context.object
 
-        # ============= beams
-        row = layout.row()
-        row.template_list(MESH_UL_jbeam_beams.__name__, "", ob.data.jbeam_beam_prop_chain, "chain_list",
-                          ob.data.jbeam_beam_prop_chain, "active_index")
-
-        col = row.column(align=True)
-        col.operator(BeamPropChain_Add.bl_idname, icon='ZOOMIN', text="")
-        col.operator(BeamPropChain_Remove.bl_idname, icon='ZOOMOUT', text="")
-        col.separator()
-        col.operator(BeamPropChain_Move.bl_idname, icon='TRIA_UP', text="").direction = 'UP'
-        col.operator(BeamPropChain_Move.bl_idname, icon='TRIA_DOWN', text="").direction = 'DOWN'
-
-        if ob.data.jbeam_beam_prop_chain.chain_list and ob.mode == 'EDIT':
-            row = layout.row()
-
-            sub = row.row(align=True)
-            sub.operator(BeamPropChain_Assign.bl_idname, text="Assign")
-            sub.operator(BeamPropChain_Free.bl_idname, text="Free")
-
-            sub = row.row(align=True)
-            sub.operator(BeamPropChain_Select.bl_idname, text="Select").select = True
-            sub.operator(BeamPropChain_Select.bl_idname, text="Deselect").select = False
+        self.template_props_table(layout, ob.data.jbeam_beam_prop_chain, MESH_UL_jbeam_beams.__name__,
+                                  BeamPropChain_Add.bl_idname,
+                                  BeamPropChain_Remove.bl_idname,
+                                  BeamPropChain_Move.bl_idname,
+                                  ob.mode,
+                                  BeamPropChain_Assign.bl_idname,
+                                  BeamPropChain_Free.bl_idname,
+                                  BeamPropChain_Select.bl_idname)
 
 
 class DATA_PT_jbeam_triangles(JbeamPanel, Panel):
@@ -131,28 +129,14 @@ class DATA_PT_jbeam_triangles(JbeamPanel, Panel):
         layout = self.layout
         ob = context.object
 
-        # ============= triangles
-        row = layout.row()
-        row.template_list(MESH_UL_jbeam_triangles.__name__, "", ob.data.jbeam_triangle_prop_chain, "chain_list",
-                          ob.data.jbeam_triangle_prop_chain, "active_index")
-
-        col = row.column(align=True)
-        col.operator(TrianglePropChain_Add.bl_idname, icon='ZOOMIN', text="")
-        col.operator(TrianglePropChain_Remove.bl_idname, icon='ZOOMOUT', text="")
-        col.separator()
-        col.operator(TrianglePropChain_Move.bl_idname, icon='TRIA_UP', text="").direction = 'UP'
-        col.operator(TrianglePropChain_Move.bl_idname, icon='TRIA_DOWN', text="").direction = 'DOWN'
-
-        if ob.data.jbeam_triangle_prop_chain.chain_list and ob.mode == 'EDIT':
-            row = layout.row()
-
-            sub = row.row(align=True)
-            sub.operator(TrianglePropChain_Assign.bl_idname, text="Assign")
-            sub.operator(TrianglePropChain_Free.bl_idname, text="Free")
-
-            sub = row.row(align=True)
-            sub.operator(TrianglePropChain_Select.bl_idname, text="Select").select = True
-            sub.operator(TrianglePropChain_Select.bl_idname, text="Deselect").select = False
+        self.template_props_table(layout, ob.data.jbeam_triangle_prop_chain, MESH_UL_jbeam_triangles.__name__,
+                                  TrianglePropChain_Add.bl_idname,
+                                  TrianglePropChain_Remove.bl_idname,
+                                  TrianglePropChain_Move.bl_idname,
+                                  ob.mode,
+                                  TrianglePropChain_Assign.bl_idname,
+                                  TrianglePropChain_Free.bl_idname,
+                                  TrianglePropChain_Select.bl_idname)
 
 
 class DATA_PT_jbeam_quads(JbeamPanel, Panel):
@@ -162,28 +146,14 @@ class DATA_PT_jbeam_quads(JbeamPanel, Panel):
         layout = self.layout
         ob = context.object
 
-        # ============= quads
-        row = layout.row()
-        row.template_list(MESH_UL_jbeam_quads.__name__, "", ob.data.jbeam_quads_ptable, "chain_list",
-                          ob.data.jbeam_quads_ptable, "active_index")
-
-        col = row.column(align=True)
-        col.operator(QuadPropChain_Add.bl_idname, icon='ZOOMIN', text="")
-        col.operator(QuadPropChain_Remove.bl_idname, icon='ZOOMOUT', text="")
-        col.separator()
-        col.operator(QuadPropChain_Move.bl_idname, icon='TRIA_UP', text="").direction = 'UP'
-        col.operator(QuadPropChain_Move.bl_idname, icon='TRIA_DOWN', text="").direction = 'DOWN'
-
-        if ob.data.jbeam_quads_ptable.chain_list and ob.mode == 'EDIT':
-            row = layout.row()
-
-            sub = row.row(align=True)
-            sub.operator(QuadPropChain_Assign.bl_idname, text="Assign")
-            sub.operator(QuadPropChain_Free.bl_idname, text="Free")
-
-            sub = row.row(align=True)
-            sub.operator(QuadPropChain_Select.bl_idname, text="Select").select = True
-            sub.operator(QuadPropChain_Select.bl_idname, text="Deselect").select = False
+        self.template_props_table(layout, ob.data.jbeam_quads_ptable, MESH_UL_jbeam_quads.__name__,
+                                  QuadPropChain_Add.bl_idname,
+                                  QuadPropChain_Remove.bl_idname,
+                                  QuadPropChain_Move.bl_idname,
+                                  ob.mode,
+                                  QuadPropChain_Assign.bl_idname,
+                                  QuadPropChain_Free.bl_idname,
+                                  QuadPropChain_Select.bl_idname)
 
 
 class PropSetBase:
