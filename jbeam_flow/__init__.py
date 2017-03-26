@@ -5,9 +5,27 @@ bl_info = {
     'category': 'Import-Export'
 }
 
-# To support reload properly, try to access a package var, 
+# To support reload properly, try to access a package var,
 # if it's there, reload everything
-if "bpy" in locals():
+is_reloading = "bpy" in locals()
+import bpy
+from . import (
+    jb,
+    jbeam,
+    bl_jbeam,
+    jbeam_utils,
+    op_import,
+    op_sync_to_jbeam,
+    op_move_dummies,
+    op_rename_node,
+    display_nodes,
+    props_inheritance,
+    op_find_node,
+    op_import_vehicle,
+    op_load_vehicle_config,
+)
+
+if is_reloading:
     import importlib
 
     importlib.reload(jb)
@@ -25,23 +43,6 @@ if "bpy" in locals():
     importlib.reload(op_load_vehicle_config)
     print('Reloaded JBeam plugin')
 else:
-    import bpy
-    from . import (
-        jb,
-        jbeam,
-        bl_jbeam,
-        jbeam_utils,
-        op_import,
-        op_sync_to_jbeam,
-        op_move_dummies,
-        op_rename_node,
-        display_nodes,
-        props_inheritance,
-        op_find_node,
-        op_import_vehicle,
-        op_load_vehicle_config,
-    )
-
     print("Imported JBeam plugin")
 
 
