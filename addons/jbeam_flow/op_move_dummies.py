@@ -1,8 +1,7 @@
-import bpy
 import bmesh
-from bpy.types import Operator
+import bpy
 from bpy.props import BoolProperty
-from mathutils import Vector
+from bpy.types import Operator
 
 from .jbeam.misc import anytree
 

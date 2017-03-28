@@ -12,7 +12,6 @@ from bpy.types import (
 )
 
 from . import bl_jbeam
-from .bl_jbeam import PROP_CHAIN_ID
 
 
 class PropsMixin:
@@ -328,9 +327,9 @@ class NodesOpMixin(PropSetBase):
 
     @staticmethod
     def get_datalayer(bm):
-        dlayer = bm.verts.layers.int.get(PROP_CHAIN_ID, None)
+        dlayer = bm.verts.layers.int.get(bl_jbeam.PROP_CHAIN_ID, None)
         if dlayer is None:
-            dlayer = bm.verts.layers.int.new(PROP_CHAIN_ID)
+            dlayer = bm.verts.layers.int.new(bl_jbeam.PROP_CHAIN_ID)
         return dlayer
 
     @staticmethod
@@ -345,9 +344,9 @@ class BeamsOpMixin(PropSetBase):
 
     @staticmethod
     def get_datalayer(bm):
-        dlayer = bm.edges.layers.int.get(PROP_CHAIN_ID, None)
+        dlayer = bm.edges.layers.int.get(bl_jbeam.PROP_CHAIN_ID, None)
         if dlayer is None:
-            dlayer = bm.edges.layers.int.new(PROP_CHAIN_ID)
+            dlayer = bm.edges.layers.int.new(bl_jbeam.PROP_CHAIN_ID)
         return dlayer
 
     @staticmethod
@@ -362,9 +361,9 @@ class TrianglesOpMixin(PropSetBase):
 
     @staticmethod
     def get_datalayer(bm):
-        dlayer = bm.faces.layers.int.get(PROP_CHAIN_ID, None)
+        dlayer = bm.faces.layers.int.get(bl_jbeam.PROP_CHAIN_ID, None)
         if dlayer is None:
-            dlayer = bm.faces.layers.int.new(PROP_CHAIN_ID)
+            dlayer = bm.faces.layers.int.new(bl_jbeam.PROP_CHAIN_ID)
         return dlayer
 
     @staticmethod

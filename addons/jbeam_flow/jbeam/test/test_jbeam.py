@@ -1,6 +1,6 @@
 import unittest
 
-from jbeam import ExtJSONParser, JbeamVisitor, JbeamBase, Switch, Table
+from jbeam import ExtJSONParser, JbeamVisitor, EvalBase, Switch, Table
 from jbeam.test import test_ExtJSON
 
 # fast links
@@ -13,7 +13,7 @@ _ValueStringContext = ExtJSONParser.ValueStringContext
 
 _Parser = ExtJSONParser
 _jbv = JbeamVisitor()
-_j_base = JbeamBase()
+_j_base = EvalBase()
 
 
 def _fast_res(src, parser_method, visitor_method):

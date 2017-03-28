@@ -2,11 +2,12 @@ import collections
 from contextlib import contextmanager
 from typing import Union
 
-from bmesh.types import BMVertSeq, BMEdgeSeq, BMFaceSeq, BMLayerItem, BMesh
+from bmesh.types import BMVertSeq, BMEdgeSeq, BMFaceSeq, BMLayerItem
 from bpy.props import IntProperty, StringProperty, CollectionProperty, PointerProperty
 from bpy.types import PropertyGroup, Mesh
 
-from .jbeam import Table, Switch
+from . import jbeam
+from .jbeam.misc import Switch
 
 PROP_CHAIN_ID = 'jbeam_prop_chain_id'
 
@@ -27,7 +28,7 @@ class Counter(PropertyGroup):
         return super().__getitem__(item)
 
 
-class PropsTableBase(Table):
+class PropsTableBase(jbeam.Table):
     """
     Represents properties inheritance chaining.
     Position in the chain described with factor (float number).
@@ -35,7 +36,7 @@ class PropsTableBase(Table):
     Note: __init__ never called by Blender, use 'init' contextmanager instead
     """
 
-    class Prop(PropertyGroup, Table.Prop):
+    class Prop(PropertyGroup, jbeam.Table.Prop):
         # 'id' is a reference for nodes
         id = IntProperty()
         src = StringProperty()
@@ -104,26 +105,6 @@ def get_table_storage_ctxman(me, bm_elem_seq):
             return me.jbeam_triangle_prop_chain.init(bm_elem_seq)
         else:
             raise ValueError('%r is not supported table storage' % bm_elem_seq)
-
-
-class Unused_PropInheritanceBuilder:
-    def __init__(self, bm_elem_seq, props_inh: PropsTable):
-        self._last_prop_id = 0
-        # property inheritance factor
-        # 0 - not affected with property inheritance
-        self._current_f = 0.0
-        self.step = 100.0
-        # A node inherits properties step by step from 0 (nothing) to last factor <= vert[_lyr]
-        self._lyr = bm_elem_seq.layers.int.new(PROP_CHAIN_ID)
-        self.props_inh = props_inh  # JbeamPropsInheritance
-
-    def next_item(self, bm_elem):
-        bm_elem[self._lyr] = self._last_prop_id
-
-    def next_prop(self, src):
-        self._current_f += self.step
-        prop = self.props_inh.add(self._current_f, src)
-        self._last_prop_id = prop.id
 
 
 def register():
