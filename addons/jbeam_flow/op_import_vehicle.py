@@ -1,15 +1,11 @@
 import os
 from collections import deque
 from os import path
-from itertools import chain
 
 import bpy
-from bpy.props import StringProperty, BoolProperty, EnumProperty
+from bpy.props import StringProperty
 from bpy.types import Operator
-# from bpy import path
 from bpy_extras.io_utils import ImportHelper
-
-from . import jbeam_utils
 
 
 class ImportJBeam(Operator, ImportHelper):  #

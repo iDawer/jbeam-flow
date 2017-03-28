@@ -75,7 +75,7 @@ class Table:
         self.counter.update(items)
 
 
-class JbeamBase(ExtJSONEvaluator, visitor_mixins.Helper):
+class EvalBase(ExtJSONEvaluator, visitor_mixins.Helper):
     def table(self, rows_ctx: ExtJSONParser.ValuesContext, table: Table = None) -> Iterator[Tuple[ExtDict, str]]:
         table = table or Table()
 

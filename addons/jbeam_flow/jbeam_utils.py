@@ -1,22 +1,21 @@
+import io
+from typing import Sequence, Tuple, Union
 from collections import OrderedDict
-from io import StringIO
-from typing import Dict, Tuple, List, Union, Sequence
 
+import antlr4
 import bmesh
 import bpy
-
-from antlr4 import *  # ToDo: get rid of the global antlr4 lib
 from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from antlr4.tree.Tree import TerminalNodeImpl
+
+from . import bl_jbeam, jbeam
 from .jb import jbeamLexer, jbeamParser, jbeamVisitor
 from .jb.utils import preprocess
-from .jbeam import JbeamBase
 from .jbeam.ext_json import ExtJSONParser
 from .jbeam.misc import (
     Triangle,
     ExtDict,
 )
-from .bl_jbeam import PropsTable, get_table_storage_ctxman, QuadsPropTable
 
 _ValueContext = ExtJSONParser.ValueContext
 _ValueArrayContext = ExtJSONParser.ValueArrayContext
@@ -25,10 +24,10 @@ _ValueStringContext = ExtJSONParser.ValueStringContext
 
 
 def to_tree(jbeam_data: str):
-    data_stream = InputStream(jbeam_data)
+    data_stream = antlr4.InputStream(jbeam_data)
 
     lexer = jbeamLexer(data_stream)
-    stream = CommonTokenStream(lexer)
+    stream = antlr4.CommonTokenStream(lexer)
     stream = preprocess(stream)
     parser = jbeamParser(stream)
     tree = parser.jbeam()
@@ -36,7 +35,7 @@ def to_tree(jbeam_data: str):
     return tree
 
 
-class PartObjectsBuilder(JbeamBase):
+class PartObjectsBuilder(jbeam.EvalBase):
     lock_part_transform = True
     console_indent = 0
 
@@ -49,8 +48,8 @@ class PartObjectsBuilder(JbeamBase):
         self._vars_initialised = False
 
     def get_all_objects(self):
-        from itertools import chain
-        return chain(self.parts_group.objects, self.helper_objects)
+        import itertools
+        return itertools.chain(self.parts_group.objects, self.helper_objects)
 
     def jbeam(self, ctx: ExtJSONParser.JsonContext):
         jbeam_group = bpy.data.groups.new(self.name)
@@ -77,7 +76,7 @@ class PartObjectsBuilder(JbeamBase):
         if self.lock_part_transform:
             self.lock_transform(part_obj)
 
-        data_buf = StringIO()
+        data_buf = io.StringIO()
         sections_ctx = part_value_ctx.object().pairs()
         if sections_ctx:
             self.sections(sections_ctx, part_obj, mesh, data_buf)
@@ -86,7 +85,7 @@ class PartObjectsBuilder(JbeamBase):
         mesh.update()
         return part_obj
 
-    def sections(self, sections_ctx: ExtJSONParser.PairsContext, part_obj, mesh, data_buf: StringIO):
+    def sections(self, sections_ctx: ExtJSONParser.PairsContext, part_obj, mesh, data_buf: io.StringIO):
         bm = bmesh.new()
         sections = OrderedDict((name, (value_ctx, section_ctx)) for (name, value_ctx), section_ctx in
                                ((self._unpack_pair(section_ctx), section_ctx) for section_ctx in sections_ctx.pair()))
@@ -230,7 +229,7 @@ class PartObjectsBuilder(JbeamBase):
         prop_layer = bm.verts.layers.string.new('jbeamNodeProps')
         nodes_ctx = ctx.array().values()
         if nodes_ctx:
-            with get_table_storage_ctxman(me, bm.verts) as ptable:  # type: PropsTable
+            with bl_jbeam.get_table_storage_ctxman(me, bm.verts) as ptable:  # type: bl_jbeam.PropsTable
                 for node_props, inlined_props_src in self.table(nodes_ctx, ptable):
                     node = self.node(node_props, inlined_props_src, bm, id_layer, prop_layer)
                     ptable.assign_to_last_prop(node)
@@ -254,7 +253,7 @@ class PartObjectsBuilder(JbeamBase):
         inl_props_lyr = bm.edges.layers.string.new('jbeam_prop')
         beams_ctx = ctx.array().values()
         if beams_ctx:
-            with get_table_storage_ctxman(me, bm.edges) as ptable:  # type: PropsTable
+            with bl_jbeam.get_table_storage_ctxman(me, bm.edges) as ptable:  # type: bl_jbeam.PropsTable
                 for beam_props, inl_prop_src in self.table(beams_ctx, ptable):
                     beam = self.beam(beam_props, bm, type_lyr)
                     if beam:
@@ -282,7 +281,7 @@ class PartObjectsBuilder(JbeamBase):
         inl_props_lyr = bm.faces.layers.string.active or bm.faces.layers.string.new('jbeam_prop')
         triangles_ctx = ctx.array().values()
         if triangles_ctx:
-            with get_table_storage_ctxman(me, bm.faces) as ptable:  # type: PropsTable
+            with bl_jbeam.get_table_storage_ctxman(me, bm.faces) as ptable:  # type: bl_jbeam.PropsTable
                 for tri_prop, inl_prop_src in self.table(triangles_ctx, ptable):
                     tri = self.face(tri_prop['id1:', 'id2:', 'id3:'], bm)
                     if tri:
@@ -308,7 +307,7 @@ class PartObjectsBuilder(JbeamBase):
         inl_props_lyr = bm.faces.layers.string.active or bm.faces.layers.string.new('jbeam_prop')
         quads_ctx = ctx.array().values()
         if quads_ctx:
-            with QuadsPropTable.get_from(me).init(bm.faces) as ptable:  # type: QuadsPropTable
+            with bl_jbeam.QuadsPropTable.get_from(me).init(bm.faces) as ptable:  # type: bl_jbeam.QuadsPropTable
                 for prop, inl_prop_src in self.table(quads_ctx, ptable):
                     quad = self.face(prop['id1:', 'id2:', 'id3:', 'id4:'], bm)
                     if quad:
@@ -359,7 +358,7 @@ class NodeCollector(jbeamVisitor):
         if key not in self.beams.keys():
             self.beams[key] = beam_ctx
 
-    def _link_to_node(self, key: str, item: ParserRuleContext):
+    def _link_to_node(self, key: str, item: antlr4.ParserRuleContext):
         items = self.node_to_items_map.setdefault(key, [])
         items.append(item)
 
@@ -384,9 +383,9 @@ def get_parse_tree(data: str, name: str):
     if tree is not None:
         return tree
 
-    data_stream = InputStream(data)
+    data_stream = antlr4.InputStream(data)
     lexer = jbeamLexer(data_stream)
-    stream = CommonTokenStream(lexer)
+    stream = antlr4.CommonTokenStream(lexer)
     parser = jbeamParser(stream)
     tree = parser.jbeam()
     jbeam_parse_tree_cache[name] = tree
