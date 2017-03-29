@@ -1,6 +1,6 @@
 import io
-from typing import Sequence, Tuple, Union
 from collections import OrderedDict
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import antlr4
 import bmesh
@@ -43,15 +43,15 @@ class PartObjectsBuilder(jbeam.EvalBase):
         self.name = name
         self.parts_group = None
         self.helper_objects = []
-        self._vertsIndex = {}
+        self._vertsIndex = {}  # type: Dict[str, bmesh.types.BMVert]
         self._part_variables = {}
         self._vars_initialised = False
 
-    def get_all_objects(self):
+    def get_all_objects(self) -> Sequence[bpy.types.Object]:
         import itertools
         return itertools.chain(self.parts_group.objects, self.helper_objects)
 
-    def jbeam(self, ctx: ExtJSONParser.JsonContext):
+    def jbeam(self, ctx: ExtJSONParser.JsonContext) -> bpy.types.Group:
         jbeam_group = bpy.data.groups.new(self.name)
         self.parts_group = jbeam_group
         parts_ctx = ctx.object().pairs()
@@ -61,7 +61,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
                 jbeam_group.objects.link(part_obj)
         return jbeam_group
 
-    def part(self, ctx: ExtJSONParser.PairContext):
+    def part(self, ctx: ExtJSONParser.PairContext) -> bpy.types.Object:
         part_name, part_value_ctx = self._unpack_pair(ctx)
         self._print("part:", part_name)
         self._vertsIndex = {}
@@ -138,14 +138,14 @@ class PartObjectsBuilder(jbeam.EvalBase):
         return obj
 
     @staticmethod
-    def generic_section(ctx: ExtJSONParser.ValueContext):
+    def generic_section(ctx: ExtJSONParser.ValueContext) -> str:
         # return source text
         src = ctx.parser.getTokenStream().getText(ctx.getSourceInterval())
         # escape for templating
         src = src.replace('$', '$$')
         return src
 
-    def ensure_nodes(self, ids, bm):
+    def ensure_nodes(self, ids, bm) -> List[bmesh.types.BMVert]:
         get_node = self._vertsIndex.get
         nodes = [get_node(id_) for id_ in ids]
         # handle dummy nodes (which not defined in prev sections)
@@ -171,7 +171,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
         id_layer = bm.verts.layers.string.active
         if id_layer is None:
             # in case if no nodes section, i.e. beams with parent part nodes
-            # Beware this kill existing verts in '_vertsIndex' map.
+            # Beware it kills existing verts in '_vertsIndex' map.
             id_layer = bm.verts.layers.string.new('jbeamNodeId')
         if co:
             vert = bm.verts.new(co)
@@ -201,7 +201,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
 
     # ============================== slots ==============================
 
-    def section_slots(self, ctx: _ValueArrayContext = None, part=None, **_):
+    def section_slots(self, ctx: _ValueArrayContext = None, part=None, **_) -> str:
         slots_empty = bpy.data.objects.new('slots', None)
         # slot section has no transform modifiers
         self.lock_transform(slots_empty)
@@ -212,7 +212,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
         self._set_parent(slots_empty, part)
         return '${slots}'
 
-    def slot(self, props: ExtDict):
+    def slot(self, props: ExtDict) -> bpy.types.Object:
         name = props.pop('type') + '.slot'
         empty_obj = bpy.data.objects.new(name, None)  # 'Empty' object
         if 'nodeOffset' in props and isinstance(props['nodeOffset'], dict):
@@ -224,7 +224,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
 
     # ============================== nodes ==============================
 
-    def section_nodes(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_):
+    def section_nodes(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_) -> str:
         id_layer = bm.verts.layers.string.new('jbeamNodeId')
         prop_layer = bm.verts.layers.string.new('jbeamNodeProps')
         nodes_ctx = ctx.array().values()
@@ -248,7 +248,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
 
     # ============================== beams ==============================
 
-    def section_beams(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_):
+    def section_beams(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_) -> str:
         type_lyr = bm.edges.layers.int.new('jbeam_type')
         inl_props_lyr = bm.edges.layers.string.new('jbeam_prop')
         beams_ctx = ctx.array().values()
@@ -277,7 +277,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
 
     # ============================== collision triangles ==============================
 
-    def section_triangles(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_):
+    def section_triangles(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_) -> str:
         inl_props_lyr = bm.faces.layers.string.active or bm.faces.layers.string.new('jbeam_prop')
         triangles_ctx = ctx.array().values()
         if triangles_ctx:
@@ -291,7 +291,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
         bm.faces.ensure_lookup_table()
         return '${triangles}'
 
-    def face(self, ids: Sequence[str], bm: bmesh.types.BMesh):
+    def face(self, ids: Sequence[str], bm: bmesh.types.BMesh) -> Optional[bmesh.types.BMFace]:
         nodes = self.ensure_nodes(ids, bm)
         try:
             face = bm.faces.new(nodes)
@@ -303,7 +303,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
     # ============================== quads ==============================
 
     def section_quads(self, ctx: _ValueArrayContext = None, me=None, bm: bmesh.types.BMesh = None,
-                      **_):
+                      **_) -> str:
         inl_props_lyr = bm.faces.layers.string.active or bm.faces.layers.string.new('jbeam_prop')
         quads_ctx = ctx.array().values()
         if quads_ctx:
@@ -319,13 +319,13 @@ class PartObjectsBuilder(jbeam.EvalBase):
 
     # ============================== another sections ==============================
 
-    def section_slottype(self, ctx: _ValueStringContext = None, me=None, **_):
+    def section_slottype(self, ctx: _ValueStringContext = None, me=None, **_) -> str:
         stype = ctx.accept(self)
         me['slotType'] = stype
         return '${slotType}'
 
 
-def update_id_object(id_object, props: dict):
+def update_id_object(id_object: bpy.types.ID, props: dict):
     for k in props:
         id_object[k] = props[k]
 
