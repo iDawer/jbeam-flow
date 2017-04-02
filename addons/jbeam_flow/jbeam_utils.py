@@ -168,11 +168,10 @@ class PartObjectsBuilder(jbeam.EvalBase):
         :param co: mathutils.Vector
         :return: bmesh.types.BMVert
         """
-        id_layer = bm.verts.layers.string.active
-        if id_layer is None:
-            # in case if no nodes section, i.e. beams with parent part nodes
-            # Beware it kills existing verts in '_vertsIndex' map.
-            id_layer = bm.verts.layers.string.new('jbeamNodeId')
+        # Init in case if no nodes section, i.e. beams with parent part nodes
+        # Beware it kills existing verts in '_vertsIndex' map.
+        id_layer = bl_jbeam.Node.id.ensure_layer(bm.verts.layers)
+
         if co:
             vert = bm.verts.new(co)
             # hang dummy node
@@ -224,26 +223,26 @@ class PartObjectsBuilder(jbeam.EvalBase):
 
     # ============================== nodes ==============================
 
-    def section_nodes(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_) -> str:
-        id_layer = bm.verts.layers.string.new('jbeamNodeId')
-        prop_layer = bm.verts.layers.string.new('jbeamNodeProps')
+    def section_nodes(self, ctx: _ValueArrayContext = None, me=None, bm: bmesh.types.BMesh = None, **_) -> str:
+        bl_jbeam.Node.ensure_layers(bm.verts.layers)
         nodes_ctx = ctx.array().values()
         if nodes_ctx:
             with bl_jbeam.get_table_storage_ctxman(me, bm.verts) as ptable:  # type: bl_jbeam.PropsTable
                 for node_props, inlined_props_src in self.table(nodes_ctx, ptable):
-                    node = self.node(node_props, inlined_props_src, bm, id_layer, prop_layer)
+                    node = self.node(node_props, inlined_props_src, bm)
                     ptable.assign_to_last_prop(node)
         bm.verts.ensure_lookup_table()
         return '${nodes}'
 
-    def node(self, props: ExtDict, inlined_props_src: str, bm, id_layer, iprop_layer):
+    def node(self, props: ExtDict, inlined_props_src: str, bm):
         vert = bm.verts.new(props['posX', 'posY', 'posZ'])
+        node = bl_jbeam.Node(bm, vert)
         _id = props['id']
-        vert[id_layer] = _id.encode()  # set node id to the data layer
+        node.id = _id
         self._vertsIndex[_id] = vert
         # inlined node props
         if inlined_props_src is not None:
-            vert[iprop_layer] = inlined_props_src.encode()
+            node.props_src = inlined_props_src
         return vert
 
     # ============================== beams ==============================

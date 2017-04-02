@@ -2,11 +2,11 @@ import collections
 from contextlib import contextmanager
 from typing import Union
 
-from bmesh.types import BMVertSeq, BMEdgeSeq, BMFaceSeq, BMLayerItem
+from bmesh.types import BMesh, BMVertSeq, BMEdgeSeq, BMFaceSeq, BMLayerItem, BMVert
 from bpy.props import IntProperty, StringProperty, CollectionProperty, PointerProperty
 from bpy.types import PropertyGroup, Mesh
 
-from . import jbeam
+from . import bm_props, jbeam
 from .jbeam.misc import Switch
 
 PROP_CHAIN_ID = 'jbeam_prop_chain_id'
@@ -59,7 +59,7 @@ class PropsTableBase(jbeam.Table):
         finally:
             self._pid_key = None
 
-    def new(self):
+    def new_prop(self):
         return self.add_prop("{}")
 
     @classmethod
@@ -73,6 +73,70 @@ class PropsTableBase(jbeam.Table):
 
 class PropsTable(PropertyGroup, PropsTableBase):
     ptable_id_layer_name = PROP_CHAIN_ID
+
+
+class UnusedNodesTable(PropertyGroup, PropsTableBase):
+    """ Optimise custom data accecss. """
+
+    # not used actually, need for shut up IDE complaining
+    def __init__(self):
+        super().__init__()
+        self._node_id_lyr = None  # type: BMLayerItem
+        self._node_prop_lyr = None  # type: BMLayerItem
+
+    @contextmanager
+    def init(self, vert_seq: BMVertSeq):
+        # see PropsTableBase.init for details
+        with super().init(vert_seq):
+            self._node_id_lyr = vert_seq.layers.string.new('jbeamNodeId')
+            self._node_prop_lyr = vert_seq.layers.string.new('jbeamNodeProps')
+            try:
+                yield self
+            finally:
+                self._node_id_lyr = None
+                self._node_prop_lyr = None
+
+    def new_node(self, bm: BMesh, vert: BMVert):
+        if not (self._node_prop_lyr and self._node_id_lyr):
+            raise ValueError("NodesTable.new method allowed only under 'with NodesTable.init()' block")
+
+        # raise NotImplementedError()
+        return Node(bm, vert)
+
+    @property
+    def node_id_lyr(self):
+        return self._node_id_lyr
+
+    @property
+    def node_prop_lyr(self):
+        return self._node_prop_lyr
+
+
+class Element(bm_props.ElemWrapper):
+    """ Base class for jbeam elements (node, beam, etc.) which are represented as bmesh elements. """
+    # todo: property access (ChainMap?)
+    props_src = bm_props.String('JBEAM_ELEM_PROPS')
+
+    def __init__(self, layers, bm_elem: bm_props.BMElem):
+        super().__init__(layers, bm_elem)
+        self.props_src = ""
+
+    @classmethod
+    def ensure_layers(cls, layers: bm_props.BMLayerAccess):
+        cls.props_src.ensure_layer(layers)
+
+
+class Node(Element):
+    id = bm_props.String('jbeamNodeId')
+
+    def __init__(self, bm: BMesh, vert: BMVert):
+        super().__init__(bm.verts.layers, vert)
+        self.id = ""
+
+    @classmethod
+    def ensure_layers(cls, layers: bm_props.BMLayerAccess):
+        super().ensure_layers(layers)
+        cls.id.ensure_layer(layers)
 
 
 class QuadsPropTable(PropertyGroup, PropsTableBase):
