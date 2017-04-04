@@ -88,8 +88,8 @@ class UnusedNodesTable(PropertyGroup, PropsTableBase):
     def init(self, vert_seq: BMVertSeq):
         # see PropsTableBase.init for details
         with super().init(vert_seq):
-            self._node_id_lyr = vert_seq.layers.string.new('jbeamNodeId')
-            self._node_prop_lyr = vert_seq.layers.string.new('jbeamNodeProps')
+            self._node_id_lyr = vert_seq.layers.string.new(Node.id.layer_name)
+            self._node_prop_lyr = vert_seq.layers.string.new(Node.props_src.layer_name)
             try:
                 yield self
             finally:
@@ -117,13 +117,9 @@ class Element(bm_props.ElemWrapper):
     # todo: property access (ChainMap?)
     props_src = bm_props.String('JBEAM_ELEM_PROPS')
 
-    def __init__(self, layers, bm_elem: bm_props.BMElem):
-        super().__init__(layers, bm_elem)
-        self.props_src = ""
-
     @classmethod
-    def ensure_layers(cls, layers: bm_props.BMLayerAccess):
-        cls.props_src.ensure_layer(layers)
+    def ensure_data_layers(cls, bm: BMesh):
+        cls.props_src.ensure_layer(bm.verts.layers)
 
 
 class Node(Element):
@@ -131,12 +127,11 @@ class Node(Element):
 
     def __init__(self, bm: BMesh, vert: BMVert):
         super().__init__(bm.verts.layers, vert)
-        self.id = ""
 
     @classmethod
-    def ensure_layers(cls, layers: bm_props.BMLayerAccess):
-        super().ensure_layers(layers)
-        cls.id.ensure_layer(layers)
+    def ensure_data_layers(cls, bm: BMesh):
+        super().ensure_data_layers(bm)
+        cls.id.ensure_layer(bm.verts.layers)
 
 
 class QuadsPropTable(PropertyGroup, PropsTableBase):

@@ -3,6 +3,7 @@ import bpy
 from bpy.props import BoolProperty
 from bpy.types import Operator
 
+from . import bl_jbeam
 from .jbeam.misc import anytree
 
 
@@ -65,7 +66,7 @@ def get_jnodes_co(obj):
     mesh = obj.data
     bm = bmesh.new()
     bm.from_mesh(mesh)
-    id_lyr = bm.verts.layers.string.get('jbeamNodeId')
+    id_lyr = bm.verts.layers.string.get(bl_jbeam.Node.id.layer_name)
     if id_lyr is None:
         return
     for v in bm.verts:
@@ -84,7 +85,7 @@ def position_dummies(jnode_map, obj):
         bm = bmesh.new()
         bm.from_mesh(me)
 
-    id_lyr = bm.verts.layers.string.get('jbeamNodeId')
+    id_lyr = bm.verts.layers.string.get(bl_jbeam.Node.id.layer_name)
     if not id_lyr:
         print('No id data')
         return 0, 0

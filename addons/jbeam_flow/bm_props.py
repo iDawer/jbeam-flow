@@ -17,13 +17,14 @@ class ElemWrapper:
         self.layers = layers  # type: BMLayerAccess
 
     @classmethod
-    def ensure_layers(cls, layers: BMLayerAccess):
-        """ Initialise custom data layers if not initialised yet. """
+    def ensure_data_layers(cls, bm: bmtypes.BMesh):
+        """ Initialise custom data layers if need. """
         raise NotImplementedError()
 
 
 class String:
     def __init__(self, layer_name: str):
+        """ :rtype: str or String """
         self.layer_name = layer_name
 
     def __get__(self, instance: ElemWrapper, owner):

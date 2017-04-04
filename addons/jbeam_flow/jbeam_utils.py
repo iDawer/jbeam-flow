@@ -224,7 +224,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
     # ============================== nodes ==============================
 
     def section_nodes(self, ctx: _ValueArrayContext = None, me=None, bm: bmesh.types.BMesh = None, **_) -> str:
-        bl_jbeam.Node.ensure_layers(bm.verts.layers)
+        bl_jbeam.Node.ensure_data_layers(bm)
         nodes_ctx = ctx.array().values()
         if nodes_ctx:
             with bl_jbeam.get_table_storage_ctxman(me, bm.verts) as ptable:  # type: bl_jbeam.PropsTable

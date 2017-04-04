@@ -2,6 +2,8 @@ import bmesh
 from bpy.props import StringProperty
 from bpy.types import Operator
 
+from . import bl_jbeam
+
 
 class Rename(Operator):
     bl_idname = "object.jbeam_rename_node"
@@ -28,25 +30,21 @@ class Rename(Operator):
 
         obj = context.active_object
         bm = bmesh.from_edit_mesh(obj.data)
-        id_lyr = bm.verts.layers.string['jbeamNodeId']
         for vert in bm.verts:
             if vert.select:
-                vert[id_lyr] = self.node_id.encode()
+                bl_jbeam.Node(bm, vert).id = self.node_id
                 break
         return {'FINISHED'}
 
     def invoke(self, context, event):
         obj = context.active_object
         bm = bmesh.from_edit_mesh(obj.data)
-        id_lyr = bm.verts.layers.string.get('jbeamNodeId')
 
-        if id_lyr is None:
-            self.report({'ERROR_INVALID_INPUT'}, 'Mesh has no jbeam data')
-            return {'CANCELLED'}
+        bl_jbeam.Node.id.ensure_layer(bm.verts.layers)
 
         for vert in bm.verts:
             if vert.select:
-                self.node_id = vert[id_lyr].decode()
+                self.node_id = bl_jbeam.Node(bm, vert).id
                 break
 
         return {'FINISHED'}
