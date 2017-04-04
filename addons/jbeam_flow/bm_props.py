@@ -12,6 +12,7 @@ class ElemWrapper:
     Abstract bmesh element wrapper class. 
     Makes it possible to use descriptors to access custom data.
     """
+
     def __init__(self, layers, bm_elem: BMElem):
         self.bm_elem = bm_elem  # type: BMElem
         self.layers = layers  # type: BMLayerAccess
@@ -37,6 +38,8 @@ class String:
             raise  # other error occurred
 
     def __set__(self, instance: ElemWrapper, value: str):
+        if len(value) > 255:
+            raise ValueError("String value length is over than 255", value)
         instance.bm_elem[instance.layers.string[self.layer_name]] = value.encode()
 
     def ensure_layer(self, layers: BMLayerAccess) -> bmtypes.BMLayerItem:

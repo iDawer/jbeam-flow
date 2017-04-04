@@ -14,7 +14,8 @@ class Rename(Operator):
     node_id = StringProperty(
         name="Node ID",
         description="Jbeam node id",
-        options={'TEXTEDIT_UPDATE'}
+        options={'TEXTEDIT_UPDATE'},
+        maxlen=255,
     )
 
     @classmethod
