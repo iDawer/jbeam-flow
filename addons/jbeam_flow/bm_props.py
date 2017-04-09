@@ -1,9 +1,20 @@
-from bmesh import types as bmtypes
-from typing import Union
+import types
+import typing
 
-# typing hints
-BMElem = Union[bmtypes.BMVert, bmtypes.BMEdge, bmtypes.BMFace]
-BMLayerAccess = Union[bmtypes.BMLayerAccessVert, bmtypes.BMLayerAccessEdge, bmtypes.BMLayerAccessFace]
+import bmesh
+import bpy
+from bmesh import types as bmtypes
+
+# Typing hints, for annotations use only.
+try:
+    # Blender 2.78a comes with Python 3.5.1, but typing.Type was introduced in 3.5.2
+    from typing import Type
+except ImportError:
+    class Type(typing.Generic[typing.TypeVar('CT_co', covariant=True, bound=type)], extra=type):
+        __slots__ = ()
+BMElem = typing.Union[bmtypes.BMVert, bmtypes.BMEdge, bmtypes.BMFace]
+BMElemSeq = typing.Union[bmtypes.BMVertSeq, bmtypes.BMEdgeSeq, bmtypes.BMFaceSeq]
+BMLayerAccess = typing.Union[bmtypes.BMLayerAccessVert, bmtypes.BMLayerAccessEdge, bmtypes.BMLayerAccessFace]
 
 
 # Make wrapper, because can't inherit from BMVert or other builtin types.
@@ -48,3 +59,41 @@ class String:
             return layers.string[self.layer_name]
         except KeyError:
             return layers.string.new(self.layer_name)
+
+    def get_layer(self, layers: BMLayerAccess) -> bmtypes.BMLayerItem:
+        """ Returns layer if exist, else returns None """
+        return layers.string.get(self.layer_name)
+
+
+def make_rna_proxy(bm_prop: String, bpy_prop, bmelem_seq_prop: types.MemberDescriptorType, bmelem_type: Type[BMElem]):
+    # '_' in args is a property owner class instance
+    def update(_, context):
+        if context.area:
+            context.area.tag_redraw()
+
+    def setval(_, value: str):
+        eo = bpy.context.edit_object
+        bm = bmesh.from_edit_mesh(eo.data)
+        elem = bm.select_history.active
+        bmelem_seq = bmelem_seq_prop.__get__(bm)  # type: BMElemSeq
+        data_layer = bm_prop.get_layer(bmelem_seq.layers)
+        if elem and isinstance(elem, bmelem_type) and data_layer:
+            elem[data_layer] = value.encode()
+
+    def getval(_):
+        eo = bpy.context.edit_object
+        if not eo or eo.type != 'MESH':
+            return ""
+        bm = bmesh.from_edit_mesh(eo.data)
+        elem = bm.select_history.active
+        bmelem_seq = bmelem_seq_prop.__get__(bm)  # type: BMElemSeq
+        data_layer = bm_prop.get_layer(bmelem_seq.layers)
+        if elem and isinstance(elem, bmelem_type) and data_layer:
+            return elem[data_layer].decode()
+        return ""
+
+    prop_def_args = bpy_prop[1]  # type: dict
+    prop_def_args['get'] = getval
+    prop_def_args['set'] = setval
+    prop_def_args['update'] = update
+    return bpy_prop

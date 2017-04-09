@@ -24,6 +24,7 @@ from . import (
     op_find_node,
     op_import_vehicle,
     op_load_vehicle_config,
+    jbeam_elem_editor,
 )
 
 if is_reloading:
@@ -43,6 +44,7 @@ if is_reloading:
     importlib.reload(op_find_node)
     importlib.reload(op_import_vehicle)
     importlib.reload(op_load_vehicle_config)
+    importlib.reload(jbeam_elem_editor)
     print('Reloaded JBeam plugin')
 else:
     print("Imported JBeam plugin")
