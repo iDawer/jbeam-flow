@@ -34,10 +34,29 @@ class ElemWrapper:
         raise NotImplementedError()
 
 
-class String:
+class ABCProperty:
     def __init__(self, layer_name: str):
-        """ :rtype: str or String """
         self.layer_name = layer_name
+
+    def __get__(self, instance: ElemWrapper, owner):
+        raise NotImplementedError()
+
+    def __set__(self, instance: ElemWrapper, value):
+        raise NotImplementedError()
+
+    def ensure_layer(self, layers: BMLayerAccess) -> bmtypes.BMLayerItem:
+        """ Ensures data layer is initialised. Returns the layer. """
+        raise NotImplementedError()
+
+    def get_layer(self, layers: BMLayerAccess) -> bmtypes.BMLayerItem:
+        """ Returns layer if exist, else returns None. """
+        raise NotImplementedError()
+
+
+class String(ABCProperty):
+    def __init__(self, layer_name: str):
+        """ :rtype: str or String """  # 'typing' module does not support des
+        super().__init__(layer_name)
 
     def __get__(self, instance: ElemWrapper, owner):
         try:
@@ -54,18 +73,21 @@ class String:
         instance.bm_elem[instance.layers.string[self.layer_name]] = value.encode()
 
     def ensure_layer(self, layers: BMLayerAccess) -> bmtypes.BMLayerItem:
-        """ Ensure layer is initialised """
         try:
             return layers.string[self.layer_name]
         except KeyError:
             return layers.string.new(self.layer_name)
 
     def get_layer(self, layers: BMLayerAccess) -> bmtypes.BMLayerItem:
-        """ Returns layer if exist, else returns None """
         return layers.string.get(self.layer_name)
 
 
-def make_rna_proxy(bm_prop: String, bpy_prop, bmelem_seq_prop: types.MemberDescriptorType, bmelem_type: Type[BMElem]):
+def make_rna_proxy(bm_prop: ABCProperty, bpy_prop, bmelem_seq_prop: types.MemberDescriptorType,
+                   bmelem_type: Type[BMElem]):
+    """ 
+    Makes RNA porperty definition which redirects attribute access to active bmesh element's custom data. 
+    This function uses RNA internals not documented in PyAPI. Tested in Blender 2.78a. 
+    """
     # '_' in args is a property owner class instance
     def update(_, context):
         if context.area:
