@@ -123,3 +123,8 @@ def fill_slots(part_map: defaultdict(dict), part_slots_map: defaultdict(list), p
 
 def is_slot(ob):
     return ob.parent is not None and 'slots' == ob.parent.name.partition('.')[0]
+
+
+classes = (
+    LoadVehicleConfig,
+)

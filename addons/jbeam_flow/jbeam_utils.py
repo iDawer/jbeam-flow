@@ -395,3 +395,6 @@ def get_parse_tree(data: str, name: str):
 class Rewriter(TokenStreamRewriter):
     def delete_subtree(self, subtree):
         self.delete(self.DEFAULT_PROGRAM_NAME, subtree.start.tokenIndex, subtree.stop.tokenIndex)
+
+
+classes = ()

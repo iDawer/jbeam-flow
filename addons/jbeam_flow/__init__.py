@@ -12,10 +12,10 @@ class reloadable:
 
     def __init__(self, mod_name, mod_locals):
         self.mod_name = mod_name
-        # To support reload properly, try to access a package var,
-        # if it's there, reload everything
+        # To support reload properly, try to access a package var, if it's there, reload everything
         self.is_reloading = 'bpy' in mod_locals
         self.modules = []
+        """List of loaded modules. Preserves importing order"""
 
     def __enter__(self):
         import builtins
@@ -66,17 +66,18 @@ with reloadable(__name__, locals()) as loaded:
 
 
 def register():
-    bpy.utils.register_module(__name__)
-    for submodule in loaded.modules:
-        # Allow explicit registering methods in a submodules
-        if hasattr(submodule, 'register'):
-            submodule.register()
+    from bpy.utils import register_class
+    for cls in (cls for mod in loaded.modules for cls in mod.classes):
+        register_class(cls)
+    del register_class
+    display_nodes.register()
     print("REGISTERED '{}'".format(__name__))
 
 
 def unregister():
-    bpy.utils.unregister_module(__name__)
-    for submodule in loaded.modules:
-        if hasattr(submodule, 'unregister'):
-            submodule.unregister()
+    from bpy.utils import unregister_class
+    for cls in reversed([cls for mod in loaded.modules for cls in mod.classes]):
+        unregister_class(cls)
+    del unregister_class
+    display_nodes.unregister()
     print("UNREGISTERED  '{}'".format(__name__))
