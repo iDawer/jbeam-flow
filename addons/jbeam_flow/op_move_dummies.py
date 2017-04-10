@@ -147,3 +147,8 @@ class Node(anytree.Node):
 
     def __repr__(self):
         return self.name
+
+
+classes = (
+    MoveDummies,
+)

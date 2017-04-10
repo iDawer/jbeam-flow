@@ -540,3 +540,44 @@ class QuadPropChain_Select(QuadsOpMixin, PropSet_Select, Operator):
     """Select/deselect all quads assigned to the active property set """
     bl_idname = "object.jbeam_quad_prop_chain_select"
     bl_label = "Select"
+
+
+classes = (
+    MESH_UL_jbeam_nodes,
+    MESH_UL_jbeam_beams,
+    MESH_UL_jbeam_triangles,
+    MESH_UL_jbeam_quads,
+
+    DATA_PT_jbeam_nodes,
+    DATA_PT_jbeam_beams,
+    DATA_PT_jbeam_triangles,
+    DATA_PT_jbeam_quads,
+
+    NodePropChain_Add,
+    NodePropChain_Remove,
+    NodePropChain_Move,
+    NodePropChain_Assign,
+    NodePropChain_Free,
+    NodePropChain_Select,
+
+    BeamPropChain_Add,
+    BeamPropChain_Remove,
+    BeamPropChain_Move,
+    BeamPropChain_Assign,
+    BeamPropChain_Free,
+    BeamPropChain_Select,
+
+    TrianglePropChain_Add,
+    TrianglePropChain_Remove,
+    TrianglePropChain_Move,
+    TrianglePropChain_Assign,
+    TrianglePropChain_Free,
+    TrianglePropChain_Select,
+
+    QuadPropChain_Add,
+    QuadPropChain_Remove,
+    QuadPropChain_Move,
+    QuadPropChain_Assign,
+    QuadPropChain_Free,
+    QuadPropChain_Select,
+)

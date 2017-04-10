@@ -164,3 +164,8 @@ class SyncMeshToText(Operator):
                 # def unregister():
                 #     bpy.types.INFO_MT_file_import.remove(menu_func_draw)
                 #
+
+
+classes = (
+    SyncMeshToText,
+)

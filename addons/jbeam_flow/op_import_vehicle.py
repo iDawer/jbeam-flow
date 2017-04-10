@@ -8,7 +8,7 @@ from bpy.types import Operator
 from bpy_extras.io_utils import ImportHelper
 
 
-class ImportJBeam(Operator, ImportHelper):  #
+class ImportJBeamVehicle(Operator, ImportHelper):  #
     """Import BeamNG's JBeam vehicle"""
     bl_idname = "import_scene.jbeam_vehicle"
     bl_label = "JBeam vehicle"
@@ -57,3 +57,8 @@ class ImportJBeam(Operator, ImportHelper):  #
         self._timer = wm.event_timer_add(0.2, context.window)
         wm.modal_handler_add(self)
         return {'RUNNING_MODAL'}
+
+
+classes = (
+    ImportJBeamVehicle,
+)
