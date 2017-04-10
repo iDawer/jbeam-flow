@@ -140,3 +140,6 @@ class EvalBase(ExtJSONEvaluator, visitor_mixins.Helper):
     #
     # def visit_value_row(self, ctx: ExtJSONParser.ValueArrayContext):
     #     return super().visitValueArray(ctx)
+
+
+classes = ()

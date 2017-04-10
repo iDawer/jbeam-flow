@@ -74,6 +74,18 @@ class PropsTableBase(jbeam.Table):
 class PropsTable(PropertyGroup, PropsTableBase):
     ptable_id_layer_name = PROP_CHAIN_ID
 
+    @classmethod
+    def register(cls):
+        Mesh.jbeam_node_prop_chain = PointerProperty(type=cls)
+        Mesh.jbeam_beam_prop_chain = PointerProperty(type=cls)
+        Mesh.jbeam_triangle_prop_chain = PointerProperty(type=cls)
+
+    @classmethod
+    def unregister(cls):
+        del Mesh.jbeam_node_prop_chain
+        del Mesh.jbeam_beam_prop_chain
+        del Mesh.jbeam_triangle_prop_chain
+
 
 class QuadsPropTable(PropertyGroup, PropsTableBase):
     ptable_id_layer_name = 'JBEAM_QUADS_PTABLE_ID'
@@ -84,6 +96,14 @@ class QuadsPropTable(PropertyGroup, PropsTableBase):
         :rtype: QuadsPropTable
         """
         return mesh.jbeam_quads_ptable
+
+    @classmethod
+    def register(cls):
+        Mesh.jbeam_quads_ptable = PointerProperty(type=cls)
+
+    @classmethod
+    def unregister(cls):
+        del Mesh.jbeam_quads_ptable
 
 
 def get_table_storage_ctxman(me, bm_elem_seq):
@@ -107,15 +127,9 @@ def get_table_storage_ctxman(me, bm_elem_seq):
             raise ValueError('%r is not supported table storage' % bm_elem_seq)
 
 
-def register():
-    Mesh.jbeam_node_prop_chain = PointerProperty(type=PropsTable)
-    Mesh.jbeam_beam_prop_chain = PointerProperty(type=PropsTable)
-    Mesh.jbeam_triangle_prop_chain = PointerProperty(type=PropsTable)
-    Mesh.jbeam_quads_ptable = PointerProperty(type=QuadsPropTable)
-
-
-def unregister():
-    del Mesh.jbeam_node_prop_chain
-    del Mesh.jbeam_beam_prop_chain
-    del Mesh.jbeam_triangle_prop_chain
-    del Mesh.jbeam_quads_ptable
+classes = (
+    Counter,
+    PropsTableBase.Prop,
+    PropsTable,
+    QuadsPropTable,
+)

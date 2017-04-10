@@ -78,3 +78,8 @@ class ImportJBeam(Operator, ImportHelper):
 
 def menu_func_draw(self, context):
     self.layout.operator(ImportJBeam.bl_idname)
+
+
+classes = (
+    ImportJBeam,
+)

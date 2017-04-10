@@ -50,3 +50,8 @@ class Rename(Operator):
                 break
 
         return {'FINISHED'}
+
+
+classes = (
+    Rename,
+)

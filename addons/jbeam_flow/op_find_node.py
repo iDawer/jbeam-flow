@@ -38,3 +38,8 @@ class FindNode(Operator):
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
+
+
+classes = (
+    FindNode,
+)

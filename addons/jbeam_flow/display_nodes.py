@@ -105,3 +105,6 @@ def unregister():
     bpy.types.VIEW3D_PT_view3d_meshdisplay.remove(draw_ui_mesh_display)
     bpy.types.OBJECT_PT_display.remove(draw_ui_mesh_display)
     bpy.types.VIEW3D_PT_view3d_display.remove(draw_ui_display)
+
+
+classes = ()
