@@ -51,3 +51,8 @@ class JbeamNodeEditPanel(bpy.types.Panel):
     def unregister(cls):
         del bpy.types.WindowManager.proxy_jbeam_node_id
         del bpy.types.WindowManager.proxy_jbeam_node_prop_src
+
+
+classes = (
+    JbeamNodeEditPanel,
+)

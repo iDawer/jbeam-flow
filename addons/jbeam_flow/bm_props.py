@@ -88,6 +88,7 @@ def make_rna_proxy(bm_prop: ABCProperty, bpy_prop, bmelem_seq_prop: types.Member
     Makes RNA porperty definition which redirects attribute access to active bmesh element's custom data. 
     This function uses RNA internals not documented in PyAPI. Tested in Blender 2.78a. 
     """
+
     # '_' in args is a property owner class instance
     def update(_, context):
         if context.area:
@@ -119,3 +120,6 @@ def make_rna_proxy(bm_prop: ABCProperty, bpy_prop, bmelem_seq_prop: types.Member
     prop_def_args['set'] = setval
     prop_def_args['update'] = update
     return bpy_prop
+
+
+classes = ()
