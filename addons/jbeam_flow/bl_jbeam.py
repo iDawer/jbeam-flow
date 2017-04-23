@@ -138,12 +138,17 @@ class Node(Element):
     id = bm_props.String('jbeamNodeId')
 
     def __init__(self, bm: BMesh, vert: BMVert):
-        super().__init__(bm.verts.layers, vert)
+        super().__init__(bm, vert)
+        self.layers = bm.verts.layers
 
     @classmethod
     def ensure_data_layers(cls, bm: BMesh):
         super().ensure_data_layers(bm)
         cls.id.ensure_layer(bm.verts.layers)
+
+    @staticmethod
+    def is_valid_type(bm_elem: bm_props.BMElem) -> bool:
+        return isinstance(bm_elem, BMVert)
 
 
 class QuadsPropTable(PropertyGroup, PropsTableBase):

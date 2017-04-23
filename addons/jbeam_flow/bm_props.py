@@ -24,9 +24,13 @@ class ElemWrapper:
     Makes it possible to use descriptors to access custom data.
     """
 
-    def __init__(self, layers, bm_elem: BMElem):
+    def __init__(self, bm: bmtypes.BMesh, bm_elem: BMElem):
         self.bm_elem = bm_elem  # type: BMElem
-        self.layers = layers  # type: BMLayerAccess
+        self.layers = None  # type: BMLayerAccess
+
+    @staticmethod
+    def is_valid_type(bm_elem: BMElem) -> bool:
+        raise NotImplementedError()
 
     @classmethod
     def ensure_data_layers(cls, bm: bmtypes.BMesh):
@@ -61,7 +65,7 @@ class String(ABCProperty):
     def __get__(self, instance: ElemWrapper, owner):
         try:
             return instance.bm_elem[instance.layers.string[self.layer_name]].decode()
-        except AttributeError:
+        except AttributeError:  # This seems to be buggy when there is no data layer.
             # '__get__' called from class
             if instance is None:
                 return self
@@ -82,11 +86,14 @@ class String(ABCProperty):
         return layers.string.get(self.layer_name)
 
 
-def make_rna_proxy(bm_prop: ABCProperty, bpy_prop, bmelem_seq_prop: types.MemberDescriptorType,
-                   bmelem_type: Type[BMElem]):
+def make_rna_proxy(wrapper_t: Type[ElemWrapper], bm_prop: ABCProperty, bpy_prop):
     """ 
     Makes RNA porperty definition which redirects attribute access to active bmesh element's custom data. 
     This function uses RNA internals not documented in PyAPI. Tested in Blender 2.78a. 
+    :param wrapper_t: implemented ElemWrapper class
+    :param bm_prop: bm elem property to proxy.
+    :param bpy_prop: base RNA property (desctiption, options).
+    :return: 
     """
 
     # '_' in args is a property owner class instance
@@ -98,10 +105,10 @@ def make_rna_proxy(bm_prop: ABCProperty, bpy_prop, bmelem_seq_prop: types.Member
         eo = bpy.context.edit_object
         bm = bmesh.from_edit_mesh(eo.data)
         elem = bm.select_history.active
-        bmelem_seq = bmelem_seq_prop.__get__(bm)  # type: BMElemSeq
-        data_layer = bm_prop.get_layer(bmelem_seq.layers)
-        if elem and isinstance(elem, bmelem_type) and data_layer:
-            elem[data_layer] = value.encode()
+        if wrapper_t.is_valid_type(elem):
+            wrapped = wrapper_t(bm, elem)
+            wrapped.ensure_data_layers(bm)
+            bm_prop.__set__(wrapped, value)
 
     def getval(_):
         eo = bpy.context.edit_object
@@ -109,11 +116,11 @@ def make_rna_proxy(bm_prop: ABCProperty, bpy_prop, bmelem_seq_prop: types.Member
             return ""
         bm = bmesh.from_edit_mesh(eo.data)
         elem = bm.select_history.active
-        bmelem_seq = bmelem_seq_prop.__get__(bm)  # type: BMElemSeq
-        data_layer = bm_prop.get_layer(bmelem_seq.layers)
-        if elem and isinstance(elem, bmelem_type) and data_layer:
-            return elem[data_layer].decode()
-        return ""
+        if wrapper_t.is_valid_type(elem):
+            wrapped = wrapper_t(bm, elem)
+            wrapped.ensure_data_layers(bm)
+            return bm_prop.__get__(wrapped, wrapper_t)
+        return ""  # ToDo: return default value
 
     prop_def_args = bpy_prop[1]  # type: dict
     prop_def_args['get'] = getval
