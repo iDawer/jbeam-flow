@@ -86,6 +86,33 @@ class String(ABCProperty):
         return layers.string.get(self.layer_name)
 
 
+class Boolean(ABCProperty):
+    def __init__(self, layer_name: str):
+        """ :rtype: bool or Boolean """  # 'typing' module does not support des
+        super().__init__(layer_name)
+
+    def __get__(self, instance: ElemWrapper, owner):
+        try:
+            return bool(instance.bm_elem[instance.layers.int[self.layer_name]])
+        except AttributeError:  # This seems to be buggy when there is no data layer.
+            # '__get__' called from class
+            if instance is None:
+                return self
+            raise  # other error occurred
+
+    def __set__(self, instance: ElemWrapper, value: bool):
+        instance.bm_elem[instance.layers.int[self.layer_name]] = int(value)
+
+    def ensure_layer(self, layers: BMLayerAccess) -> bmtypes.BMLayerItem:
+        try:
+            return layers.int[self.layer_name]
+        except KeyError:
+            return layers.int.new(self.layer_name)
+
+    def get_layer(self, layers: BMLayerAccess) -> bmtypes.BMLayerItem:
+        return layers.int.get(self.layer_name)
+
+
 def make_rna_proxy(wrapper_t: Type[ElemWrapper], bm_prop: ABCProperty, bpy_prop):
     """ 
     Makes RNA porperty definition which redirects attribute access to active bmesh element's custom data. 

@@ -248,28 +248,26 @@ class PartObjectsBuilder(jbeam.EvalBase):
     # ============================== beams ==============================
 
     def section_beams(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_) -> str:
-        type_lyr = bm.edges.layers.int.new('jbeam_type')
-        inl_props_lyr = bm.edges.layers.string.new('jbeam_prop')
+        bl_jbeam.Beam.ensure_data_layers(bm)
         beams_ctx = ctx.array().values()
         if beams_ctx:
             with bl_jbeam.get_table_storage_ctxman(me, bm.edges) as ptable:  # type: bl_jbeam.PropsTable
                 for beam_props, inl_prop_src in self.table(beams_ctx, ptable):
-                    beam = self.beam(beam_props, bm, type_lyr)
+                    beam = self.beam(beam_props, inl_prop_src, bm)
                     if beam:
-                        ptable.assign_to_last_prop(beam)
-                        if inl_prop_src:
-                            beam[inl_props_lyr] = inl_prop_src.encode()
+                        ptable.assign_to_last_prop(beam.bm_elem)
         bm.edges.ensure_lookup_table()
         return '${beams}'
 
-    def beam(self, props: ExtDict, bm, beam_layer):
+    def beam(self, props: ExtDict, inlined_props_src: str, bm) -> Optional[bl_jbeam.Beam]:
         ids = props['id1:', 'id2:']
         nodes = self.ensure_nodes(ids, bm)
         try:
             edge = bm.edges.new(nodes)  # throws on duplicates
-            # set explicitly cuz triangles can have 'non beam' edges
-            edge[beam_layer] = 1
-            return edge
+            beam = bl_jbeam.Beam(bm, edge)
+            if inlined_props_src is not None:
+                beam.props_src = inlined_props_src
+            return beam
         except ValueError as err:
             self._print('\t', err, list(ids))  # ToDo handle duplicates
             return None

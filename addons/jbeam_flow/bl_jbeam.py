@@ -2,7 +2,7 @@ import collections
 from contextlib import contextmanager
 from typing import Union
 
-from bmesh.types import BMesh, BMVertSeq, BMEdgeSeq, BMFaceSeq, BMLayerItem, BMVert
+from bmesh.types import BMesh, BMVertSeq, BMEdgeSeq, BMFaceSeq, BMLayerItem, BMVert, BMEdge
 from bpy.props import IntProperty, StringProperty, CollectionProperty, PointerProperty
 from bpy.types import PropertyGroup, Mesh
 
@@ -129,10 +129,6 @@ class Element(bm_props.ElemWrapper):
     # todo: property access (ChainMap?)
     props_src = bm_props.String('JBEAM_ELEM_PROPS')
 
-    @classmethod
-    def ensure_data_layers(cls, bm: BMesh):
-        cls.props_src.ensure_layer(bm.verts.layers)
-
 
 class Node(Element):
     id = bm_props.String('jbeamNodeId')
@@ -143,12 +139,31 @@ class Node(Element):
 
     @classmethod
     def ensure_data_layers(cls, bm: BMesh):
-        super().ensure_data_layers(bm)
+        cls.props_src.ensure_layer(bm.verts.layers)
         cls.id.ensure_layer(bm.verts.layers)
 
     @staticmethod
     def is_valid_type(bm_elem: bm_props.BMElem) -> bool:
         return isinstance(bm_elem, BMVert)
+
+
+class Beam(Element):
+    is_ghost = bm_props.Boolean('jbeam.beam.is_ghost')
+    """True when beam is ghost, default False. 
+    Ghost beams are not exported. Useful for triangles with edges which are not defined as beams."""
+
+    def __init__(self, bm: BMesh, edge: BMEdge):
+        super().__init__(bm, edge)
+        self.layers = bm.edges.layers
+
+    @classmethod
+    def ensure_data_layers(cls, bm: BMesh):
+        cls.is_ghost.ensure_layer(bm.edges.layers)
+        cls.props_src.ensure_layer(bm.edges.layers)
+
+    @staticmethod
+    def is_valid_type(bm_elem: bm_props.BMElem) -> bool:
+        return isinstance(bm_elem, BMEdge)
 
 
 class QuadsPropTable(PropertyGroup, PropsTableBase):
