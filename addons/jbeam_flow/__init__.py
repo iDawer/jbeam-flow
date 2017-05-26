@@ -53,6 +53,7 @@ with reloadable(__name__, locals()) as loaded:
         jbeam,
         bl_jbeam,
         jbeam_utils,
+        text_prop_editor,
         op_import,
         op_sync_to_jbeam,
         op_move_dummies,
