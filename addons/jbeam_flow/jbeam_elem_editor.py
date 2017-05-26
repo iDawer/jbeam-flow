@@ -48,7 +48,7 @@ class JbeamNodeEditPanel(bpy.types.Panel):
         obj = context.object
         bm = bmesh.from_edit_mesh(obj.data)
         v = bm.select_history.active
-        if v is None:
+        if v is None or not isinstance(v, bmesh.types.BMVert):
             self.layout.row().label("No active node")
             return
 
@@ -79,7 +79,7 @@ class JbeamBeamEditPanel(bpy.types.Panel):
         obj = context.object
         bm = bmesh.from_edit_mesh(obj.data)
         edge = bm.select_history.active
-        if edge is None:
+        if edge is None or not isinstance(edge, bmesh.types.BMEdge):
             self.layout.row().label("No active edge")
             return
 
