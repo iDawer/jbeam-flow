@@ -119,7 +119,7 @@ def make_rna_proxy(wrapper_t: Type[ElemWrapper], bm_prop: ABCProperty, bpy_prop)
     This function uses RNA internals not documented in PyAPI. Tested in Blender 2.78a. 
     :param wrapper_t: implemented ElemWrapper class
     :param bm_prop: bm elem property to proxy.
-    :param bpy_prop: base RNA property (desctiption, options).
+    :param bpy_prop: base RNA property (description, options).
     :return: 
     """
 
@@ -128,32 +128,51 @@ def make_rna_proxy(wrapper_t: Type[ElemWrapper], bm_prop: ABCProperty, bpy_prop)
         if context.area:
             context.area.tag_redraw()
 
-    def setval(_, value: str):
+    def setval(_, value):
         eo = bpy.context.edit_object
+        if not eo or eo.type != 'MESH':
+            raise NoEditMeshError("There is no edit mesh in the context.")
         bm = bmesh.from_edit_mesh(eo.data)
         elem = bm.select_history.active
         if wrapper_t.is_valid_type(elem):
             wrapped = wrapper_t(bm, elem)
             wrapped.ensure_data_layers(bm)
             bm_prop.__set__(wrapped, value)
+        else:
+            raise ElementTypeError("Trying to set property to wrong type of active mesh element: {}".format(elem))
 
     def getval(_):
         eo = bpy.context.edit_object
         if not eo or eo.type != 'MESH':
-            return ""
+            raise NoEditMeshError("There is no edit mesh in the context.")
         bm = bmesh.from_edit_mesh(eo.data)
         elem = bm.select_history.active
         if wrapper_t.is_valid_type(elem):
             wrapped = wrapper_t(bm, elem)
             wrapped.ensure_data_layers(bm)
             return bm_prop.__get__(wrapped, wrapper_t)
-        return ""  # ToDo: return default value
+        else:
+            raise ElementTypeError("Trying to read from wrong type of active mesh element: {}".format(elem))
 
     prop_def_args = bpy_prop[1]  # type: dict
     prop_def_args['get'] = getval
     prop_def_args['set'] = setval
     prop_def_args['update'] = update
     return bpy_prop
+
+
+class Error(Exception):
+    def __init__(self, message):
+        self.message = message
+
+
+class NoEditMeshError(Error):
+    pass
+
+
+class ElementTypeError(Error):
+    """Raised when type of active mesh element is wrong"""
+    pass
 
 
 classes = ()
