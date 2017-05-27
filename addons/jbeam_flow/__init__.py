@@ -50,6 +50,7 @@ with reloadable(__name__, locals()) as loaded:
     import bpy
     from . import (
         jb,
+        bm_props,
         jbeam,
         bl_jbeam,
         jbeam_utils,
@@ -63,6 +64,7 @@ with reloadable(__name__, locals()) as loaded:
         op_find_node,
         op_import_vehicle,
         op_load_vehicle_config,
+        jbeam_elem_editor,
     )
 
 

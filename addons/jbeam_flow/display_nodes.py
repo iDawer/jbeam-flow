@@ -7,6 +7,8 @@ import bmesh
 from bpy.props import BoolProperty
 from bpy_extras.view3d_utils import location_3d_to_region_2d
 
+from . import bl_jbeam
+
 
 def draw_ui_mesh_display(self, context):
     if context.active_object.type == 'MESH':
@@ -41,7 +43,7 @@ class KotL:  # magic here!
         KotL.draw_nodes_handle = None
 
 
-def draw_nodes():
+def draw_nodes(layer_name=bl_jbeam.Node.id.layer_name):
     # enter_time = time.time()
     # i = 0
 
@@ -55,7 +57,7 @@ def draw_nodes():
         else:
             bm = bmesh.new()
             bm.from_mesh(obj.data)
-        id_layer = bm.verts.layers.string.get('jbeamNodeId')
+        id_layer = bm.verts.layers.string.get(layer_name)
         if id_layer is None:
             continue
 

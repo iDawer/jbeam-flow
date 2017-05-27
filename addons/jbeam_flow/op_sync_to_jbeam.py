@@ -4,10 +4,10 @@ import bmesh
 import bpy
 from bpy.types import Operator
 
-from . import jbeam_utils
+from . import bl_jbeam, jbeam_utils
 from .jbeam.misc import Triangle
 
-use_profile = True
+use_profile = False
 
 
 class SyncMeshToText(Operator):
@@ -50,7 +50,7 @@ class SyncMeshToText(Operator):
         part = jbeam_utils.NodeCollector(part_name)
         part.visit(tree)
 
-        id_lyr = bm.verts.layers.string['jbeamNodeId']
+        id_lyr = bm.verts.layers.string[bl_jbeam.Node.id.layer_name]
         nodes_to_del = part.nodes.copy()
         # update vert coordinates
         for vert in bm.verts:
