@@ -1,4 +1,5 @@
 import bpy
+from . import bm_props
 
 
 class PropEditorSettings(bpy.types.PropertyGroup):
@@ -88,10 +89,14 @@ class ApplyOperator(bpy.types.Operator):
             prop = eval(settings.full_data_path)  # type: bpy.types.bpy_struct
             try:
                 setattr(prop, settings.attr, context.edit_text.as_string())
+                # exception suppressing workaround
+                if bm_props.last_error:
+                    raise bm_props.last_error
             except Exception as err:
                 self.report({'ERROR'}, "Cannot apply changes: {}".format(err))
                 return {'CANCELLED'}
             else:
+                self.report({'INFO'}, "Applied to active element")
                 return {'FINISHED'}
 
 
