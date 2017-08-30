@@ -8,6 +8,7 @@ class PropEditorSettings(bpy.types.PropertyGroup):
         description="Full path to a structure that has a specific property to edit.")
     attr = bpy.props.StringProperty(name="Property", description="Text property name.")
     pointer = bpy.props.StringProperty()
+    apply_text = bpy.props.StringProperty(default="Apply")
 
     def validate_path(self):
         try:
@@ -15,6 +16,15 @@ class PropEditorSettings(bpy.types.PropertyGroup):
         except:
             return False
         return str(prop.as_pointer()) == self.pointer
+
+    def copy_to(self, other):
+        """ Shallow copy
+        :type other: PropEditorSettings
+        :rtype: PropEditorSettings
+        """
+        for key, value in self.items():
+            other[key] = value
+        return other
 
     @classmethod
     def register(cls):
@@ -31,22 +41,19 @@ class EditOperator(bpy.types.Operator):
     bl_label = "Edit in Text Editor"
     bl_options = {'REGISTER'}
 
-    full_data_path = bpy.props.StringProperty()
-    attr = bpy.props.StringProperty()
+    settings = bpy.props.PointerProperty(type=PropEditorSettings)  # type: PropEditorSettings
 
     def execute(self, context):
         try:
-            prop = eval(self.full_data_path)  # type: bpy.types.bpy_struct
+            prop = eval(self.settings.full_data_path)  # type: bpy.types.bpy_struct
         except Exception as err:
             self.report({'ERROR'},
-                        "Cannot evaluate data path '{}': {}".format(self.full_data_path, err))
+                        "Cannot evaluate data path '{}': {}".format(self.settings.full_data_path, err))
             return {'CANCELLED'}
 
         text = bpy.data.texts.new("Text Property Editor")
-        text.from_string(getattr(prop, self.attr))
-        settings = text.jbeam_flow  # type: PropEditorSettings
-        settings.full_data_path = self.full_data_path
-        settings.attr = self.attr
+        text.from_string(getattr(prop, self.settings.attr))
+        settings = self.settings.copy_to(text.jbeam_flow)
         settings.pointer = str(prop.as_pointer())
         settings.active = True
 
@@ -79,8 +86,13 @@ class ApplyOperator(bpy.types.Operator):
             return {'CANCELLED'}
         else:
             prop = eval(settings.full_data_path)  # type: bpy.types.bpy_struct
-            setattr(prop, settings.attr, context.edit_text.as_string())
-            return {'FINISHED'}
+            try:
+                setattr(prop, settings.attr, context.edit_text.as_string())
+            except Exception as err:
+                self.report({'ERROR'}, "Cannot apply changes: {}".format(err))
+                return {'CANCELLED'}
+            else:
+                return {'FINISHED'}
 
 
 class TextPropEditPanel(bpy.types.Panel):
@@ -101,7 +113,9 @@ class TextPropEditPanel(bpy.types.Panel):
         layout.prop(settings, 'attr', icon='RNA')
 
         # layout.prop(settings, 'pointer')
-        layout.operator(ApplyOperator.bl_idname, icon='FILE_TICK' if settings.validate_path() else 'ERROR')
+        layout.operator(ApplyOperator.bl_idname,
+                        text=settings.apply_text,
+                        icon='FILE_TICK' if settings.validate_path() else 'ERROR')
 
 
 classes = (

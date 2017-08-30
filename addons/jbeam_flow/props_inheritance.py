@@ -34,8 +34,8 @@ class PropsMixin:
         # editor button
         if jb_prop == data.chain_list[data.active_index]:
             op_props = row.operator(text_prop_editor.EditOperator.bl_idname, text="", icon='TEXT')
-            op_props.full_data_path = repr(jb_prop)
-            op_props.attr = 'src'
+            op_props.settings.full_data_path = repr(jb_prop)
+            op_props.settings.attr = 'src'
 
     def draw_filter(self, context, layout):
         # no filter

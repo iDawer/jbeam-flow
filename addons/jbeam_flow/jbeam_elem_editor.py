@@ -2,7 +2,11 @@ import bmesh
 import bpy
 from bpy.props import StringProperty, PointerProperty, BoolProperty
 
-from . import bl_jbeam, bm_props
+from . import (
+    bl_jbeam,
+    bm_props,
+    text_prop_editor,
+)
 
 
 class ProxyGroup(bpy.types.PropertyGroup):
@@ -18,7 +22,7 @@ class ProxyGroup(bpy.types.PropertyGroup):
     beam_is_ghost = bm_props.make_rna_proxy(
         bl_jbeam.Beam,
         bl_jbeam.Beam.is_ghost,
-        BoolProperty(name="Ghost", description="Ghost beams are not exported. "
+        BoolProperty(name="Ghost", description="Ghost beams will not export. "
                                                "Useful for triangles with edges which are not defined as beams."))
     beam_prop_src = bm_props.make_rna_proxy(
         bl_jbeam.Beam,
@@ -62,7 +66,13 @@ class JbeamNodeEditPanel(bpy.types.Panel):
         if props_lyr is None:
             self.layout.row().label("No properties data layer")
         else:
-            self.layout.prop(context.window_manager.jbeam_flow_proxies, "node_prop_src")
+            row = self.layout.row(align=True)
+            row.prop(context.window_manager.jbeam_flow_proxies, 'node_prop_src')
+            op_props = row.operator(text_prop_editor.EditOperator.bl_idname, text="",
+                                    icon='TEXT')  # type: text_prop_editor.EditOperator
+            op_props.settings.full_data_path = repr(context.window_manager.jbeam_flow_proxies)
+            op_props.settings.attr = 'node_prop_src'
+            op_props.settings.apply_text = "Apply to active node"
 
 
 class JbeamBeamEditPanel(bpy.types.Panel):
