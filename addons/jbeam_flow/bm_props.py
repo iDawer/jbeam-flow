@@ -130,7 +130,12 @@ def make_rna_proxy(wrapper_t: Type[ElemWrapper], bm_prop: ABCProperty, bpy_prop)
 
     getter_sentinel = object()
 
+    # Note: Blender 2.78a suppresses exceptions raised inside get/set functions.
     def getset(_, value=getter_sentinel):
+        # exception suppressing workaround
+        global last_error
+        last_error = None
+
         eo = bpy.context.edit_object
         if not eo or eo.type != 'MESH':
             raise NoEditMeshError("There is no edit mesh in the context.")
@@ -153,9 +158,15 @@ def make_rna_proxy(wrapper_t: Type[ElemWrapper], bm_prop: ABCProperty, bpy_prop)
     return bpy_prop
 
 
+# Last error raised by rna proxy
+last_error = None  # type: Error
+
+
 class Error(Exception):
     def __init__(self, message):
         self.message = message
+        global last_error
+        last_error = self
 
 
 class NoEditMeshError(Error):
