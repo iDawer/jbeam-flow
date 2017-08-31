@@ -137,19 +137,22 @@ def make_rna_proxy(wrapper_t: Type[ElemWrapper], bm_prop: ABCProperty, bpy_prop)
         last_error = None
 
         eo = bpy.context.edit_object
-        if not eo or eo.type != 'MESH':
-            raise NoEditMeshError("There is no edit mesh in the context.")
-        bm = bmesh.from_edit_mesh(eo.data)
-        elem = bm.select_history.active
-        if wrapper_t.is_valid_type(elem):
+        try:
+            if not eo or eo.type != 'MESH':
+                raise NoEditMeshError("There is no edit mesh in the context.")
+            bm = bmesh.from_edit_mesh(eo.data)
+            elem = bm.select_history.active
+            if not wrapper_t.is_valid_type(elem):
+                raise ElementTypeError("Active mesh element has inappropriate type: {}".format(elem))
             wrapped = wrapper_t(bm, elem)
             wrapped.ensure_data_layers(bm)
             if value is getter_sentinel:
                 return bm_prop.__get__(wrapped, wrapper_t)
             else:
                 bm_prop.__set__(wrapped, value)
-        else:
-            raise ElementTypeError("Active mesh element has inappropriate type: {}".format(elem))
+        except Exception as err:
+            last_error = err
+            raise  # continue propagation
 
     prop_def_args = bpy_prop[1]  # type: dict
     prop_def_args['get'] = lambda _: getset(_)  # Blender requires exactly 1 argument
@@ -165,8 +168,6 @@ last_error = None  # type: Error
 class Error(Exception):
     def __init__(self, message):
         self.message = message
-        global last_error
-        last_error = self
 
 
 class NoEditMeshError(Error):
