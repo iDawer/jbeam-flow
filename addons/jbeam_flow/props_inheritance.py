@@ -11,7 +11,10 @@ from bpy.types import (
     Operator,
 )
 
-from . import bl_jbeam
+from . import (
+    bl_jbeam,
+    text_prop_editor,
+)
 
 
 class PropsMixin:
@@ -27,6 +30,12 @@ class PropsMixin:
             split = row.split()
             split.alignment = 'RIGHT'
             split.label(text=str(data.counter[str_id]), icon='PINNED')
+
+        # editor button
+        if jb_prop == data.chain_list[data.active_index]:
+            op_props = row.operator(text_prop_editor.EditOperator.bl_idname, text="", icon='TEXT')
+            op_props.settings.full_data_path = repr(jb_prop)
+            op_props.settings.attr = 'src'
 
     def draw_filter(self, context, layout):
         # no filter
