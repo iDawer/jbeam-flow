@@ -66,8 +66,9 @@ class JbeamNodeEditPanel(bpy.types.Panel):
         if props_lyr is None:
             self.layout.row().label("No properties data layer")
         else:
+            self.layout.label("Private properties:")
             row = self.layout.row(align=True)
-            row.prop(context.window_manager.jbeam_flow_proxies, 'node_private_props')
+            row.prop(context.window_manager.jbeam_flow_proxies, 'node_private_props', text="")
             op_props = row.operator(text_prop_editor.EditOperator.bl_idname, text="",
                                     icon='TEXT')  # type: text_prop_editor.EditOperator
             op_props.settings.full_data_path = repr(context.window_manager.jbeam_flow_proxies)
@@ -103,8 +104,9 @@ class JbeamBeamEditPanel(bpy.types.Panel):
         if props_lyr is None:
             self.layout.row().label("No properties data layer")
         else:
+            self.layout.label("Private properties:")
             row = self.layout.row(align=True)
-            row.prop(context.window_manager.jbeam_flow_proxies, 'beam_private_props')
+            row.prop(context.window_manager.jbeam_flow_proxies, 'beam_private_props', text="")
             op_props = row.operator(text_prop_editor.EditOperator.bl_idname, text="",
                                     icon='TEXT')  # type: text_prop_editor.EditOperator
             op_props.settings.full_data_path = repr(context.window_manager.jbeam_flow_proxies)
