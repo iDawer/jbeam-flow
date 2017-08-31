@@ -168,11 +168,10 @@ class PartObjectsBuilder(jbeam.EvalBase):
         :param co: mathutils.Vector
         :return: bmesh.types.BMVert
         """
-        id_layer = bm.verts.layers.string.active
-        if id_layer is None:
-            # in case if no nodes section, i.e. beams with parent part nodes
-            # Beware it kills existing verts in '_vertsIndex' map.
-            id_layer = bm.verts.layers.string.new('jbeamNodeId')
+        # Init in case if no nodes section, i.e. beams with parent part nodes
+        # Beware it kills existing verts in '_vertsIndex' map.
+        id_layer = bl_jbeam.Node.id.ensure_layer(bm.verts.layers)
+
         if co:
             vert = bm.verts.new(co)
             # hang dummy node
@@ -224,53 +223,51 @@ class PartObjectsBuilder(jbeam.EvalBase):
 
     # ============================== nodes ==============================
 
-    def section_nodes(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_) -> str:
-        id_layer = bm.verts.layers.string.new('jbeamNodeId')
-        prop_layer = bm.verts.layers.string.new('jbeamNodeProps')
+    def section_nodes(self, ctx: _ValueArrayContext = None, me=None, bm: bmesh.types.BMesh = None, **_) -> str:
+        bl_jbeam.Node.ensure_data_layers(bm)
         nodes_ctx = ctx.array().values()
         if nodes_ctx:
             with bl_jbeam.get_table_storage_ctxman(me, bm.verts) as ptable:  # type: bl_jbeam.PropsTable
                 for node_props, inlined_props_src in self.table(nodes_ctx, ptable):
-                    node = self.node(node_props, inlined_props_src, bm, id_layer, prop_layer)
+                    node = self.node(node_props, inlined_props_src, bm)
                     ptable.assign_to_last_prop(node)
         bm.verts.ensure_lookup_table()
         return '${nodes}'
 
-    def node(self, props: ExtDict, inlined_props_src: str, bm, id_layer, iprop_layer):
+    def node(self, props: ExtDict, inlined_props_src: str, bm):
         vert = bm.verts.new(props['posX', 'posY', 'posZ'])
+        node = bl_jbeam.Node(bm, vert)
         _id = props['id']
-        vert[id_layer] = _id.encode()  # set node id to the data layer
+        node.id = _id
         self._vertsIndex[_id] = vert
         # inlined node props
         if inlined_props_src is not None:
-            vert[iprop_layer] = inlined_props_src.encode()
+            node.props_src = inlined_props_src
         return vert
 
     # ============================== beams ==============================
 
     def section_beams(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_) -> str:
-        type_lyr = bm.edges.layers.int.new('jbeam_type')
-        inl_props_lyr = bm.edges.layers.string.new('jbeam_prop')
+        bl_jbeam.Beam.ensure_data_layers(bm)
         beams_ctx = ctx.array().values()
         if beams_ctx:
             with bl_jbeam.get_table_storage_ctxman(me, bm.edges) as ptable:  # type: bl_jbeam.PropsTable
                 for beam_props, inl_prop_src in self.table(beams_ctx, ptable):
-                    beam = self.beam(beam_props, bm, type_lyr)
+                    beam = self.beam(beam_props, inl_prop_src, bm)
                     if beam:
-                        ptable.assign_to_last_prop(beam)
-                        if inl_prop_src:
-                            beam[inl_props_lyr] = inl_prop_src.encode()
+                        ptable.assign_to_last_prop(beam.bm_elem)
         bm.edges.ensure_lookup_table()
         return '${beams}'
 
-    def beam(self, props: ExtDict, bm, beam_layer):
+    def beam(self, props: ExtDict, inlined_props_src: str, bm) -> Optional[bl_jbeam.Beam]:
         ids = props['id1:', 'id2:']
         nodes = self.ensure_nodes(ids, bm)
         try:
             edge = bm.edges.new(nodes)  # throws on duplicates
-            # set explicitly cuz triangles can have 'non beam' edges
-            edge[beam_layer] = 1
-            return edge
+            beam = bl_jbeam.Beam(bm, edge)
+            if inlined_props_src is not None:
+                beam.props_src = inlined_props_src
+            return beam
         except ValueError as err:
             self._print('\t', err, list(ids))  # ToDo handle duplicates
             return None

@@ -2,6 +2,8 @@ import bmesh
 from bpy.props import StringProperty
 from bpy.types import Operator
 
+from . import bl_jbeam
+
 
 class FindNode(Operator):
     bl_idname = "scene.jbeam_find_node"
@@ -24,7 +26,7 @@ class FindNode(Operator):
             else:
                 bm = bmesh.new()
                 bm.from_mesh(obj.data)
-            id_layer = bm.verts.layers.string.get('jbeamNodeId')
+            id_layer = bm.verts.layers.string.get(bl_jbeam.Node.id.layer_name)
             if id_layer is None:
                 continue
             for vert in bm.verts:

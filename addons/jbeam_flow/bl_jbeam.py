@@ -2,11 +2,11 @@ import collections
 from contextlib import contextmanager
 from typing import Union
 
-from bmesh.types import BMVertSeq, BMEdgeSeq, BMFaceSeq, BMLayerItem
+from bmesh.types import BMesh, BMVertSeq, BMEdgeSeq, BMFaceSeq, BMLayerItem, BMVert, BMEdge
 from bpy.props import IntProperty, StringProperty, CollectionProperty, PointerProperty
 from bpy.types import PropertyGroup, Mesh
 
-from . import jbeam
+from . import bm_props, jbeam
 from .jbeam.misc import Switch
 
 PROP_CHAIN_ID = 'jbeam_prop_chain_id'
@@ -59,7 +59,7 @@ class PropsTableBase(jbeam.Table):
         finally:
             self._pid_key = None
 
-    def new(self):
+    def new_prop(self):
         return self.add_prop("{}")
 
     @classmethod
@@ -85,6 +85,85 @@ class PropsTable(PropertyGroup, PropsTableBase):
         del Mesh.jbeam_node_prop_chain
         del Mesh.jbeam_beam_prop_chain
         del Mesh.jbeam_triangle_prop_chain
+
+
+class UnusedNodesTable(PropertyGroup, PropsTableBase):
+    """ Optimise custom data accecss. """
+
+    # not used actually, need for shut up IDE complaining
+    def __init__(self):
+        super().__init__()
+        self._node_id_lyr = None  # type: BMLayerItem
+        self._node_prop_lyr = None  # type: BMLayerItem
+
+    @contextmanager
+    def init(self, vert_seq: BMVertSeq):
+        # see PropsTableBase.init for details
+        with super().init(vert_seq):
+            self._node_id_lyr = vert_seq.layers.string.new(Node.id.layer_name)
+            self._node_prop_lyr = vert_seq.layers.string.new(Node.props_src.layer_name)
+            try:
+                yield self
+            finally:
+                self._node_id_lyr = None
+                self._node_prop_lyr = None
+
+    def new_node(self, bm: BMesh, vert: BMVert):
+        if not (self._node_prop_lyr and self._node_id_lyr):
+            raise ValueError("NodesTable.new method allowed only under 'with NodesTable.init()' block")
+
+        # raise NotImplementedError()
+        return Node(bm, vert)
+
+    @property
+    def node_id_lyr(self):
+        return self._node_id_lyr
+
+    @property
+    def node_prop_lyr(self):
+        return self._node_prop_lyr
+
+
+class Element(bm_props.ElemWrapper):
+    """ Base class for jbeam elements (node, beam, etc.) which are represented as bmesh elements. """
+    # todo: property access (ChainMap?)
+    props_src = bm_props.String('JBEAM_ELEM_PROPS')
+
+
+class Node(Element):
+    id = bm_props.String('jbeamNodeId')
+
+    def __init__(self, bm: BMesh, vert: BMVert):
+        super().__init__(bm, vert)
+        self.layers = bm.verts.layers
+
+    @classmethod
+    def ensure_data_layers(cls, bm: BMesh):
+        cls.props_src.ensure_layer(bm.verts.layers)
+        cls.id.ensure_layer(bm.verts.layers)
+
+    @staticmethod
+    def is_valid_type(bm_elem: bm_props.BMElem) -> bool:
+        return isinstance(bm_elem, BMVert)
+
+
+class Beam(Element):
+    is_ghost = bm_props.Boolean('jbeam.beam.is_ghost')
+    """True when beam is ghost, default False. 
+    Ghost beams are not exported. Useful for triangles with edges which are not defined as beams."""
+
+    def __init__(self, bm: BMesh, edge: BMEdge):
+        super().__init__(bm, edge)
+        self.layers = bm.edges.layers
+
+    @classmethod
+    def ensure_data_layers(cls, bm: BMesh):
+        cls.is_ghost.ensure_layer(bm.edges.layers)
+        cls.props_src.ensure_layer(bm.edges.layers)
+
+    @staticmethod
+    def is_valid_type(bm_elem: bm_props.BMElem) -> bool:
+        return isinstance(bm_elem, BMEdge)
 
 
 class QuadsPropTable(PropertyGroup, PropsTableBase):
