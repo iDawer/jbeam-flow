@@ -14,7 +14,7 @@ class ProxyGroup(bpy.types.PropertyGroup):
         bl_jbeam.Node,
         bl_jbeam.Node.id,
         StringProperty(name="Node id", options={'TEXTEDIT_UPDATE'}))
-    node_prop_src = bm_props.make_rna_proxy(
+    node_private_props = bm_props.make_rna_proxy(
         bl_jbeam.Node,
         bl_jbeam.Node.props_src,
         StringProperty(name="Private properties"))
@@ -24,7 +24,7 @@ class ProxyGroup(bpy.types.PropertyGroup):
         bl_jbeam.Beam.is_ghost,
         BoolProperty(name="Ghost", description="Ghost beams will not export. "
                                                "Useful for triangles with edges which are not defined as beams."))
-    beam_prop_src = bm_props.make_rna_proxy(
+    beam_private_props = bm_props.make_rna_proxy(
         bl_jbeam.Beam,
         bl_jbeam.Beam.props_src,
         StringProperty(name="Private properties"))
@@ -67,11 +67,11 @@ class JbeamNodeEditPanel(bpy.types.Panel):
             self.layout.row().label("No properties data layer")
         else:
             row = self.layout.row(align=True)
-            row.prop(context.window_manager.jbeam_flow_proxies, 'node_prop_src')
+            row.prop(context.window_manager.jbeam_flow_proxies, 'node_private_props')
             op_props = row.operator(text_prop_editor.EditOperator.bl_idname, text="",
                                     icon='TEXT')  # type: text_prop_editor.EditOperator
             op_props.settings.full_data_path = repr(context.window_manager.jbeam_flow_proxies)
-            op_props.settings.attr = 'node_prop_src'
+            op_props.settings.attr = 'node_private_props'
             op_props.settings.apply_text = "Apply to active node"
 
 
@@ -103,7 +103,13 @@ class JbeamBeamEditPanel(bpy.types.Panel):
         if props_lyr is None:
             self.layout.row().label("No properties data layer")
         else:
-            self.layout.prop(context.window_manager.jbeam_flow_proxies, "beam_prop_src")
+            row = self.layout.row(align=True)
+            row.prop(context.window_manager.jbeam_flow_proxies, 'beam_private_props')
+            op_props = row.operator(text_prop_editor.EditOperator.bl_idname, text="",
+                                    icon='TEXT')  # type: text_prop_editor.EditOperator
+            op_props.settings.full_data_path = repr(context.window_manager.jbeam_flow_proxies)
+            op_props.settings.attr = 'beam_private_props'
+            op_props.settings.apply_text = "Apply to active beam"
 
 
 classes = (
