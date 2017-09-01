@@ -2,7 +2,7 @@ import collections
 from contextlib import contextmanager
 from typing import Union
 
-from bmesh.types import BMesh, BMVertSeq, BMEdgeSeq, BMFaceSeq, BMLayerItem, BMVert, BMEdge
+from bmesh.types import BMesh, BMVertSeq, BMEdgeSeq, BMFaceSeq, BMLayerItem, BMVert, BMEdge, BMFace
 from bpy.props import IntProperty, StringProperty, CollectionProperty, PointerProperty
 from bpy.types import PropertyGroup, Mesh
 
@@ -127,11 +127,11 @@ class UnusedNodesTable(PropertyGroup, PropsTableBase):
 class Element(bm_props.ElemWrapper):
     """ Base class for jbeam elements (node, beam, etc.) which are represented as bmesh elements. """
     # todo: property access (ChainMap?)
-    props_src = bm_props.String('JBEAM_ELEM_PROPS')
+    props_src = bm_props.String('jbeam.private_props')
 
 
 class Node(Element):
-    id = bm_props.String('jbeamNodeId')
+    id = bm_props.String('jbeam.node.id')
 
     def __init__(self, bm: BMesh, vert: BMVert):
         super().__init__(bm, vert)
@@ -164,6 +164,21 @@ class Beam(Element):
     @staticmethod
     def is_valid_type(bm_elem: bm_props.BMElem) -> bool:
         return isinstance(bm_elem, BMEdge)
+
+
+class Surface(Element):
+    """Collision surface: triangle or quad."""
+    def __init__(self, bm: BMesh, face: BMFace):
+        super().__init__(bm, face)
+        self.layers = bm.faces.layers
+
+    @classmethod
+    def ensure_data_layers(cls, bm: BMesh):
+        cls.props_src.ensure_layer(bm.faces.layers)
+
+    @staticmethod
+    def is_valid_type(bm_elem: bm_props.BMElem) -> bool:
+        return isinstance(bm_elem, BMFace)
 
 
 class QuadsPropTable(PropertyGroup, PropsTableBase):

@@ -275,42 +275,41 @@ class PartObjectsBuilder(jbeam.EvalBase):
     # ============================== collision triangles ==============================
 
     def section_triangles(self, ctx: _ValueArrayContext = None, me=None, bm=None, **_) -> str:
-        inl_props_lyr = bm.faces.layers.string.active or bm.faces.layers.string.new('jbeam_prop')
+        bl_jbeam.Surface.ensure_data_layers(bm)
         triangles_ctx = ctx.array().values()
         if triangles_ctx:
             with bl_jbeam.get_table_storage_ctxman(me, bm.faces) as ptable:  # type: bl_jbeam.PropsTable
                 for tri_prop, inl_prop_src in self.table(triangles_ctx, ptable):
-                    tri = self.face(tri_prop['id1:', 'id2:', 'id3:'], bm)
-                    if tri:
-                        ptable.assign_to_last_prop(tri)
-                        if inl_prop_src:
-                            tri[inl_props_lyr] = inl_prop_src.encode()
+                    surface = self.surface(tri_prop['id1:', 'id2:', 'id3:'], inl_prop_src, bm)
+                    if surface:
+                        ptable.assign_to_last_prop(surface.bm_elem)
         bm.faces.ensure_lookup_table()
         return '${triangles}'
 
-    def face(self, ids: Sequence[str], bm: bmesh.types.BMesh) -> Optional[bmesh.types.BMFace]:
+    def surface(self, ids: Sequence[str], priv_props_src: str, bm: bmesh.types.BMesh) -> Optional[bl_jbeam.Surface]:
         nodes = self.ensure_nodes(ids, bm)
+        # ToDo handle ghost beams
         try:
             face = bm.faces.new(nodes)
-            return face
+            surface = bl_jbeam.Surface(bm, face)
+            if priv_props_src is not None:
+                surface.props_src = priv_props_src
+            return surface
         except ValueError as err:
             self._print('\t', err, ids)  # ToDo handle duplicates
             return None
 
     # ============================== quads ==============================
 
-    def section_quads(self, ctx: _ValueArrayContext = None, me=None, bm: bmesh.types.BMesh = None,
-                      **_) -> str:
-        inl_props_lyr = bm.faces.layers.string.active or bm.faces.layers.string.new('jbeam_prop')
+    def section_quads(self, ctx: _ValueArrayContext = None, me=None, bm: bmesh.types.BMesh = None, **_) -> str:
+        bl_jbeam.Surface.ensure_data_layers(bm)
         quads_ctx = ctx.array().values()
         if quads_ctx:
             with bl_jbeam.QuadsPropTable.get_from(me).init(bm.faces) as ptable:  # type: bl_jbeam.QuadsPropTable
                 for prop, inl_prop_src in self.table(quads_ctx, ptable):
-                    quad = self.face(prop['id1:', 'id2:', 'id3:', 'id4:'], bm)
-                    if quad:
-                        ptable.assign_to_last_prop(quad)
-                        if inl_prop_src:
-                            quad[inl_props_lyr] = inl_prop_src.encode()
+                    surface = self.surface(prop['id1:', 'id2:', 'id3:', 'id4:'], inl_prop_src, bm)
+                    if surface:
+                        ptable.assign_to_last_prop(surface.bm_elem)
         bm.faces.ensure_lookup_table()
         return '${quads}'
 
