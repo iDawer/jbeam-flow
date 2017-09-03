@@ -14,7 +14,8 @@ class ProxyGroup(bpy.types.PropertyGroup):
     node_id = bm_props.make_rna_proxy(
         bl_jbeam.Node,
         bl_jbeam.Node.id,
-        StringProperty(name="Node id", options={'TEXTEDIT_UPDATE'}))
+        StringProperty(name="Node id", options={'TEXTEDIT_UPDATE'},
+                       description="Name of the node. '~' at start means it is dummy copy from parent part"))
     node_private_props = bm_props.make_rna_proxy(
         bl_jbeam.Node,
         bl_jbeam.Node.props_src,
@@ -100,6 +101,8 @@ class JbeamBeamEditPanel(bpy.types.Panel):
         if edge is None or not isinstance(edge, bmesh.types.BMEdge):
             self.layout.row().label("No active edge")
             return
+        beam = bl_jbeam.Beam(bm, edge)
+        self.layout.label(str(beam))
 
         lyr = bl_jbeam.Beam.is_ghost.get_layer(bm.edges.layers)
         if lyr is None:

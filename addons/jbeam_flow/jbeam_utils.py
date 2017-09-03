@@ -288,12 +288,18 @@ class PartObjectsBuilder(jbeam.EvalBase):
 
     def surface(self, ids: Sequence[str], priv_props_src: str, bm: bmesh.types.BMesh) -> Optional[bl_jbeam.Surface]:
         nodes = self.ensure_nodes(ids, bm)
-        # ToDo handle ghost beams
+        # handle ghost beams
+        edge_pairs = zip(nodes, nodes[1:] + nodes[:1])
+        ghost_edge_pairs = (pair for pair in edge_pairs if bm.edges.get(pair) is None)
         try:
             face = bm.faces.new(nodes)
             surface = bl_jbeam.Surface(bm, face)
             if priv_props_src is not None:
                 surface.props_src = priv_props_src
+            for pair in ghost_edge_pairs:
+                edge = bm.edges.get(pair)
+                ghost_beam = bl_jbeam.Beam(bm, edge)
+                ghost_beam.is_ghost = True
             return surface
         except ValueError as err:
             self._print('\t', err, ids)  # ToDo handle duplicates

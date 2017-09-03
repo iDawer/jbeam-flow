@@ -155,6 +155,15 @@ class Beam(Element):
     def __init__(self, bm: BMesh, edge: BMEdge):
         super().__init__(bm, edge)
         self.layers = bm.edges.layers
+        v1, v2 = edge.verts
+        self._nodes = (Node(bm, v1), Node(bm, v2))
+
+    @property
+    def nodes(self):
+        return self._nodes
+
+    def __str__(self) -> str:
+        return '["{0.id}", "{1.id}"]'.format(*self._nodes)
 
     @classmethod
     def ensure_data_layers(cls, bm: BMesh):
