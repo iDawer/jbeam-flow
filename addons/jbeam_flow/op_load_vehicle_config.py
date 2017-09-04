@@ -46,12 +46,12 @@ class LoadVehicleConfig(Operator, ImportHelper):
         part_slots_map = defaultdict(list)
         for ob in context.scene.objects:
             if ob.type == 'MESH':
-                slotType = ob.data.get('slotType')
-                part_name = ob.data.get('jbeam_part')
+                slotType = ob.data.jbeam_part.slot_type
+                part_name = ob.data.jbeam_part.name
                 if slotType is not None and part_name is not None:
                     part_map[slotType][part_name] = ob
             elif is_slot(ob):
-                part_name = ob.parent.parent.data.get('jbeam_part')
+                part_name = ob.parent.parent.data.jbeam_part.name
                 part_slots_map[part_name].append((ob.name.partition('.')[0], ob['default'], ob))
 
         main_parts = part_map.get('main')
@@ -107,7 +107,7 @@ def fill_slots(part_map: defaultdict(dict), part_slots_map: defaultdict(list), p
         print("\tWARNING: Slots tree too deep (>50). Current part: '{}'".format(part.name))
         return
 
-    part_name = part.data['jbeam_part']
+    part_name = part.data.jbeam_part.name
     for slot_name, default, slot_obj in part_slots_map[part_name]:
         ch_part_name = slot_part_conf.get(slot_name) or default
         if ch_part_name:
