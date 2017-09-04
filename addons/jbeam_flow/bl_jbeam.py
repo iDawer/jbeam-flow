@@ -12,6 +12,20 @@ from .jbeam.misc import Switch
 PROP_CHAIN_ID = 'jbeam_prop_chain_id'
 
 
+class Part(PropertyGroup):
+    name = StringProperty(name="Name")
+    slot_type = StringProperty(name="Slot type")
+    data = StringProperty(name="Data", description="Partially decoded JBeam data")
+
+    @classmethod
+    def register(cls):
+        Mesh.jbeam_part = PointerProperty(type=cls)
+
+    @classmethod
+    def unregister(cls):
+        del Mesh.jbeam_part
+
+
 class Counter(PropertyGroup):
     """Mimic collections.Counter, underlying data stored as ID property"""
     update = collections.Counter.update
@@ -177,6 +191,7 @@ class Beam(Element):
 
 class Surface(Element):
     """Collision surface: triangle or quad."""
+
     def __init__(self, bm: BMesh, face: BMFace):
         super().__init__(bm, face)
         self.layers = bm.faces.layers
@@ -231,6 +246,7 @@ def get_table_storage_ctxman(me, bm_elem_seq):
 
 
 classes = (
+    Part,
     Counter,
     PropsTableBase.Prop,
     PropsTable,

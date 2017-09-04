@@ -60,6 +60,7 @@ with reloadable(__name__, locals()) as loaded:
         op_move_dummies,
         op_rename_node,
         display_nodes,
+        ui_part,
         props_inheritance,
         op_find_node,
         op_import_vehicle,

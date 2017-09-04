@@ -69,7 +69,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
 
         mesh = bpy.data.meshes.new(part_name)
         # Save part name explicitly, due Blender avoids names collision by appending '.001'
-        mesh['jbeam_part'] = part_name
+        mesh.jbeam_part.name = part_name
         part_obj = bpy.data.objects.new(part_name, mesh)
         part_obj.show_wire = True
         part_obj.show_all_edges = True
@@ -81,7 +81,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
         if sections_ctx:
             self.sections(sections_ctx, part_obj, mesh, data_buf)
 
-        mesh['jbeam_part_data'] = data_buf.getvalue()
+        mesh.jbeam_part.data = data_buf.getvalue()
         mesh.update()
         return part_obj
 
@@ -323,7 +323,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
 
     def section_slottype(self, ctx: _ValueStringContext = None, me=None, **_) -> str:
         stype = ctx.accept(self)
-        me['slotType'] = stype
+        me.jbeam_part.slot_type = stype
         return '${slotType}'
 
 
