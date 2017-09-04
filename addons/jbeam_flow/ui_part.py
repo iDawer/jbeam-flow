@@ -2,8 +2,10 @@ from bpy.types import (
     Panel,
 )
 
-from . import text_prop_editor
-
+from . import (
+    bl_jbeam,
+    text_prop_editor,
+)
 
 class JBeamPartPanel(Panel):
     bl_context = "data"
@@ -29,6 +31,28 @@ class JBeamPartPanel(Panel):
         op_props.settings.attr = 'data'
 
 
+class SlotPanel(Panel):
+    bl_region_type = 'WINDOW'
+    bl_space_type = 'PROPERTIES'
+    bl_context = "data"
+    bl_label = "JBeam Slot"
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        return obj and obj.type in {'EMPTY'} and obj.jbeam_slot.is_slot()
+
+    def draw(self, context):
+        layout = self.layout
+        slot = context.object.jbeam_slot  # type: bl_jbeam.Slot
+        if not slot.is_slot():
+            return
+        layout.label("Type:  {}".format(slot.get_type()))
+        layout.prop(slot, 'default')
+        layout.prop(slot, 'description')
+
+
 classes = (
     JBeamPartPanel,
+    SlotPanel,
 )

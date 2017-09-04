@@ -217,8 +217,9 @@ class PartObjectsBuilder(jbeam.EvalBase):
         if 'nodeOffset' in props and isinstance(props['nodeOffset'], dict):
             offset = props.pop('nodeOffset')
             empty_obj.location = offset['x', 'y', 'z']
-        update_id_object(empty_obj, props)
         self.lock_rot_scale(empty_obj)
+        slot = empty_obj.jbeam_slot  # type: bl_jbeam.Slot
+        slot.default, slot.description = props['default', 'description']
         return empty_obj
 
     # ============================== nodes ==============================

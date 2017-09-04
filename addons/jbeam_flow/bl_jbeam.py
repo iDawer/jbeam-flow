@@ -4,7 +4,7 @@ from typing import Union
 
 from bmesh.types import BMesh, BMVertSeq, BMEdgeSeq, BMFaceSeq, BMLayerItem, BMVert, BMEdge, BMFace
 from bpy.props import IntProperty, StringProperty, CollectionProperty, PointerProperty
-from bpy.types import PropertyGroup, Mesh
+from bpy.types import PropertyGroup, Mesh, Object
 
 from . import bm_props, jbeam
 
@@ -90,6 +90,25 @@ class Part(PropertyGroup):
     @classmethod
     def unregister(cls):
         del Mesh.jbeam_part
+
+
+class Slot(PropertyGroup):
+    default = StringProperty(name="Default part", description="Default part name.")
+    description = StringProperty(name="Description")
+
+    def is_slot(self):
+        return self.id_data.parent is not None and 'slots' == self.id_data.parent.name.partition('.')[0]
+
+    def get_type(self):
+        return self.id_data.name.partition('.')[0]
+
+    @classmethod
+    def register(cls):
+        Object.jbeam_slot = PointerProperty(type=cls)
+
+    @classmethod
+    def unregister(cls):
+        del Object.jbeam_slot
 
 
 class _NodesTable_unused:  # (PropertyGroup, PropsTableBase):
@@ -206,4 +225,5 @@ classes = (
     PropsTable,
     QuadsPropTable,
     Part,
+    Slot,
 )

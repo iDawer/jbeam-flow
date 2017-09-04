@@ -50,9 +50,9 @@ class LoadVehicleConfig(Operator, ImportHelper):
                 part_name = ob.data.jbeam_part.name
                 if slotType is not None and part_name is not None:
                     part_map[slotType][part_name] = ob
-            elif is_slot(ob):
+            elif ob.jbeam_slot.is_slot():
                 part_name = ob.parent.parent.data.jbeam_part.name
-                part_slots_map[part_name].append((ob.name.partition('.')[0], ob['default'], ob))
+                part_slots_map[part_name].append((ob.name.partition('.')[0], ob.jbeam_slot.default, ob))
 
         main_parts = part_map.get('main')
         if not main_parts:
@@ -119,10 +119,6 @@ def fill_slots(part_map: defaultdict(dict), part_slots_map: defaultdict(list), p
             else:
                 # child part specified but not found
                 print("\tPart '{}' for slot [{}] not found".format(ch_part_name, slot_name))
-
-
-def is_slot(ob):
-    return ob.parent is not None and 'slots' == ob.parent.name.partition('.')[0]
 
 
 classes = (
