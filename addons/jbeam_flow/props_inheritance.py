@@ -103,7 +103,7 @@ class DATA_PT_jbeam_nodes(JbeamPanel, Panel):
         layout = self.layout
         ob = context.object
 
-        self.template_props_table(layout, ob.data.jbeam_node_prop_chain, MESH_UL_jbeam_nodes.__name__,
+        self.template_props_table(layout, ob.data.jbeam_part.nodes, MESH_UL_jbeam_nodes.__name__,
                                   NodePropChain_Add.bl_idname,
                                   NodePropChain_Remove.bl_idname,
                                   NodePropChain_Move.bl_idname,
@@ -120,7 +120,7 @@ class DATA_PT_jbeam_beams(JbeamPanel, Panel):
         layout = self.layout
         ob = context.object
 
-        self.template_props_table(layout, ob.data.jbeam_beam_prop_chain, MESH_UL_jbeam_beams.__name__,
+        self.template_props_table(layout, ob.data.jbeam_part.beams, MESH_UL_jbeam_beams.__name__,
                                   BeamPropChain_Add.bl_idname,
                                   BeamPropChain_Remove.bl_idname,
                                   BeamPropChain_Move.bl_idname,
@@ -137,7 +137,7 @@ class DATA_PT_jbeam_triangles(JbeamPanel, Panel):
         layout = self.layout
         ob = context.object
 
-        self.template_props_table(layout, ob.data.jbeam_triangle_prop_chain, MESH_UL_jbeam_triangles.__name__,
+        self.template_props_table(layout, ob.data.jbeam_part.triangles, MESH_UL_jbeam_triangles.__name__,
                                   TrianglePropChain_Add.bl_idname,
                                   TrianglePropChain_Remove.bl_idname,
                                   TrianglePropChain_Move.bl_idname,
@@ -154,7 +154,7 @@ class DATA_PT_jbeam_quads(JbeamPanel, Panel):
         layout = self.layout
         ob = context.object
 
-        self.template_props_table(layout, ob.data.jbeam_quads_ptable, MESH_UL_jbeam_quads.__name__,
+        self.template_props_table(layout, ob.data.jbeam_part.quads, MESH_UL_jbeam_quads.__name__,
                                   QuadPropChain_Add.bl_idname,
                                   QuadPropChain_Remove.bl_idname,
                                   QuadPropChain_Move.bl_idname,
@@ -332,14 +332,11 @@ class PropSet_Select(PropSetBase):
 class NodesOpMixin(PropSetBase):
     @staticmethod
     def get_props(context):
-        return context.object.data.jbeam_node_prop_chain
+        return context.object.data.jbeam_part.nodes
 
     @staticmethod
     def get_datalayer(bm):
-        dlayer = bm.verts.layers.int.get(bl_jbeam.PROP_CHAIN_ID, None)
-        if dlayer is None:
-            dlayer = bm.verts.layers.int.new(bl_jbeam.PROP_CHAIN_ID)
-        return dlayer
+        return bl_jbeam.PropsTable.get_id_layer(bm.verts)
 
     @staticmethod
     def get_bm_elements(bm):
@@ -349,14 +346,11 @@ class NodesOpMixin(PropSetBase):
 class BeamsOpMixin(PropSetBase):
     @staticmethod
     def get_props(context):
-        return context.object.data.jbeam_beam_prop_chain
+        return context.object.data.jbeam_part.beams
 
     @staticmethod
     def get_datalayer(bm):
-        dlayer = bm.edges.layers.int.get(bl_jbeam.PROP_CHAIN_ID, None)
-        if dlayer is None:
-            dlayer = bm.edges.layers.int.new(bl_jbeam.PROP_CHAIN_ID)
-        return dlayer
+        return bl_jbeam.PropsTable.get_id_layer(bm.edges)
 
     @staticmethod
     def get_bm_elements(bm):
@@ -366,14 +360,11 @@ class BeamsOpMixin(PropSetBase):
 class TrianglesOpMixin(PropSetBase):
     @staticmethod
     def get_props(context):
-        return context.object.data.jbeam_triangle_prop_chain
+        return context.object.data.jbeam_part.triangles
 
     @staticmethod
     def get_datalayer(bm):
-        dlayer = bm.faces.layers.int.get(bl_jbeam.PROP_CHAIN_ID, None)
-        if dlayer is None:
-            dlayer = bm.faces.layers.int.new(bl_jbeam.PROP_CHAIN_ID)
-        return dlayer
+        return bl_jbeam.PropsTable.get_id_layer(bm.faces)
 
     @staticmethod
     def get_bm_elements(bm):
@@ -383,7 +374,7 @@ class TrianglesOpMixin(PropSetBase):
 class QuadsOpMixin(PropSetBase):
     @staticmethod
     def get_props(context):
-        return context.object.data.jbeam_quads_ptable
+        return context.object.data.jbeam_part.quads
 
     @staticmethod
     def get_datalayer(bm: bmesh.types.BMesh):

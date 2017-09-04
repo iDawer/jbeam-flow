@@ -7,23 +7,6 @@ from bpy.props import IntProperty, StringProperty, CollectionProperty, PointerPr
 from bpy.types import PropertyGroup, Mesh
 
 from . import bm_props, jbeam
-from .jbeam.misc import Switch
-
-PROP_CHAIN_ID = 'jbeam_prop_chain_id'
-
-
-class Part(PropertyGroup):
-    name = StringProperty(name="Name")
-    slot_type = StringProperty(name="Slot type")
-    data = StringProperty(name="Data", description="Partially decoded JBeam data")
-
-    @classmethod
-    def register(cls):
-        Mesh.jbeam_part = PointerProperty(type=cls)
-
-    @classmethod
-    def unregister(cls):
-        del Mesh.jbeam_part
 
 
 class Counter(PropertyGroup):
@@ -32,7 +15,7 @@ class Counter(PropertyGroup):
 
     # Define our own method cuz dict.clear requires dict (sub)class
     def clear(self):
-        ptable = getattr(self.id_data, self.path_from_id().partition('.')[0])  # type: PropsTable
+        ptable = self.id_data.path_resolve(self.path_from_id().rpartition('.')[0])  # type: PropsTable
         ptable['counter'].clear()  # RNA does not expose underlying ID dict property methods
 
     def __getitem__(self, item):
@@ -45,8 +28,6 @@ class Counter(PropertyGroup):
 class PropsTableBase(jbeam.Table):
     """
     Represents properties inheritance chaining.
-    Position in the chain described with factor (float number).
-    Item with factor N inherits all props in the chain with factor less or equal to N with priority of the last.
     Note: __init__ never called by Blender, use 'init' contextmanager instead
     """
 
@@ -60,7 +41,7 @@ class PropsTableBase(jbeam.Table):
     max_id = IntProperty()
     counter = PointerProperty(type=Counter)
 
-    ptable_id_layer_name = None  # type: str
+    ptable_id_layer_name = 'jbeam.chain_id'
 
     @contextmanager
     def init(self, bm_elem_seq: Union[BMVertSeq, BMEdgeSeq, BMFaceSeq]):
@@ -86,22 +67,32 @@ class PropsTableBase(jbeam.Table):
 
 
 class PropsTable(PropertyGroup, PropsTableBase):
-    ptable_id_layer_name = PROP_CHAIN_ID
+    pass
+
+
+class QuadsPropTable(PropertyGroup, PropsTableBase):
+    ptable_id_layer_name = 'jbeam.quads.chain_id'
+
+
+class Part(PropertyGroup):
+    name = StringProperty(name="Name")
+    slot_type = StringProperty(name="Slot type")
+    data = StringProperty(name="Data", description="Partially decoded JBeam data")
+    nodes = PointerProperty(type=PropsTable)
+    beams = PointerProperty(type=PropsTable)
+    triangles = PointerProperty(type=PropsTable)
+    quads = PointerProperty(type=QuadsPropTable)
 
     @classmethod
     def register(cls):
-        Mesh.jbeam_node_prop_chain = PointerProperty(type=cls)
-        Mesh.jbeam_beam_prop_chain = PointerProperty(type=cls)
-        Mesh.jbeam_triangle_prop_chain = PointerProperty(type=cls)
+        Mesh.jbeam_part = PointerProperty(type=cls)
 
     @classmethod
     def unregister(cls):
-        del Mesh.jbeam_node_prop_chain
-        del Mesh.jbeam_beam_prop_chain
-        del Mesh.jbeam_triangle_prop_chain
+        del Mesh.jbeam_part
 
 
-class UnusedNodesTable(PropertyGroup, PropsTableBase):
+class _NodesTable_unused:  # (PropertyGroup, PropsTableBase):
     """ Optimise custom data accecss. """
 
     # not used actually, need for shut up IDE complaining
@@ -138,6 +129,7 @@ class UnusedNodesTable(PropertyGroup, PropsTableBase):
         return self._node_prop_lyr
 
 
+# region BMesh element wrappers
 class Element(bm_props.ElemWrapper):
     """ Base class for jbeam elements (node, beam, etc.) which are represented as bmesh elements. """
     # todo: property access (ChainMap?)
@@ -205,50 +197,13 @@ class Surface(Element):
         return isinstance(bm_elem, BMFace)
 
 
-class QuadsPropTable(PropertyGroup, PropsTableBase):
-    ptable_id_layer_name = 'JBEAM_QUADS_PTABLE_ID'
-
-    @staticmethod
-    def get_from(mesh: Mesh):
-        """
-        :rtype: QuadsPropTable
-        """
-        return mesh.jbeam_quads_ptable
-
-    @classmethod
-    def register(cls):
-        Mesh.jbeam_quads_ptable = PointerProperty(type=cls)
-
-    @classmethod
-    def unregister(cls):
-        del Mesh.jbeam_quads_ptable
-
-
-def get_table_storage_ctxman(me, bm_elem_seq):
-    """
-    Returns RNA property of JbeamPropsInheritance type for given bmesh element types
-    :param me: mesh that stores JbeamPropsInheritance table.
-    :type me: bpy.types.Mesh
-    :param bm_elem_seq: bmesh elements the table associated with.
-    :type bm_elem_seq: BMVertSeq|BMEdgeSeq|BMFaceSeq
-    :return: instance of table
-    :rtype: JbeamPropsInheritance contextmanager
-    """
-    with Switch.Inst(bm_elem_seq) as case:
-        if case(BMVertSeq):
-            return me.jbeam_node_prop_chain.init(bm_elem_seq)
-        elif case(BMEdgeSeq):
-            return me.jbeam_beam_prop_chain.init(bm_elem_seq)
-        elif case(BMFaceSeq):
-            return me.jbeam_triangle_prop_chain.init(bm_elem_seq)
-        else:
-            raise ValueError('%r is not supported table storage' % bm_elem_seq)
+# endregion BMesh element wrappers
 
 
 classes = (
-    Part,
     Counter,
     PropsTableBase.Prop,
     PropsTable,
     QuadsPropTable,
+    Part,
 )

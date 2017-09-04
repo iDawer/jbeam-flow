@@ -227,7 +227,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
         bl_jbeam.Node.ensure_data_layers(bm)
         nodes_ctx = ctx.array().values()
         if nodes_ctx:
-            with bl_jbeam.get_table_storage_ctxman(me, bm.verts) as ptable:  # type: bl_jbeam.PropsTable
+            with me.jbeam_part.nodes.init(bm.verts) as ptable:  # type: bl_jbeam.PropsTable
                 for node_props, inlined_props_src in self.table(nodes_ctx, ptable):
                     node = self.node(node_props, inlined_props_src, bm)
                     ptable.assign_to_last_prop(node)
@@ -251,7 +251,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
         bl_jbeam.Beam.ensure_data_layers(bm)
         beams_ctx = ctx.array().values()
         if beams_ctx:
-            with bl_jbeam.get_table_storage_ctxman(me, bm.edges) as ptable:  # type: bl_jbeam.PropsTable
+            with me.jbeam_part.beams.init(bm.edges) as ptable:  # type: bl_jbeam.PropsTable
                 for beam_props, inl_prop_src in self.table(beams_ctx, ptable):
                     beam = self.beam(beam_props, inl_prop_src, bm)
                     if beam:
@@ -278,7 +278,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
         bl_jbeam.Surface.ensure_data_layers(bm)
         triangles_ctx = ctx.array().values()
         if triangles_ctx:
-            with bl_jbeam.get_table_storage_ctxman(me, bm.faces) as ptable:  # type: bl_jbeam.PropsTable
+            with me.jbeam_part.triangles.init(bm.faces) as ptable:  # type: bl_jbeam.PropsTable
                 for tri_prop, inl_prop_src in self.table(triangles_ctx, ptable):
                     surface = self.surface(tri_prop['id1:', 'id2:', 'id3:'], inl_prop_src, bm)
                     if surface:
@@ -311,7 +311,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
         bl_jbeam.Surface.ensure_data_layers(bm)
         quads_ctx = ctx.array().values()
         if quads_ctx:
-            with bl_jbeam.QuadsPropTable.get_from(me).init(bm.faces) as ptable:  # type: bl_jbeam.QuadsPropTable
+            with me.jbeam_part.quads.init(bm.faces) as ptable:  # type: bl_jbeam.QuadsPropTable
                 for prop, inl_prop_src in self.table(quads_ctx, ptable):
                     surface = self.surface(prop['id1:', 'id2:', 'id3:', 'id4:'], inl_prop_src, bm)
                     if surface:
