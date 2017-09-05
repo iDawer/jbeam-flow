@@ -1,4 +1,5 @@
 import io
+import os
 from collections import OrderedDict
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
@@ -11,7 +12,7 @@ from antlr4.tree.Tree import TerminalNodeImpl
 from . import bl_jbeam, jbeam
 from .jb import jbeamLexer, jbeamParser, jbeamVisitor
 from .jb.utils import preprocess
-from .jbeam.ext_json import ExtJSONParser
+from .jbeam.ext_json import ExtJSONParser, decoder
 from .jbeam.misc import (
     Triangle,
     ExtDict,
@@ -331,6 +332,57 @@ class PartObjectsBuilder(jbeam.EvalBase):
 def update_id_object(id_object: bpy.types.ID, props: dict):
     for k in props:
         id_object[k] = props[k]
+
+
+class PartsIndexBuilder(jbeam.EvalBase):
+    def __init__(self):
+        self.index = {}
+        self.searching = {}  # type: Dict[str, ExtJSONParser.PairContext]
+        # restore index
+        from . import Preferences
+        from json import load
+        addon_prefs = bpy.context.user_preferences.addons[Preferences.bl_idname].preferences  # type: Preferences
+        with open(bpy.path.abspath(addon_prefs.common_index), encoding='utf-8') as idx_file:
+            self.index = load(idx_file)
+
+    def find_parts(self, parts: Sequence[str]) -> Dict[str, ExtJSONParser.PairContext]:
+        self.searching = {pname: None for pname in parts}
+        for pname in parts:
+            if self.searching[pname] is not None:
+                continue
+            filepath = self.index.get(pname)
+            if filepath is not None:
+                self.file(filepath)
+        return self.searching
+
+    def directory(self, dirpath: str):
+        files = (os.path.join(root, f) for root, dirs, files in os.walk(dirpath)
+                 for f in files if f.lower().endswith(".jbeam"))
+        for filepath in files:
+            self.file(filepath)
+        return files
+
+    def file(self, filepath: str):
+        with open(filepath, encoding='utf-8') as file:
+            content = file.read()
+        tree = decoder.get_parse_tree(content)
+        return self.jbeam(tree, filepath)
+
+    def jbeam(self, ctx: ExtJSONParser.JsonContext, filepath: str) -> List[str]:
+        parts_ctx = ctx.object().pairs()
+        part_names = []
+        if parts_ctx:
+            for part_ctx in parts_ctx.pair():
+                pname = self.part(part_ctx)
+                part_names.append(pname)
+                self.index[pname] = filepath
+        return part_names
+
+    def part(self, ctx: ExtJSONParser.PairContext) -> str:
+        part_name = ctx.STRING().accept(self)
+        if part_name in self.searching:
+            self.searching[part_name] = ctx
+        return part_name
 
 
 class NodeCollector(jbeamVisitor):

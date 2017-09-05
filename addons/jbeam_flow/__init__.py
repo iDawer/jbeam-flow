@@ -5,6 +5,9 @@ bl_info = {
     'category': 'Import-Export'
 }
 
+from bpy.props import StringProperty
+from bpy.types import AddonPreferences
+
 
 class reloadable:
     """ Utility class that helps with reloading submodules imported with from..import statement.
@@ -55,6 +58,7 @@ with reloadable(__name__, locals()) as loaded:
         bl_jbeam,
         jbeam_utils,
         text_prop_editor,
+        op_build_common_parts_index,
         op_import,
         op_sync_to_jbeam,
         op_move_dummies,
@@ -69,8 +73,32 @@ with reloadable(__name__, locals()) as loaded:
     )
 
 
+class Preferences(AddonPreferences):
+    bl_idname = __package__
+    common_dir = StringProperty(
+        name="Common parts directory",
+        maxlen=1024,
+        subtype='DIR_PATH',
+    )
+    common_index = StringProperty(
+        name="Common parts index",
+        maxlen=1024,
+        subtype='FILE_PATH',
+    )
+
+    def draw(self, context):
+        layout = self.layout  # type: bpy.types.UILayout
+        layout.prop(self, 'common_dir')
+        layout.prop(self, 'common_index')
+        op = layout.operator(op_build_common_parts_index.BuildCommonPartsIndexOperator.bl_idname
+                             )  # type: op_build_common_parts_index.BuildCommonPartsIndexOperator
+        op.common_dir = self.common_dir
+        op.filepath = self.common_index
+
+
 def register():
     from bpy.utils import register_class
+    register_class(Preferences)
     for cls in (cls for mod in loaded.modules for cls in mod.classes):
         register_class(cls)
     del register_class
@@ -82,6 +110,7 @@ def unregister():
     from bpy.utils import unregister_class
     for cls in reversed([cls for mod in loaded.modules for cls in mod.classes]):
         unregister_class(cls)
+    unregister_class(Preferences)
     del unregister_class
     display_nodes.unregister()
     print("UNREGISTERED  '{}'".format(__name__))
