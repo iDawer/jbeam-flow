@@ -82,7 +82,11 @@ class EvalBase(ExtJSONEvaluator, visitor_mixins.Helper):
         rows = rows_ctx.value()
         rows_iter = iter(rows)
         header = next(rows_iter).accept(self)
-        assert isinstance(header, list)
+        if not isinstance(header, list):
+            # Note: need header specifications.
+            # Fix: missing header in nodes section of some common parts.
+            header = ['id', 'posX', 'posY', 'posZ']
+            rows_iter = iter(rows)
         _ValueArrayContext = ExtJSONParser.ValueArrayContext
         _ValueObjectContext = ExtJSONParser.ValueObjectContext
         for row_ctx in rows_iter:

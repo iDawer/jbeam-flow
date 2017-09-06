@@ -52,7 +52,7 @@ class LoadVehicleConfig(Operator, ImportHelper):
                     part_map[slotType][part_name] = ob
             elif ob.jbeam_slot.is_slot():
                 part_name = ob.parent.parent.data.jbeam_part.name
-                part_slots_map[part_name].append((ob.name.partition('.')[0], ob.jbeam_slot.default, ob))
+                part_slots_map[part_name].append((ob.jbeam_slot.get_type(), ob.jbeam_slot.default, ob))
 
         main_parts = part_map.get('main')
         if not main_parts:
