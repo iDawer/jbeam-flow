@@ -6,6 +6,7 @@ from bpy.types import Operator
 from bpy_extras.io_utils import ImportHelper
 
 from .jbeam import ext_json
+from . import jbeam_utils
 
 
 class LoadVehicleConfig(Operator, ImportHelper):
@@ -52,7 +53,7 @@ class LoadVehicleConfig(Operator, ImportHelper):
                     part_map[slotType][part_name] = ob
             elif ob.jbeam_slot.is_slot():
                 part_name = ob.parent.parent.data.jbeam_part.name
-                part_slots_map[part_name].append((ob.name.partition('.')[0], ob.jbeam_slot.default, ob))
+                part_slots_map[part_name].append((ob.jbeam_slot.get_type(), ob.jbeam_slot.default, ob))
 
         main_parts = part_map.get('main')
         if not main_parts:
@@ -108,6 +109,7 @@ def fill_slots(part_map: defaultdict(dict), part_slots_map: defaultdict(list), p
         return
 
     part_name = part.data.jbeam_part.name
+    missing_parts = {}  # dict[part_name, slot]
     for slot_name, default, slot_obj in part_slots_map[part_name]:
         ch_part_name = slot_part_conf.get(slot_name) or default
         if ch_part_name:
@@ -115,10 +117,32 @@ def fill_slots(part_map: defaultdict(dict), part_slots_map: defaultdict(list), p
             ch_part = part_map[slot_name].get(ch_part_name)
             if ch_part is not None:  # child part found
                 ch_part.parent = slot_obj
-                fill_slots(part_map, part_slots_map, ch_part, slot_part_conf, depth + 1)
+                missing_children = fill_slots(part_map, part_slots_map, ch_part, slot_part_conf, depth + 1)
+                missing_parts.update(missing_children)
             else:
                 # child part specified but not found
                 print("\tPart '{}' for slot [{}] not found".format(ch_part_name, slot_name))
+                missing_parts[ch_part_name] = slot_obj
+    return missing_parts
+
+
+def fill_with_common(missing_parts: dict, part_map: defaultdict(dict), part_slots_map: defaultdict(list),
+                     slot_part_conf: dict, depth=0):
+    search = jbeam_utils.PartsIndexBuilder()
+    part_ctx_map = search.find_parts(missing_parts)
+    obj_builder = jbeam_utils.PartObjectsBuilder()
+    for pname, part_ctx in part_ctx_map.items():
+        if part_ctx is not None:
+            part = obj_builder.part(part_ctx)
+            slotType = part.data.jbeam_part.slot_type
+            part_name = part.data.jbeam_part.name
+            parent_slot = missing_parts[part_name]
+            if slotType is not None and part_name is not None:
+                part_map[slotType][part_name] = part
+            # add new slots
+            part_slots_map[part_name].extend(
+                ((slot.jbeam_slot.get_type(), slot.jbeam_slot.default, slot) for slot in objBuilder.helper_objects))
+    pass
 
 
 classes = (

@@ -50,7 +50,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
 
     def get_all_objects(self) -> Sequence[bpy.types.Object]:
         import itertools
-        return itertools.chain(self.parts_group.objects, self.helper_objects)
+        return itertools.chain(self.parts_group.objects if self.parts_group else [], self.helper_objects)
 
     def jbeam(self, ctx: ExtJSONParser.JsonContext) -> bpy.types.Group:
         jbeam_group = bpy.data.groups.new(self.name)
