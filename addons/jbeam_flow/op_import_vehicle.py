@@ -37,7 +37,7 @@ class ImportJBeamVehicle(Operator, ImportHelper):  #
                     "Importing: %d/%d. Press Esc/RMB to cancel." % (self.total - len(self.files), self.total))
                 bpy.ops.import_mesh.jbeam(filepath=path.join(dir, name), filename=name)
             else:
-                self.report({'INFO'}, "Import done (%d parts)" % self.total)
+                self.report({'INFO'}, "Import done (%d files)" % self.total)
                 self.cancel(context)
                 return {'FINISHED'}
         return {'PASS_THROUGH'}
@@ -48,7 +48,7 @@ class ImportJBeamVehicle(Operator, ImportHelper):  #
         wm.event_timer_remove(self._timer)
 
     def execute(self, context):
-        context.screen.scene = bpy.data.scenes.new('parts')
+        context.screen.scene = bpy.data.scenes.get('parts') or bpy.data.scenes.new('parts')
         self.files = deque((root, f) for root, dirs, files in os.walk(self.directory)
                            for f in files if f.lower().endswith(".jbeam"))
         self.total = len(self.files)
