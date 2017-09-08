@@ -108,14 +108,16 @@ class Slot(PropertyGroup):
         obj_slot = self.id_data  # type: Object
         obj_slot.location.yz = self.nodeOffset.yz
         # X has special case [vehicle/jbeam/jbeam_main.lua:1642 - function postProcess(vehicles)]
-        x_offset = self.nodeOffset.x
+        delta_dimension = self.nodeOffset.x * 2
         for obj_part in obj_slot.children:
-            mod = obj_part.modifiers.get('jbeam.slot.nodeOffset.x')  # type: bpy.types.DisplaceModifier
+            mod = obj_part.modifiers.get('jbeam.slot.nodeOffset.x')
             if mod is None:
-                mod = obj_part.modifiers.new('jbeam.slot.nodeOffset.x', 'DISPLACE')
-                mod.direction = 'NORMAL'
-                mod.mid_level = 0
-            mod.strength = x_offset
+                mod = obj_part.modifiers.new('jbeam.slot.nodeOffset.x', 'DISPLACE')  # type: bpy.types.DisplaceModifier
+                mod.direction = 'X'
+                mod.mid_level = .5
+                # texture with displace directions
+                mod.texture = self._ensure_offset_texture()
+            mod.strength = delta_dimension
 
     nodeOffset = bpy.props.FloatVectorProperty(name="Node offset", subtype='XYZ', unit='LENGTH', size=3, precision=3,
                                                update=offset_update)
@@ -124,6 +126,24 @@ class Slot(PropertyGroup):
     def add_part_object(self, part: Object):
         part.parent = self.id_data
         self.offset_update()
+
+    @staticmethod
+    def _ensure_offset_texture() -> bpy.types.BlendTexture:
+        t = bpy.data.textures.get('jbeam.offset')
+        if t is None:
+            t = bpy.data.textures.new('jbeam.offset', 'BLEND')  # type: bpy.types.BlendTexture
+            t.use_fake_user = True
+            t.progression = 'LINEAR'
+            t.use_flip_axis = 'HORIZONTAL'
+            t.use_color_ramp = True
+            ramp = t.color_ramp
+            ramp.color_mode = 'RGB'
+            ramp.interpolation = 'CONSTANT'
+            e1, e2 = ramp.elements
+            e1.color = (0.0, 0.0, 0.0, 1.0)  # black, direction <0
+            e2.color = (1.0, 1.0, 1.0, 1.0)  # white, direction >=0
+            e2.position = .5
+        return t
 
     @classmethod
     def register(cls):
