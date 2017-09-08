@@ -2,6 +2,7 @@ import collections
 from contextlib import contextmanager
 from typing import Union
 
+import bpy
 from bmesh.types import BMesh, BMVertSeq, BMEdgeSeq, BMFaceSeq, BMLayerItem, BMVert, BMEdge, BMFace
 from bpy.props import IntProperty, StringProperty, CollectionProperty, PointerProperty
 from bpy.types import PropertyGroup, Mesh, Object
@@ -101,6 +102,28 @@ class Slot(PropertyGroup):
 
     def get_type(self):
         return self.id_data.name.partition('.')[0]
+
+    def offset_update(self, _=None):
+        """Apply offset to child parts."""
+        obj_slot = self.id_data  # type: Object
+        obj_slot.location.yz = self.nodeOffset.yz
+        # X has special case [vehicle/jbeam/jbeam_main.lua:1642 - function postProcess(vehicles)]
+        x_offset = self.nodeOffset.x
+        for obj_part in obj_slot.children:
+            mod = obj_part.modifiers.get('jbeam.slot.nodeOffset.x')  # type: bpy.types.DisplaceModifier
+            if mod is None:
+                mod = obj_part.modifiers.new('jbeam.slot.nodeOffset.x', 'DISPLACE')
+                mod.direction = 'NORMAL'
+                mod.mid_level = 0
+            mod.strength = x_offset
+
+    nodeOffset = bpy.props.FloatVectorProperty(name="Node offset", subtype='XYZ', unit='LENGTH', size=3, precision=3,
+                                               update=offset_update)
+    type = StringProperty(name="Type", description="Slot type.", get=get_type)
+
+    def add_part_object(self, part: Object):
+        part.parent = self.id_data
+        self.offset_update()
 
     @classmethod
     def register(cls):

@@ -47,9 +47,10 @@ class SlotPanel(Panel):
         slot = context.object.jbeam_slot  # type: bl_jbeam.Slot
         if not slot.is_slot():
             return
-        layout.label("Type:  {}".format(slot.get_type()))
+        layout.prop(slot, 'type')
         layout.prop(slot, 'default')
         layout.prop(slot, 'description')
+        layout.column().prop(slot, 'nodeOffset')
 
 
 classes = (

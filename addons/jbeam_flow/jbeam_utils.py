@@ -214,11 +214,11 @@ class PartObjectsBuilder(jbeam.EvalBase):
     def slot(self, props: ExtDict) -> bpy.types.Object:
         name = props.pop('type') + '.slot'
         empty_obj = bpy.data.objects.new(name, None)  # 'Empty' object
+        self.lock_transform(empty_obj)
+        slot = empty_obj.jbeam_slot  # type: bl_jbeam.Slot
         if 'nodeOffset' in props and isinstance(props['nodeOffset'], dict):
             offset = props.pop('nodeOffset')
-            empty_obj.location = offset['x', 'y', 'z']
-        self.lock_rot_scale(empty_obj)
-        slot = empty_obj.jbeam_slot  # type: bl_jbeam.Slot
+            slot.nodeOffset = offset['x', 'y', 'z']
         slot.default, slot.description = props['default', 'description']
         return empty_obj
 

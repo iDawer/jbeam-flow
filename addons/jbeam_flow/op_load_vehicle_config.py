@@ -52,7 +52,7 @@ class LoadVehicleConfig(Operator, ImportHelper):
                     part_map[slotType][part_name] = ob
             elif ob.jbeam_slot.is_slot():
                 part_name = ob.parent.parent.data.jbeam_part.name
-                part_slots_map[part_name].append((ob.jbeam_slot.get_type(), ob.jbeam_slot.default, ob))
+                part_slots_map[part_name].append(ob.jbeam_slot)
 
         main_parts = part_map.get('main')
         if not main_parts:
@@ -108,17 +108,17 @@ def fill_slots(part_map: defaultdict(dict), part_slots_map: defaultdict(list), p
         return
 
     part_name = part.data.jbeam_part.name
-    for slot_name, default, slot_obj in part_slots_map[part_name]:
-        ch_part_name = slot_part_conf.get(slot_name) or default
+    for slot in part_slots_map[part_name]:
+        ch_part_name = slot_part_conf.get(slot.type) or slot.default
         if ch_part_name:
             # child part specified by 'pc' or default
-            ch_part = part_map[slot_name].get(ch_part_name)
+            ch_part = part_map[slot.type].get(ch_part_name)
             if ch_part is not None:  # child part found
-                ch_part.parent = slot_obj
+                slot.add_part_object(ch_part)
                 fill_slots(part_map, part_slots_map, ch_part, slot_part_conf, depth + 1)
             else:
                 # child part specified but not found
-                print("\tPart '{}' for slot [{}] not found".format(ch_part_name, slot_name))
+                print("\tPart '{}' for slot [{}] not found".format(ch_part_name, slot.type))
 
 
 classes = (
