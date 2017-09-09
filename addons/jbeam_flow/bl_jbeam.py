@@ -100,8 +100,12 @@ class Slot(PropertyGroup):
     def is_slot(self):
         return self.id_data.parent is not None and 'slots' == self.id_data.parent.name.partition('.')[0]
 
-    def get_type(self):
+    def _type_get(self):
         return self.id_data.name.partition('.')[0]
+
+    def _type_set(self, value):
+        _, sep, tail = self.id_data.name.partition('.')
+        self.id_data.name = sep.join((value, tail))
 
     def offset_update(self, _=None):
         """Apply offset to child parts."""
@@ -121,7 +125,7 @@ class Slot(PropertyGroup):
 
     nodeOffset = bpy.props.FloatVectorProperty(name="Node offset", subtype='XYZ', unit='LENGTH', size=3, precision=3,
                                                update=offset_update)
-    type = StringProperty(name="Type", description="Slot type.", get=get_type)
+    type = StringProperty(name="Type", description="Slot type.", get=_type_get, set=_type_set)
 
     def add_part_object(self, part: Object):
         part.parent = self.id_data
