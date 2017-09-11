@@ -2,6 +2,7 @@ import collections
 from itertools import islice
 from typing import Iterator, Tuple
 
+from . import ext_json
 from .ext_json import ExtJSONParser, ExtJSONEvaluator
 from .misc import Switch, visitor_mixins, ExtDict
 
@@ -144,6 +145,36 @@ class EvalBase(ExtJSONEvaluator, visitor_mixins.Helper):
     #
     # def visit_value_row(self, ctx: ExtJSONParser.ValueArrayContext):
     #     return super().visitValueArray(ctx)
+
+
+class PC:
+    """.pc file"""
+    format = 1
+
+    def __init__(self, pc_data: dict):
+        self.data = pc_data
+
+    @property
+    def parts(self):
+        return self.data
+
+    @staticmethod
+    def load_from(file):
+        data = ext_json.load(file.read())
+        ft = data.get('format')
+        if ft:
+            p = PC2(data)
+            p.format = ft
+            return p
+        return PC(data)
+
+
+class PC2(PC):
+    format = 2
+
+    @property
+    def parts(self):
+        return self.data['parts']
 
 
 classes = ()

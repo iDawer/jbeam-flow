@@ -1,5 +1,5 @@
 import io
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import antlr4
@@ -33,6 +33,49 @@ def to_tree(jbeam_data: str):
     tree = parser.jbeam()
 
     return tree
+
+
+class VehicleBuilder:
+    @classmethod
+    def pc(cls, name: str, file: io.TextIOBase, context: bpy.types.Context):
+        part_map = defaultdict(dict)
+        part_slots_map = defaultdict(list)
+        for ob in context.scene.objects:
+            if ob.type == 'MESH':
+                slotType = ob.data.jbeam_part.slot_type
+                part_name = ob.data.jbeam_part.name
+                if slotType is not None and part_name is not None:
+                    part_map[slotType][part_name] = ob
+            elif ob.jbeam_slot.is_slot():
+                part_name = ob.parent.parent.data.jbeam_part.name
+                part_slots_map[part_name].append(ob.jbeam_slot)
+
+        main_parts = part_map.get('main')
+        if not main_parts:
+            raise ValueError("Missing part with slot type 'main'")
+        main_obj = next(iter(main_parts.values()))
+        raw_pc_data = jbeam.PC.load_from(file)
+        pc = bl_jbeam.PartsConfig(name, context)
+        cls.fill_pc_group(pc, raw_pc_data, main_obj)
+
+    @classmethod
+    def fill_pc_group(cls, pc: bl_jbeam.PartsConfig, pconf: jbeam.PC, part_obj: bpy.types.Object):
+        pc.parts_obj.link(part_obj)
+        slots_obj, slots = bl_jbeam.Part.get_slots(part_obj)
+        slots_obj and pc.parts_obj.link(slots_obj)
+        for slot in slots:
+            pc.parts_obj.link(slot.id_data)
+            ch_part_name = pconf.parts.get(slot.type) or slot.default
+            if ch_part_name:
+                # child part specified by 'pc' or default
+                ch_part = slot.parts_obj_map.get(ch_part_name)
+                if ch_part is not None:  # child part found
+                    cls.fill_pc_group(pc, pconf, ch_part)
+                else:
+                    # child part specified but not found
+                    print("\tPart '{}' for slot [{}] not found".format(ch_part_name, slot.type))
+
+        pass
 
 
 class PartObjectsBuilder(jbeam.EvalBase):
