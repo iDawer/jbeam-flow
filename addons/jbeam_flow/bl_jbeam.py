@@ -1,4 +1,5 @@
 import collections
+import typing
 from contextlib import contextmanager
 from typing import Union
 
@@ -84,6 +85,27 @@ class Part(PropertyGroup):
     triangles = PointerProperty(type=PropsTable)
     quads = PointerProperty(type=QuadsPropTable)
 
+    @staticmethod
+    def link_to_scene(part_obj, scene: bpy.types.Scene):
+        s_objects = scene.objects
+        s_objects.link(part_obj)
+        for section_obj in part_obj.children:
+            s_objects.link(section_obj)
+            if 'slots' == section_obj.name.partition('.')[0]:
+                for slot_obj in section_obj.children:
+                    s_objects.link(slot_obj)
+
+    @staticmethod
+    def get_slots(part_obj: Object):
+        """
+        :rtype: tuple(Object, list(Slot))
+        """
+        for obj in part_obj.children:
+            if 'slots' == obj.name.partition('.')[0]:
+                return obj, [slot_obj.jbeam_slot for slot_obj in obj.children]
+        else:
+            return None, []
+
     @classmethod
     def register(cls):
         Mesh.jbeam_part = PointerProperty(type=cls)
@@ -91,6 +113,27 @@ class Part(PropertyGroup):
     @classmethod
     def unregister(cls):
         del Mesh.jbeam_part
+
+
+class PartsConfig(PropertyGroup):
+    class Parts(dict):
+        def __getitem__(self, key):
+            return super().__getitem__(key)
+
+    def __new__(cls, name, context: bpy.types.Context):
+        return context.blend_data.groups.new(name).jbeam_pc
+
+    @property
+    def parts_obj(self):
+        return self.id_data.objects
+
+    @classmethod
+    def register(cls):
+        bpy.types.Group.jbeam_pc = PointerProperty(type=cls)
+
+    @classmethod
+    def unregister(cls):
+        del bpy.types.Group.jbeam_pc
 
 
 class Slot(PropertyGroup):
@@ -106,6 +149,11 @@ class Slot(PropertyGroup):
     def _type_set(self, value):
         _, sep, tail = self.id_data.name.partition('.')
         self.id_data.name = sep.join((value, tail))
+
+    @property
+    def parts_obj_map(self) -> typing.Dict[str, Object]:
+        """Dict[part_name: object]"""
+        return {obj.data.jbeam_part.name: obj for obj in self.id_data.children}
 
     def offset_update(self, _=None):
         """Apply offset to child parts."""
@@ -273,4 +321,5 @@ classes = (
     QuadsPropTable,
     Part,
     Slot,
+    PartsConfig,
 )
