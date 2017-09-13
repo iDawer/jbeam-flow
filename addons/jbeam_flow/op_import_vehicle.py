@@ -85,6 +85,7 @@ def fill_slots(part_map: defaultdict(dict), part_slots_map: defaultdict(list), p
     part_name = part.data.jbeam_part.name
     for slot in part_slots_map[part_name]:
         for ch_part in part_map[slot.type].values():
+            # ToDo handle already parented objects (duplicate?)
             slot.add_part_object(ch_part)
             fill_slots(part_map, part_slots_map, ch_part)
 

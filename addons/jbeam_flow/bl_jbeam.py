@@ -86,6 +86,16 @@ class Part(PropertyGroup):
     quads = PointerProperty(type=QuadsPropTable)
 
     @staticmethod
+    def link_to_scene(part_obj, scene: bpy.types.Scene):
+        s_objects = scene.objects
+        s_objects.link(part_obj)
+        for section_obj in part_obj.children:
+            s_objects.link(section_obj)
+            if 'slots' == section_obj.name.partition('.')[0]:
+                for slot_obj in section_obj.children:
+                    s_objects.link(slot_obj)
+
+    @staticmethod
     def get_slots(part_obj: Object):
         """
         :rtype: tuple(Object, list(Slot))

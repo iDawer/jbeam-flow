@@ -39,16 +39,12 @@ class VehicleBuilder:
     @classmethod
     def pc(cls, name: str, file: io.TextIOBase, context: bpy.types.Context):
         part_map = defaultdict(dict)
-        part_slots_map = defaultdict(list)
         for ob in context.scene.objects:
             if ob.type == 'MESH':
                 slotType = ob.data.jbeam_part.slot_type
                 part_name = ob.data.jbeam_part.name
                 if slotType is not None and part_name is not None:
                     part_map[slotType][part_name] = ob
-            elif ob.jbeam_slot.is_slot():
-                part_name = ob.parent.parent.data.jbeam_part.name
-                part_slots_map[part_name].append(ob.jbeam_slot)
 
         main_parts = part_map.get('main')
         if not main_parts:
@@ -56,10 +52,14 @@ class VehicleBuilder:
         main_obj = next(iter(main_parts.values()))
         raw_pc_data = jbeam.PC.load_from(file)
         pc = bl_jbeam.PartsConfig(name, context)
-        cls.fill_pc_group(pc, raw_pc_data, main_obj)
+        common_objects = None
+        if 'common' in context.blend_data.scenes:
+            common_objects = context.blend_data.scenes['common'].objects
+        cls.fill_pc_group(pc, raw_pc_data, main_obj, context, common_objects)
 
     @classmethod
-    def fill_pc_group(cls, pc: bl_jbeam.PartsConfig, pconf: jbeam.PC, part_obj: bpy.types.Object):
+    def fill_pc_group(cls, pc: bl_jbeam.PartsConfig, pconf: jbeam.PC, part_obj: bpy.types.Object, context,
+                      common_objects: bpy.types.SceneObjects = None):
         pc.parts_obj.link(part_obj)
         slots_obj, slots = bl_jbeam.Part.get_slots(part_obj)
         slots_obj and pc.parts_obj.link(slots_obj)
@@ -70,7 +70,12 @@ class VehicleBuilder:
                 # child part specified by 'pc' or default
                 ch_part = slot.parts_obj_map.get(ch_part_name)
                 if ch_part is not None:  # child part found
-                    cls.fill_pc_group(pc, pconf, ch_part)
+                    cls.fill_pc_group(pc, pconf, ch_part, context, common_objects)
+                elif common_objects and ch_part_name in common_objects:
+                    ch_part = common_objects[ch_part_name]
+                    slot.add_part_object(ch_part)
+                    bl_jbeam.Part.link_to_scene(ch_part, context.scene)
+                    cls.fill_pc_group(pc, pconf, ch_part, context, common_objects)
                 else:
                     # child part specified but not found
                     print("\tPart '{}' for slot [{}] not found".format(ch_part_name, slot.type))
