@@ -40,9 +40,10 @@ class VehicleBuilder:
     def pc(cls, name: str, file: io.TextIOBase, context: bpy.types.Context):
         part_map = defaultdict(dict)
         for ob in context.scene.objects:
-            if ob.type == 'MESH':
-                slotType = ob.data.jbeam_part.slot_type
-                part_name = ob.data.jbeam_part.name
+            part = bl_jbeam.Part(ob)
+            if part is not None:
+                slotType = part.slot_type
+                part_name = part.name
                 if slotType is not None and part_name is not None:
                     part_map[slotType][part_name] = ob
 
@@ -115,23 +116,17 @@ class PartObjectsBuilder(jbeam.EvalBase):
         self._vertsIndex = {}
         self._part_variables = {}
 
-        mesh = bpy.data.meshes.new(part_name)
-        # Save part name explicitly, due Blender avoids names collision by appending '.001'
-        mesh.jbeam_part.name = part_name
-        part_obj = bpy.data.objects.new(part_name, mesh)
-        part_obj.show_wire = True
-        part_obj.show_all_edges = True
-        if self.lock_part_transform:
-            self.lock_transform(part_obj)
+        part = bl_jbeam.Part(part_name, bpy.context)
+        mesh = part.id_data.data  # type: bpy.types.Mesh
 
         data_buf = io.StringIO()
         sections_ctx = part_value_ctx.object().pairs()
         if sections_ctx:
-            self.sections(sections_ctx, part_obj, mesh, data_buf)
+            self.sections(sections_ctx, part.id_data, mesh, data_buf)
 
-        mesh.jbeam_part.data = data_buf.getvalue()
+        part.data = data_buf.getvalue()
         mesh.update()
-        return part_obj
+        return part.id_data
 
     def sections(self, sections_ctx: ExtJSONParser.PairsContext, part_obj, mesh, data_buf: io.StringIO):
         bm = bmesh.new()
@@ -276,7 +271,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
         bl_jbeam.Node.ensure_data_layers(bm)
         nodes_ctx = ctx.array().values()
         if nodes_ctx:
-            with me.jbeam_part.nodes.init(bm.verts) as ptable:  # type: bl_jbeam.PropsTable
+            with me.jbeam_pgeometry.nodes.init(bm.verts) as ptable:  # type: bl_jbeam.PropsTable
                 for node_props, inlined_props_src in self.table(nodes_ctx, ptable):
                     node = self.node(node_props, inlined_props_src, bm)
                     ptable.assign_to_last_prop(node)
@@ -300,7 +295,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
         bl_jbeam.Beam.ensure_data_layers(bm)
         beams_ctx = ctx.array().values()
         if beams_ctx:
-            with me.jbeam_part.beams.init(bm.edges) as ptable:  # type: bl_jbeam.PropsTable
+            with me.jbeam_pgeometry.beams.init(bm.edges) as ptable:  # type: bl_jbeam.PropsTable
                 for beam_props, inl_prop_src in self.table(beams_ctx, ptable):
                     beam = self.beam(beam_props, inl_prop_src, bm)
                     if beam:
@@ -327,7 +322,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
         bl_jbeam.Surface.ensure_data_layers(bm)
         triangles_ctx = ctx.array().values()
         if triangles_ctx:
-            with me.jbeam_part.triangles.init(bm.faces) as ptable:  # type: bl_jbeam.PropsTable
+            with me.jbeam_pgeometry.triangles.init(bm.faces) as ptable:  # type: bl_jbeam.PropsTable
                 for tri_prop, inl_prop_src in self.table(triangles_ctx, ptable):
                     surface = self.surface(tri_prop['id1:', 'id2:', 'id3:'], inl_prop_src, bm)
                     if surface:
@@ -360,7 +355,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
         bl_jbeam.Surface.ensure_data_layers(bm)
         quads_ctx = ctx.array().values()
         if quads_ctx:
-            with me.jbeam_part.quads.init(bm.faces) as ptable:  # type: bl_jbeam.QuadsPropTable
+            with me.jbeam_pgeometry.quads.init(bm.faces) as ptable:  # type: bl_jbeam.QuadsPropTable
                 for prop, inl_prop_src in self.table(quads_ctx, ptable):
                     surface = self.surface(prop['id1:', 'id2:', 'id3:', 'id4:'], inl_prop_src, bm)
                     if surface:
@@ -370,9 +365,9 @@ class PartObjectsBuilder(jbeam.EvalBase):
 
     # ============================== another sections ==============================
 
-    def section_slottype(self, ctx: _ValueStringContext = None, me=None, **_) -> str:
+    def section_slottype(self, ctx: _ValueStringContext = None, part=None, **_) -> str:
         stype = ctx.accept(self)
-        me.jbeam_part.slot_type = stype
+        bl_jbeam.Part(part).slot_type = stype
         return '${slotType}'
 
 

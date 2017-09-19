@@ -103,7 +103,7 @@ class DATA_PT_jbeam_nodes(JbeamPanel, Panel):
         layout = self.layout
         ob = context.object
 
-        self.template_props_table(layout, ob.data.jbeam_part.nodes, MESH_UL_jbeam_nodes.__name__,
+        self.template_props_table(layout, ob.data.jbeam_pgeometry.nodes, MESH_UL_jbeam_nodes.__name__,
                                   NodePropChain_Add.bl_idname,
                                   NodePropChain_Remove.bl_idname,
                                   NodePropChain_Move.bl_idname,
@@ -120,7 +120,7 @@ class DATA_PT_jbeam_beams(JbeamPanel, Panel):
         layout = self.layout
         ob = context.object
 
-        self.template_props_table(layout, ob.data.jbeam_part.beams, MESH_UL_jbeam_beams.__name__,
+        self.template_props_table(layout, ob.data.jbeam_pgeometry.beams, MESH_UL_jbeam_beams.__name__,
                                   BeamPropChain_Add.bl_idname,
                                   BeamPropChain_Remove.bl_idname,
                                   BeamPropChain_Move.bl_idname,
@@ -137,7 +137,7 @@ class DATA_PT_jbeam_triangles(JbeamPanel, Panel):
         layout = self.layout
         ob = context.object
 
-        self.template_props_table(layout, ob.data.jbeam_part.triangles, MESH_UL_jbeam_triangles.__name__,
+        self.template_props_table(layout, ob.data.jbeam_pgeometry.triangles, MESH_UL_jbeam_triangles.__name__,
                                   TrianglePropChain_Add.bl_idname,
                                   TrianglePropChain_Remove.bl_idname,
                                   TrianglePropChain_Move.bl_idname,
@@ -154,7 +154,7 @@ class DATA_PT_jbeam_quads(JbeamPanel, Panel):
         layout = self.layout
         ob = context.object
 
-        self.template_props_table(layout, ob.data.jbeam_part.quads, MESH_UL_jbeam_quads.__name__,
+        self.template_props_table(layout, ob.data.jbeam_pgeometry.quads, MESH_UL_jbeam_quads.__name__,
                                   QuadPropChain_Add.bl_idname,
                                   QuadPropChain_Remove.bl_idname,
                                   QuadPropChain_Move.bl_idname,
@@ -332,7 +332,7 @@ class PropSet_Select(PropSetBase):
 class NodesOpMixin(PropSetBase):
     @staticmethod
     def get_props(context):
-        return context.object.data.jbeam_part.nodes
+        return context.object.data.jbeam_pgeometry.nodes
 
     @staticmethod
     def get_datalayer(bm):
@@ -346,7 +346,7 @@ class NodesOpMixin(PropSetBase):
 class BeamsOpMixin(PropSetBase):
     @staticmethod
     def get_props(context):
-        return context.object.data.jbeam_part.beams
+        return context.object.data.jbeam_pgeometry.beams
 
     @staticmethod
     def get_datalayer(bm):
@@ -360,7 +360,7 @@ class BeamsOpMixin(PropSetBase):
 class TrianglesOpMixin(PropSetBase):
     @staticmethod
     def get_props(context):
-        return context.object.data.jbeam_part.triangles
+        return context.object.data.jbeam_pgeometry.triangles
 
     @staticmethod
     def get_datalayer(bm):
@@ -374,7 +374,7 @@ class TrianglesOpMixin(PropSetBase):
 class QuadsOpMixin(PropSetBase):
     @staticmethod
     def get_props(context):
-        return context.object.data.jbeam_part.quads
+        return context.object.data.jbeam_pgeometry.quads
 
     @staticmethod
     def get_datalayer(bm: bmesh.types.BMesh):

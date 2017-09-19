@@ -76,64 +76,41 @@ class QuadsPropTable(PropertyGroup, PropsTableBase):
     ptable_id_layer_name = 'jbeam.quads.chain_id'
 
 
-class Part(PropertyGroup):
-    name = StringProperty(name="Name")
-    slot_type = StringProperty(name="Slot type")
-    data = StringProperty(name="Data", description="Partially decoded JBeam data")
-    nodes = PointerProperty(type=PropsTable)
-    beams = PointerProperty(type=PropsTable)
-    triangles = PointerProperty(type=PropsTable)
-    quads = PointerProperty(type=QuadsPropTable)
+class _NodesTable_unused:  # (PropertyGroup, PropsTableBase):
+    """ Optimise custom data accecss. """
 
-    @staticmethod
-    def link_to_scene(part_obj, scene: bpy.types.Scene):
-        s_objects = scene.objects
-        s_objects.link(part_obj)
-        for section_obj in part_obj.children:
-            s_objects.link(section_obj)
-            if 'slots' == section_obj.name.partition('.')[0]:
-                for slot_obj in section_obj.children:
-                    s_objects.link(slot_obj)
+    # not used actually, need for shut up IDE complaining
+    def __init__(self):
+        super().__init__()
+        self._node_id_lyr = None  # type: BMLayerItem
+        self._node_prop_lyr = None  # type: BMLayerItem
 
-    @staticmethod
-    def get_slots(part_obj: Object):
-        """
-        :rtype: tuple(Object, list(Slot))
-        """
-        for obj in part_obj.children:
-            if 'slots' == obj.name.partition('.')[0]:
-                return obj, [slot_obj.jbeam_slot for slot_obj in obj.children]
-        else:
-            return None, []
+    @contextmanager
+    def init(self, vert_seq: BMVertSeq):
+        # see PropsTableBase.init for details
+        with super().init(vert_seq):
+            self._node_id_lyr = vert_seq.layers.string.new(Node.id.layer_name)
+            self._node_prop_lyr = vert_seq.layers.string.new(Node.props_src.layer_name)
+            try:
+                yield self
+            finally:
+                self._node_id_lyr = None
+                self._node_prop_lyr = None
 
-    @classmethod
-    def register(cls):
-        Mesh.jbeam_part = PointerProperty(type=cls)
+    def new_node(self, bm: BMesh, vert: BMVert):
+        if not (self._node_prop_lyr and self._node_id_lyr):
+            raise ValueError("NodesTable.new method allowed only under 'with NodesTable.init()' block")
 
-    @classmethod
-    def unregister(cls):
-        del Mesh.jbeam_part
-
-
-class PartsConfig(PropertyGroup):
-    class Parts(dict):
-        def __getitem__(self, key):
-            return super().__getitem__(key)
-
-    def __new__(cls, name, context: bpy.types.Context):
-        return context.blend_data.groups.new(name).jbeam_pc
+        # raise NotImplementedError()
+        return Node(bm, vert)
 
     @property
-    def parts_obj(self):
-        return self.id_data.objects
+    def node_id_lyr(self):
+        return self._node_id_lyr
 
-    @classmethod
-    def register(cls):
-        bpy.types.Group.jbeam_pc = PointerProperty(type=cls)
-
-    @classmethod
-    def unregister(cls):
-        del bpy.types.Group.jbeam_pc
+    @property
+    def node_prop_lyr(self):
+        return self._node_prop_lyr
 
 
 class Slot(PropertyGroup):
@@ -153,7 +130,7 @@ class Slot(PropertyGroup):
     @property
     def parts_obj_map(self) -> typing.Dict[str, Object]:
         """Dict[part_name: object]"""
-        return {obj.data.jbeam_part.name: obj for obj in self.id_data.children}
+        return {obj.jbeam_part.name: obj for obj in self.id_data.children}
 
     def offset_update(self, _=None):
         """Apply offset to child parts."""
@@ -206,41 +183,94 @@ class Slot(PropertyGroup):
         del Object.jbeam_slot
 
 
-class _NodesTable_unused:  # (PropertyGroup, PropsTableBase):
-    """ Optimise custom data accecss. """
+class PartGeometry(PropertyGroup):
+    nodes = PointerProperty(type=PropsTable)
+    beams = PointerProperty(type=PropsTable)
+    triangles = PointerProperty(type=PropsTable)
+    quads = PointerProperty(type=QuadsPropTable)
 
-    # not used actually, need for shut up IDE complaining
-    def __init__(self):
-        super().__init__()
-        self._node_id_lyr = None  # type: BMLayerItem
-        self._node_prop_lyr = None  # type: BMLayerItem
+    @classmethod
+    def register(cls):
+        Mesh.jbeam_pgeometry = PointerProperty(type=cls)
 
-    @contextmanager
-    def init(self, vert_seq: BMVertSeq):
-        # see PropsTableBase.init for details
-        with super().init(vert_seq):
-            self._node_id_lyr = vert_seq.layers.string.new(Node.id.layer_name)
-            self._node_prop_lyr = vert_seq.layers.string.new(Node.props_src.layer_name)
-            try:
-                yield self
-            finally:
-                self._node_id_lyr = None
-                self._node_prop_lyr = None
+    @classmethod
+    def unregister(cls):
+        del Mesh.jbeam_pgeometry
 
-    def new_node(self, bm: BMesh, vert: BMVert):
-        if not (self._node_prop_lyr and self._node_id_lyr):
-            raise ValueError("NodesTable.new method allowed only under 'with NodesTable.init()' block")
 
-        # raise NotImplementedError()
-        return Node(bm, vert)
+class Part(PropertyGroup):
+    name = StringProperty(name="Name")
+    slot_type = StringProperty(name="Slot type")
+    data = StringProperty(name="Data", description="Partially decoded JBeam data")
+
+    def __new__(cls, name_or_obj: Union[str, Object], context: bpy.types.Context = None):
+        """
+        @rtype: Part | None
+        """
+        if isinstance(name_or_obj, Object) and name_or_obj.type == 'MESH':
+            return name_or_obj.jbeam_part
+        elif isinstance(name_or_obj, str):
+            mesh = context.blend_data.meshes.new(name_or_obj)
+            part_obj = context.blend_data.objects.new(name_or_obj, mesh)
+            part_obj.show_wire = True
+            part_obj.show_all_edges = True
+            from .jbeam.misc.visitor_mixins import Helper
+            Helper.lock_transform(part_obj)
+            # Save part name explicitly, due Blender avoids names collision by appending '.001'
+            part_obj.jbeam_part.name = name_or_obj
+            return part_obj.jbeam_part
+        else:
+            return None
+
+    @staticmethod
+    def link_to_scene(part_obj, scene: bpy.types.Scene):
+        s_objects = scene.objects
+        s_objects.link(part_obj)
+        for section_obj in part_obj.children:
+            s_objects.link(section_obj)
+            if 'slots' == section_obj.name.partition('.')[0]:
+                for slot_obj in section_obj.children:
+                    s_objects.link(slot_obj)
+
+    @staticmethod
+    def get_slots(part_obj: Object):
+        """
+        :rtype: tuple(Object, list(Slot))
+        """
+        for obj in part_obj.children:
+            if 'slots' == obj.name.partition('.')[0]:
+                return obj, [slot_obj.jbeam_slot for slot_obj in obj.children]
+        else:
+            return None, []
+
+    @classmethod
+    def register(cls):
+        Object.jbeam_part = PointerProperty(type=cls)
+
+    @classmethod
+    def unregister(cls):
+        del Object.jbeam_part
+
+
+class PartsConfig(PropertyGroup):
+    class Parts(dict):
+        def __getitem__(self, key):
+            return super().__getitem__(key)
+
+    def __new__(cls, name, context: bpy.types.Context):
+        return context.blend_data.groups.new(name).jbeam_pc
 
     @property
-    def node_id_lyr(self):
-        return self._node_id_lyr
+    def parts_obj(self):
+        return self.id_data.objects
 
-    @property
-    def node_prop_lyr(self):
-        return self._node_prop_lyr
+    @classmethod
+    def register(cls):
+        bpy.types.Group.jbeam_pc = PointerProperty(type=cls)
+
+    @classmethod
+    def unregister(cls):
+        del bpy.types.Group.jbeam_pc
 
 
 # region BMesh element wrappers
@@ -319,7 +349,8 @@ classes = (
     PropsTableBase.Prop,
     PropsTable,
     QuadsPropTable,
-    Part,
     Slot,
+    PartGeometry,
+    Part,
     PartsConfig,
 )

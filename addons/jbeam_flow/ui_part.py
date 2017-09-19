@@ -20,7 +20,7 @@ class JBeamPartPanel(Panel):
 
     def draw(self, context):
         layout = self.layout
-        part = context.object.data.jbeam_part
+        part = context.object.jbeam_part
         layout.prop(part, 'name')
         layout.prop(part, 'slot_type')
         row = layout.row(align=True)

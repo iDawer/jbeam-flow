@@ -7,6 +7,8 @@ from bpy.props import StringProperty
 from bpy.types import Operator
 from bpy_extras.io_utils import ImportHelper
 
+from . import bl_jbeam
+
 
 class ImportJBeamVehicle(Operator, ImportHelper):  #
     """Import BeamNG's JBeam vehicle"""
@@ -41,13 +43,12 @@ class ImportJBeamVehicle(Operator, ImportHelper):  #
                 part_map = defaultdict(dict)
                 part_slots_map = defaultdict(list)
                 for ob in context.scene.objects:
-                    if ob.type == 'MESH':
-                        slotType = ob.data.jbeam_part.slot_type
-                        part_name = ob.data.jbeam_part.name
-                        if slotType is not None and part_name is not None:
-                            part_map[slotType][part_name] = ob
+                    part = bl_jbeam.Part(ob)
+                    if part is not None:
+                        if part.slot_type is not None and part.name is not None:
+                            part_map[part.slot_type][part.name] = ob
                     elif ob.jbeam_slot.is_slot():
-                        part_name = ob.parent.parent.data.jbeam_part.name
+                        part_name = ob.parent.parent.jbeam_part.name
                         part_slots_map[part_name].append(ob.jbeam_slot)
 
                 main_parts = part_map.get('main')
@@ -82,7 +83,7 @@ class ImportJBeamVehicle(Operator, ImportHelper):  #
 
 
 def fill_slots(part_map: defaultdict(dict), part_slots_map: defaultdict(list), part):
-    part_name = part.data.jbeam_part.name
+    part_name = part.jbeam_part.name
     for slot in part_slots_map[part_name]:
         for ch_part in part_map[slot.type].values():
             # ToDo handle already parented objects (duplicate?)
