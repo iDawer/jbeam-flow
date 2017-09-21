@@ -113,19 +113,26 @@ class _NodesTable_unused:  # (PropertyGroup, PropsTableBase):
         return self._node_prop_lyr
 
 
+def _id_name_decorator(rna_prop):
+    def get(self: PropertyGroup):
+        return self.id_data.name.partition('.')[0]
+
+    def set(self: PropertyGroup, value):
+        _, sep, tail = self.id_data.name.partition('.')
+        self.id_data.name = sep.join((value, tail))
+
+    rna_prop[1]['get'] = get
+    rna_prop[1]['set'] = set
+    return rna_prop
+
+
 class Slot(PropertyGroup):
+    type = _id_name_decorator(StringProperty(name="Type", description="Slot type."))
     default = StringProperty(name="Default part", description="Default part name.")
     description = StringProperty(name="Description")
 
     def is_slot(self):
         return self.id_data.parent is not None and 'slots' == self.id_data.parent.name.partition('.')[0]
-
-    def _type_get(self):
-        return self.id_data.name.partition('.')[0]
-
-    def _type_set(self, value):
-        _, sep, tail = self.id_data.name.partition('.')
-        self.id_data.name = sep.join((value, tail))
 
     @property
     def parts_obj_map(self) -> typing.Dict[str, Object]:
@@ -150,7 +157,6 @@ class Slot(PropertyGroup):
 
     nodeOffset = bpy.props.FloatVectorProperty(name="Node offset", subtype='XYZ', unit='LENGTH', size=3, precision=3,
                                                update=offset_update)
-    type = StringProperty(name="Type", description="Slot type.", get=_type_get, set=_type_set)
 
     def add_part_object(self, part: Object):
         part.parent = self.id_data
@@ -199,7 +205,7 @@ class PartGeometry(PropertyGroup):
 
 
 class Part(PropertyGroup):
-    name = StringProperty(name="Name")
+    name = _id_name_decorator(StringProperty(name="Name"))
     slot_type = StringProperty(name="Slot type")
     data = StringProperty(name="Data", description="Partially decoded JBeam data")
 
@@ -231,6 +237,23 @@ class Part(PropertyGroup):
             if 'slots' == section_obj.name.partition('.')[0]:
                 for slot_obj in section_obj.children:
                     s_objects.link(slot_obj)
+
+    def duplicate(self):
+        ob = self.id_data  # type: Object
+        bpy.ops.object.select_all(action='DESELECT')
+        ob.select = True
+        for section_obj in ob.children:  # type: Object
+            section_obj.select = True
+            if 'slots' == section_obj.name.partition('.')[0]:
+                for slot_obj in section_obj.children:  # type: Object
+                    slot_obj.select = True
+        scene_objects = bpy.context.scene.objects
+        # preserve active object
+        last_active, scene_objects.active = scene_objects.active, ob
+        # duplicate operator preserves hierarchy, selection and active state
+        bpy.ops.object.duplicate(linked=True)
+        dup_ob, scene_objects.active = scene_objects.active, last_active
+        return dup_ob.jbeam_part
 
     @staticmethod
     def get_slots(part_obj: Object):

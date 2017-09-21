@@ -56,6 +56,7 @@ with reloadable(__name__, locals()) as loaded:
         jbeam_utils,
         text_prop_editor,
         op_import,
+        op_fill_slots,
         op_sync_to_jbeam,
         op_move_dummies,
         op_rename_node,

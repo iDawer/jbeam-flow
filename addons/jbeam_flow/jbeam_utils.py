@@ -81,7 +81,35 @@ class VehicleBuilder:
                     # child part specified but not found
                     print("\tPart '{}' for slot [{}] not found".format(ch_part_name, slot.type))
 
-        pass
+    @classmethod
+    def fill_slots(cls, part: bl_jbeam.Part, objects):
+        part_map = defaultdict(dict)
+        part_slots_map = defaultdict(list)
+        for ob in objects:
+            p = bl_jbeam.Part(ob)
+            if p is not None:
+                if p.slot_type is not None and p.name is not None:
+                    part_map[p.slot_type][p.name] = ob
+            elif ob.jbeam_slot.is_slot():
+                part_name = ob.parent.parent.jbeam_part.name
+                part_slots_map[part_name].append(ob.jbeam_slot)
+        cls._fill_slots(part_map, part_slots_map, part.id_data)
+
+    @staticmethod
+    def _fill_slots(part_map: defaultdict(dict), part_slots_map: defaultdict(list), part_ob):
+        _, slots = bl_jbeam.Part.get_slots(part_ob)
+        for slot in slots:
+            already_in_slot = slot.parts_obj_map
+            for ch_part in part_map[slot.type].values():
+                ch_part_name = bl_jbeam.Part(ch_part).name
+                if ch_part_name in already_in_slot:
+                    ch_part = already_in_slot.get(ch_part_name)
+                else:
+                    if ch_part.parent is not None:
+                        # duplicate already parented child object
+                        ch_part = bl_jbeam.Part(ch_part).duplicate().id_data
+                    slot.add_part_object(ch_part)
+                VehicleBuilder._fill_slots(part_map, part_slots_map, ch_part)
 
 
 class PartObjectsBuilder(jbeam.EvalBase):

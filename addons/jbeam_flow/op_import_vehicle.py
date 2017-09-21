@@ -1,16 +1,13 @@
 import os
-from collections import deque, defaultdict
+from collections import deque
 from os import path
 
 import bpy
 from bpy.props import StringProperty
-from bpy.types import Operator
 from bpy_extras.io_utils import ImportHelper
 
-from . import bl_jbeam
 
-
-class ImportJBeamVehicle(Operator, ImportHelper):  #
+class ImportJBeamVehicle(bpy.types.Operator, ImportHelper):  #
     """Import BeamNG's JBeam vehicle"""
     bl_idname = "import_scene.jbeam_vehicle"
     bl_label = "JBeam vehicle"
@@ -39,26 +36,6 @@ class ImportJBeamVehicle(Operator, ImportHelper):  #
                     "Importing: %d/%d. Press Esc/RMB to cancel." % (self.total - len(self.files), self.total))
                 bpy.ops.import_mesh.jbeam(filepath=path.join(dir, name), filename=name)
             else:
-                # All files imported. Filling slots:
-                part_map = defaultdict(dict)
-                part_slots_map = defaultdict(list)
-                for ob in context.scene.objects:
-                    part = bl_jbeam.Part(ob)
-                    if part is not None:
-                        if part.slot_type is not None and part.name is not None:
-                            part_map[part.slot_type][part.name] = ob
-                    elif ob.jbeam_slot.is_slot():
-                        part_name = ob.parent.parent.jbeam_part.name
-                        part_slots_map[part_name].append(ob.jbeam_slot)
-
-                main_parts = part_map.get('main')
-                if not main_parts:
-                    self.report({'ERROR'}, "Missing part with slot type 'main'")
-                    self.cancel(context)
-                    return {'CANCELLED'}
-                main_p = next(iter(main_parts.values()))
-                fill_slots(part_map, part_slots_map, main_p)
-
                 self.report({'INFO'}, "Import done (%d files)" % self.total)
                 self.cancel(context)
                 return {'FINISHED'}
@@ -69,9 +46,9 @@ class ImportJBeamVehicle(Operator, ImportHelper):  #
         wm = context.window_manager
         wm.event_timer_remove(self._timer)
 
-    def execute(self, context):
+    def execute(self, context: bpy.types.Context):
         vehicle_name = path.basename(path.dirname(self.directory))
-        context.screen.scene = bpy.data.scenes.new(vehicle_name)
+        context.screen.scene = context.blend_data.scenes.new(vehicle_name)
         self.files = deque((root, f) for root, dirs, files in os.walk(self.directory)
                            for f in files if f.lower().endswith(".jbeam"))
         self.total = len(self.files)
@@ -80,15 +57,6 @@ class ImportJBeamVehicle(Operator, ImportHelper):  #
         self._timer = wm.event_timer_add(0.2, context.window)
         wm.modal_handler_add(self)
         return {'RUNNING_MODAL'}
-
-
-def fill_slots(part_map: defaultdict(dict), part_slots_map: defaultdict(list), part):
-    part_name = part.jbeam_part.name
-    for slot in part_slots_map[part_name]:
-        for ch_part in part_map[slot.type].values():
-            # ToDo handle already parented objects (duplicate?)
-            slot.add_part_object(ch_part)
-            fill_slots(part_map, part_slots_map, ch_part)
 
 
 classes = (
