@@ -139,28 +139,41 @@ class Slot(PropertyGroup):
         """Dict[part_name: object]"""
         return {obj.jbeam_part.name: obj for obj in self.id_data.children}
 
-    def offset_update(self, _=None):
-        """Apply offset to child parts."""
+    def update_offset_correction(self, _=None):
+        """Applies offset X correction to child parts using Displace modifier."""
         obj_slot = self.id_data  # type: Object
-        obj_slot.location.yz = self.nodeOffset.yz
         # X has special case [vehicle/jbeam/jbeam_main.lua:1642 - function postProcess(vehicles)]
-        delta_dimension = self.nodeOffset.x * 2
         for obj_part in obj_slot.children:
             mod = obj_part.modifiers.get('jbeam.slot.nodeOffset.x')
             if mod is None:
                 mod = obj_part.modifiers.new('jbeam.slot.nodeOffset.x', 'DISPLACE')  # type: bpy.types.DisplaceModifier
                 mod.direction = 'X'
-                mod.mid_level = .5
+                # mid_level = 1.0: white 0, black -1
+                # mid_level = 0.5: white +1, black -1
+                mod.mid_level = 1.0
                 # texture with displace directions
                 mod.texture = self._ensure_offset_texture()
-            mod.strength = delta_dimension
+            # driver setup
+            fcurve = mod.driver_add('strength')
+            fcurve.mute = True
+            driver = fcurve.driver
+            driver.type = 'SCRIPTED'
+            driver.expression = "x * 2"
+            var = driver.variables[0] if len(driver.variables) > 0 else driver.variables.new()
+            var.type = 'TRANSFORMS'
+            var.name = "x"
+            var.targets[0].id = obj_slot
+            var.targets[0].transform_type = 'LOC_X'
+            var.targets[0].transform_space = 'WORLD_SPACE'
+            fcurve.mute = False
 
     nodeOffset = bpy.props.FloatVectorProperty(name="Node offset", subtype='XYZ', unit='LENGTH', size=3, precision=3,
-                                               update=offset_update)
+                                               step=2, get=lambda self: self.id_data.location,
+                                               set=lambda self, v: setattr(self.id_data, 'location', v))
 
-    def add_part_object(self, part: Object):
-        part.parent = self.id_data
-        self.offset_update()
+    def add_part_object(self, part_obj: Object):
+        part_obj.parent = self.id_data
+        self.update_offset_correction()
 
     @staticmethod
     def _ensure_offset_texture() -> bpy.types.BlendTexture:
