@@ -1,8 +1,10 @@
+import inspect
 import types
 import typing
 
 import bmesh
 import bpy
+import bpy_types
 from bmesh import types as bmtypes
 
 # Typing hints, for annotations use only.
@@ -37,10 +39,24 @@ class ElemWrapper:
         """ Initialise custom data layers if need. """
         raise NotImplementedError()
 
+    @classmethod
+    def get_edit_active(cls, edit_mesh: bpy.types.Mesh):
+        if not edit_mesh.is_editmode:
+            return None, "Mesh is not in Edit mode."
+        bm = bmesh.from_edit_mesh(edit_mesh)
+        elem = bm.select_history.active
+        if not cls.is_valid_type(elem):
+            return None, "No active {}".format(cls.__name__)
+        jb_elem = cls(bm, elem)
+        jb_elem._bmesh = bm
+        jb_elem.ensure_data_layers(bm)
+        return jb_elem, None
+
 
 class ABCProperty:
-    def __init__(self, layer_name: str):
+    def __init__(self, layer_name: str, prop_definition=None):
         self.layer_name = layer_name
+        self.prop_definition = prop_definition
 
     def __get__(self, instance: ElemWrapper, owner):
         raise NotImplementedError()
@@ -58,9 +74,10 @@ class ABCProperty:
 
 
 class String(ABCProperty):
-    def __init__(self, layer_name: str):
+    def __init__(self, layer_name: str, prop_definition=None):
         """ :rtype: str or String """  # 'typing' module does not support des
-        super().__init__(layer_name)
+        prop_definition = prop_definition or bpy.props.StringProperty()
+        super().__init__(layer_name, prop_definition)
 
     def __get__(self, instance: ElemWrapper, owner):
         try:
@@ -87,9 +104,10 @@ class String(ABCProperty):
 
 
 class Boolean(ABCProperty):
-    def __init__(self, layer_name: str):
+    def __init__(self, layer_name: str, prop_definition=None):
         """ :rtype: bool or Boolean """  # 'typing' module does not support des
-        super().__init__(layer_name)
+        prop_definition = prop_definition or bpy.props.BoolProperty()
+        super().__init__(layer_name, prop_definition)
 
     def __get__(self, instance: ElemWrapper, owner):
         try:
@@ -177,6 +195,28 @@ class NoEditMeshError(Error):
 class ElementTypeError(Error):
     """Raised when type of active mesh element is wrong"""
     pass
+
+
+def _define_getset(name, prop_def, proxify: Type[ElemWrapper]):
+    prop_def[1]['get'] = lambda self: getattr(proxify.get_edit_active(self.id_data)[0], name)
+    prop_def[1]['set'] = lambda self, val: setattr(proxify.get_edit_active(self.id_data)[0], name, val)
+    return prop_def
+
+
+class RNAProxyMeta(bpy_types.RNAMetaPropGroup):
+    """Makes proxy descriptors of active ElemWrapper"""
+
+    def __new__(mcs, name, bases, namespace, proxify=None):
+        if not issubclass(proxify, ElemWrapper):
+            raise TypeError("'proxify' must be subtype of ElemWrapper")
+
+        cls = super().__new__(mcs, name, bases, namespace)
+        for name, descr in inspect.getmembers(proxify, lambda desc: isinstance(desc, ABCProperty)):
+            setattr(cls, name, _define_getset(name, descr.prop_definition, proxify))
+        return cls
+
+    def __init__(cls, *args, **kwds):
+        pass
 
 
 classes = ()

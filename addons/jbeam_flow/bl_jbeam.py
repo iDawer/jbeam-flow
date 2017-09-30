@@ -5,7 +5,7 @@ from typing import Union
 
 import bpy
 from bmesh.types import BMesh, BMVertSeq, BMEdgeSeq, BMFaceSeq, BMLayerItem, BMVert, BMEdge, BMFace
-from bpy.props import IntProperty, StringProperty, CollectionProperty, PointerProperty
+from bpy.props import IntProperty, StringProperty, BoolProperty, CollectionProperty, PointerProperty
 from bpy.types import PropertyGroup, Mesh, Object
 
 from . import bm_props, jbeam
@@ -15,11 +15,13 @@ from . import bm_props, jbeam
 class Element(bm_props.ElemWrapper):
     """ Base class for jbeam elements (node, beam, etc.) which are represented as bmesh elements. """
     # todo: property access (ChainMap?)
-    props_src = bm_props.String('jbeam.private_props')
+    props_src = bm_props.String('jbeam.private_props', StringProperty(name="Private properties"))
 
 
 class Node(Element):
-    id = bm_props.String('jbeam.node.id')
+    id = bm_props.String('jbeam.node.id', StringProperty(
+        name="Node id", options={'TEXTEDIT_UPDATE'}, description="Name of the node. '~' at start means it is "
+                                                                 "dummy copy from parent part"))
 
     def __init__(self, bm: BMesh, vert: BMVert):
         super().__init__(bm, vert)
@@ -79,7 +81,25 @@ class Surface(Element):
         return isinstance(bm_elem, BMFace)
 
 
+class RNA_ActiveNode(PropertyGroup, metaclass=bm_props.RNAProxyMeta, proxify=Node):
+    pass
+
+
 # endregion BMesh element wrappers
+
+
+# region Helpers
+
+class NullablePtrPropGroup:
+    """Emulates PointerProperty with None values.
+    _nullablePtrs is dict with (property_name, null_checker_function) pairs
+    """
+    _nullablePtrs = {}
+
+    def __getattribute__(self, name):
+        if name != '_nullablePtrs' and name in self._nullablePtrs and self._nullablePtrs[name](self):
+            return None
+        return super().__getattribute__(name)
 
 
 class Counter(PropertyGroup):
@@ -96,6 +116,9 @@ class Counter(PropertyGroup):
         if item not in self:
             return 0
         return super().__getitem__(item)
+
+
+# endregion Helpers
 
 
 class PropsTableBase(jbeam.Table):
@@ -143,45 +166,15 @@ class PropsTable(PropertyGroup, PropsTableBase):
     pass
 
 
+class NodesTable(NullablePtrPropGroup, PropsTableBase, PropertyGroup):
+    _nullablePtrs = {
+        'active': lambda self: Node.get_edit_active(self.id_data)[0] is None,
+    }
+    active = PointerProperty(type=RNA_ActiveNode)  # type: Node
+
+
 class QuadsPropTable(PropertyGroup, PropsTableBase):
     ptable_id_layer_name = 'jbeam.quads.chain_id'
-
-
-class _NodesTable_unused:  # (PropertyGroup, PropsTableBase):
-    """ Optimise custom data accecss. """
-
-    # not used actually, need for shut up IDE complaining
-    def __init__(self):
-        super().__init__()
-        self._node_id_lyr = None  # type: BMLayerItem
-        self._node_prop_lyr = None  # type: BMLayerItem
-
-    @contextmanager
-    def init(self, vert_seq: BMVertSeq):
-        # see PropsTableBase.init for details
-        with super().init(vert_seq):
-            self._node_id_lyr = vert_seq.layers.string.new(Node.id.layer_name)
-            self._node_prop_lyr = vert_seq.layers.string.new(Node.props_src.layer_name)
-            try:
-                yield self
-            finally:
-                self._node_id_lyr = None
-                self._node_prop_lyr = None
-
-    def new_node(self, bm: BMesh, vert: BMVert):
-        if not (self._node_prop_lyr and self._node_id_lyr):
-            raise ValueError("NodesTable.new method allowed only under 'with NodesTable.init()' block")
-
-        # raise NotImplementedError()
-        return Node(bm, vert)
-
-    @property
-    def node_id_lyr(self):
-        return self._node_id_lyr
-
-    @property
-    def node_prop_lyr(self):
-        return self._node_prop_lyr
 
 
 def _id_name_decorator(rna_prop):
@@ -274,7 +267,7 @@ class Slot(PropertyGroup):
 
 
 class PartGeometry(PropertyGroup):
-    nodes = PointerProperty(type=PropsTable)
+    nodes = PointerProperty(type=NodesTable)  # type: NodesTable
     beams = PointerProperty(type=PropsTable)
     triangles = PointerProperty(type=PropsTable)
     quads = PointerProperty(type=QuadsPropTable)
@@ -381,9 +374,11 @@ class PartsConfig(PropertyGroup):
 
 
 classes = (
+    RNA_ActiveNode,
     Counter,
     PropsTableBase.Prop,
     PropsTable,
+    NodesTable,
     QuadsPropTable,
     Slot,
     PartGeometry,
