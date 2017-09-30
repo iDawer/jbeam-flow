@@ -11,6 +11,77 @@ from bpy.types import PropertyGroup, Mesh, Object
 from . import bm_props, jbeam
 
 
+# region BMesh element wrappers
+class Element(bm_props.ElemWrapper):
+    """ Base class for jbeam elements (node, beam, etc.) which are represented as bmesh elements. """
+    # todo: property access (ChainMap?)
+    props_src = bm_props.String('jbeam.private_props')
+
+
+class Node(Element):
+    id = bm_props.String('jbeam.node.id')
+
+    def __init__(self, bm: BMesh, vert: BMVert):
+        super().__init__(bm, vert)
+        self.layers = bm.verts.layers
+
+    @classmethod
+    def ensure_data_layers(cls, bm: BMesh):
+        cls.props_src.ensure_layer(bm.verts.layers)
+        cls.id.ensure_layer(bm.verts.layers)
+
+    @staticmethod
+    def is_valid_type(bm_elem: bm_props.BMElem) -> bool:
+        return isinstance(bm_elem, BMVert)
+
+
+class Beam(Element):
+    is_ghost = bm_props.Boolean('jbeam.beam.is_ghost')
+    """True when beam is ghost, default False. 
+    Ghost beams are not exported. Useful for triangles with edges which are not defined as beams."""
+
+    def __init__(self, bm: BMesh, edge: BMEdge):
+        super().__init__(bm, edge)
+        self.layers = bm.edges.layers
+        v1, v2 = edge.verts
+        self._nodes = (Node(bm, v1), Node(bm, v2))
+
+    @property
+    def nodes(self):
+        return self._nodes
+
+    def __str__(self) -> str:
+        return '["{0.id}", "{1.id}"]'.format(*self._nodes)
+
+    @classmethod
+    def ensure_data_layers(cls, bm: BMesh):
+        cls.is_ghost.ensure_layer(bm.edges.layers)
+        cls.props_src.ensure_layer(bm.edges.layers)
+
+    @staticmethod
+    def is_valid_type(bm_elem: bm_props.BMElem) -> bool:
+        return isinstance(bm_elem, BMEdge)
+
+
+class Surface(Element):
+    """Collision surface: triangle or quad."""
+
+    def __init__(self, bm: BMesh, face: BMFace):
+        super().__init__(bm, face)
+        self.layers = bm.faces.layers
+
+    @classmethod
+    def ensure_data_layers(cls, bm: BMesh):
+        cls.props_src.ensure_layer(bm.faces.layers)
+
+    @staticmethod
+    def is_valid_type(bm_elem: bm_props.BMElem) -> bool:
+        return isinstance(bm_elem, BMFace)
+
+
+# endregion BMesh element wrappers
+
+
 class Counter(PropertyGroup):
     """Mimic collections.Counter, underlying data stored as ID property"""
     update = collections.Counter.update
@@ -307,77 +378,6 @@ class PartsConfig(PropertyGroup):
     @classmethod
     def unregister(cls):
         del bpy.types.Group.jbeam_pc
-
-
-# region BMesh element wrappers
-class Element(bm_props.ElemWrapper):
-    """ Base class for jbeam elements (node, beam, etc.) which are represented as bmesh elements. """
-    # todo: property access (ChainMap?)
-    props_src = bm_props.String('jbeam.private_props')
-
-
-class Node(Element):
-    id = bm_props.String('jbeam.node.id')
-
-    def __init__(self, bm: BMesh, vert: BMVert):
-        super().__init__(bm, vert)
-        self.layers = bm.verts.layers
-
-    @classmethod
-    def ensure_data_layers(cls, bm: BMesh):
-        cls.props_src.ensure_layer(bm.verts.layers)
-        cls.id.ensure_layer(bm.verts.layers)
-
-    @staticmethod
-    def is_valid_type(bm_elem: bm_props.BMElem) -> bool:
-        return isinstance(bm_elem, BMVert)
-
-
-class Beam(Element):
-    is_ghost = bm_props.Boolean('jbeam.beam.is_ghost')
-    """True when beam is ghost, default False. 
-    Ghost beams are not exported. Useful for triangles with edges which are not defined as beams."""
-
-    def __init__(self, bm: BMesh, edge: BMEdge):
-        super().__init__(bm, edge)
-        self.layers = bm.edges.layers
-        v1, v2 = edge.verts
-        self._nodes = (Node(bm, v1), Node(bm, v2))
-
-    @property
-    def nodes(self):
-        return self._nodes
-
-    def __str__(self) -> str:
-        return '["{0.id}", "{1.id}"]'.format(*self._nodes)
-
-    @classmethod
-    def ensure_data_layers(cls, bm: BMesh):
-        cls.is_ghost.ensure_layer(bm.edges.layers)
-        cls.props_src.ensure_layer(bm.edges.layers)
-
-    @staticmethod
-    def is_valid_type(bm_elem: bm_props.BMElem) -> bool:
-        return isinstance(bm_elem, BMEdge)
-
-
-class Surface(Element):
-    """Collision surface: triangle or quad."""
-
-    def __init__(self, bm: BMesh, face: BMFace):
-        super().__init__(bm, face)
-        self.layers = bm.faces.layers
-
-    @classmethod
-    def ensure_data_layers(cls, bm: BMesh):
-        cls.props_src.ensure_layer(bm.faces.layers)
-
-    @staticmethod
-    def is_valid_type(bm_elem: bm_props.BMElem) -> bool:
-        return isinstance(bm_elem, BMFace)
-
-
-# endregion BMesh element wrappers
 
 
 classes = (
