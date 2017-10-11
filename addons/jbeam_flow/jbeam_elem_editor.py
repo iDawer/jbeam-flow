@@ -58,7 +58,7 @@ class JbeamNodeEditPanel(bpy.types.Panel):
 
     def draw(self, context: bpy.types.Context):
         edit_mesh = context.edit_object.data  # type: bpy.types.Mesh
-        active_node = edit_mesh.jbeam_pgeometry.nodes.active
+        active_node = edit_mesh.jbeam_pgeometry.nodes.proxy_active
 
         if active_node is None:
             self.layout.label("No active node.")

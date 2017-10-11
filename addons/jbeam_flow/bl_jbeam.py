@@ -81,7 +81,7 @@ class Surface(Element):
         return isinstance(bm_elem, BMFace)
 
 
-class RNA_ActiveNode(PropertyGroup, metaclass=bm_props.RNAProxyMeta, proxify=Node):
+class Proxy_ActiveNode(PropertyGroup, metaclass=bm_props.RNAProxyMeta, proxify=Node):
     pass
 
 
@@ -166,11 +166,13 @@ class PropsTable(PropertyGroup, PropsTableBase):
     pass
 
 
-class NodesTable(NullablePtrPropGroup, PropsTableBase, PropertyGroup):
-    _nullablePtrs = {
-        'active': lambda self: Node.get_edit_active(self.id_data)[0] is None,
-    }
-    active = PointerProperty(type=RNA_ActiveNode)  # type: Node
+class NodesTable(PropsTableBase, PropertyGroup):
+    proxy_active = PointerProperty(type=Proxy_ActiveNode)  # type: typing.Optional[Node]
+
+    def __getattribute__(self, key):
+        if key == 'proxy_active' and Node.get_edit_active(self.id_data)[0] is None:
+            return None
+        return super().__getattribute__(key)
 
 
 class QuadsPropTable(PropertyGroup, PropsTableBase):
@@ -374,7 +376,7 @@ class PartsConfig(PropertyGroup):
 
 
 classes = (
-    RNA_ActiveNode,
+    Proxy_ActiveNode,
     Counter,
     PropsTableBase.Prop,
     PropsTable,

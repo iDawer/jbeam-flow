@@ -204,7 +204,7 @@ def _define_getset(name, prop_def, proxify: Type[ElemWrapper]):
 
 
 class RNAProxyMeta(bpy_types.RNAMetaPropGroup):
-    """Makes proxy descriptors of active ElemWrapper"""
+    """Makes proxy descriptors for properties of active ElemWrapper"""
 
     def __new__(mcs, name, bases, namespace, proxify=None):
         if not issubclass(proxify, ElemWrapper):
