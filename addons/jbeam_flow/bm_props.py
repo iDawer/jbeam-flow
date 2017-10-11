@@ -198,9 +198,10 @@ class ElementTypeError(Error):
 
 
 def _define_getset(name, prop_def, proxify: Type[ElemWrapper]):
-    prop_def[1]['get'] = lambda self: getattr(proxify.get_edit_active(self.id_data)[0], name)
-    prop_def[1]['set'] = lambda self, val: setattr(proxify.get_edit_active(self.id_data)[0], name, val)
-    return prop_def
+    ret_def = prop_def[0], dict(prop_def[1])
+    ret_def[1]['get'] = lambda self: getattr(proxify.get_edit_active(self.id_data)[0], name)
+    ret_def[1]['set'] = lambda self, val: setattr(proxify.get_edit_active(self.id_data)[0], name, val)
+    return ret_def
 
 
 class RNAProxyMeta(bpy_types.RNAMetaPropGroup):
