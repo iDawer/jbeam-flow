@@ -38,9 +38,9 @@ class Node(Element):
 
 
 class Beam(Element):
-    is_ghost = bm_props.Boolean('jbeam.beam.is_ghost')
-    """True when beam is ghost, default False. 
-    Ghost beams are not exported. Useful for triangles with edges which are not defined as beams."""
+    is_ghost = bm_props.Boolean('jbeam.beam.is_ghost', BoolProperty(
+        name="Ghost", description="Ghost beams will not export. "
+                                  "Useful for triangles with edges which are not defined as beams."))
 
     def __init__(self, bm: BMesh, edge: BMEdge):
         super().__init__(bm, edge)
@@ -51,6 +51,10 @@ class Beam(Element):
     @property
     def nodes(self):
         return self._nodes
+
+    @property
+    def name(self):
+        return str(self)
 
     def __str__(self) -> str:
         return '["{0.id}", "{1.id}"]'.format(*self._nodes)
@@ -83,6 +87,13 @@ class Surface(Element):
 
 class Proxy_ActiveNode(PropertyGroup, metaclass=bm_props.RNAProxyMeta, proxify=Node):
     pass
+
+
+class Proxy_ActiveBeam(PropertyGroup, metaclass=bm_props.RNAProxyMeta, proxify=Beam):
+    def _name_get(self):
+        return str(Beam.get_edit_active(self.id_data)[0])
+
+    name = StringProperty(name='Name', get=_name_get)
 
 
 # endregion BMesh element wrappers
@@ -171,6 +182,15 @@ class NodesTable(PropsTableBase, PropertyGroup):
 
     def __getattribute__(self, key):
         if key == 'proxy_active' and Node.get_edit_active(self.id_data)[0] is None:
+            return None
+        return super().__getattribute__(key)
+
+
+class BeamsTable(PropsTableBase, PropertyGroup):
+    proxy_active = PointerProperty(type=Proxy_ActiveBeam)  # type: typing.Optional[Beam]
+
+    def __getattribute__(self, key):
+        if key == 'proxy_active' and Beam.get_edit_active(self.id_data)[0] is None:
             return None
         return super().__getattribute__(key)
 
@@ -270,7 +290,7 @@ class Slot(PropertyGroup):
 
 class PartGeometry(PropertyGroup):
     nodes = PointerProperty(type=NodesTable)  # type: NodesTable
-    beams = PointerProperty(type=PropsTable)
+    beams = PointerProperty(type=BeamsTable)  # type: BeamsTable
     triangles = PointerProperty(type=PropsTable)
     quads = PointerProperty(type=QuadsPropTable)
 
@@ -377,10 +397,12 @@ class PartsConfig(PropertyGroup):
 
 classes = (
     Proxy_ActiveNode,
+    Proxy_ActiveBeam,
     Counter,
     PropsTableBase.Prop,
     PropsTable,
     NodesTable,
+    BeamsTable,
     QuadsPropTable,
     Slot,
     PartGeometry,
