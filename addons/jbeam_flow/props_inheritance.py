@@ -27,9 +27,9 @@ class PropsMixin:
         # counter
         str_id = str(item.id)
         if str_id in data.counter:
-            split = row.split()
-            split.alignment = 'RIGHT'
-            split.label(text=str(data.counter[str_id]), icon='PINNED')
+            sub = row.row(align=True)
+            sub.alignment = 'RIGHT'
+            sub.label(text=str(data.counter[str_id]), icon='PINNED')
 
         # editor button
         if jb_prop == data.chain_list[data.active_index]:
@@ -73,27 +73,25 @@ class JbeamPanel:
     def template_props_table(layout: bpy.types.UILayout, props_table: bl_jbeam.PropsTable, listtype_name: str,
                              add_operator: str, remove_operator: str, move_operator: str,
                              object_mode: str, assign_operator: str, free_operator: str, select_operator: str):
+        row = layout.row(align=True)
+        row.alignment = 'RIGHT'
+        row.operator(add_operator, icon='ZOOMIN', text="")
+        row.operator(remove_operator, icon='ZOOMOUT', text="")
+        row.separator()
+        row.operator(move_operator, icon='TRIA_UP', text="").direction = 'UP'
+        row.operator(move_operator, icon='TRIA_DOWN', text="").direction = 'DOWN'
+
         row = layout.row()
         row.template_list(listtype_name, "", props_table, "chain_list",
                           props_table, "active_index")
 
-        col = row.column(align=True)
-        col.operator(add_operator, icon='ZOOMIN', text="")
-        col.operator(remove_operator, icon='ZOOMOUT', text="")
-        col.separator()
-        col.operator(move_operator, icon='TRIA_UP', text="").direction = 'UP'
-        col.operator(move_operator, icon='TRIA_DOWN', text="").direction = 'DOWN'
-
         if props_table.chain_list and object_mode == 'EDIT':
-            row = layout.row()
-
-            sub = row.row(align=True)
-            sub.operator(assign_operator, text="Assign")
-            sub.operator(free_operator, text="Free")
-
-            sub = row.row(align=True)
-            sub.operator(select_operator, text="Select").select = True
-            sub.operator(select_operator, text="Deselect").select = False
+            row = layout.row(align=True)
+            row.operator(assign_operator, text="Assign")
+            row.operator(free_operator, text="Free")
+            row.separator()
+            row.operator(select_operator, text="Select").select = True
+            row.operator(select_operator, text="Deselect").select = False
 
 
 class DATA_PT_jbeam_nodes(JbeamPanel, Panel):
