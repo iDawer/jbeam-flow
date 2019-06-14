@@ -75,6 +75,15 @@ class Surface(Element):
     def __init__(self, bm: BMesh, face: BMFace):
         super().__init__(bm, face)
         self.layers = bm.faces.layers
+        self._nodes = [Node(bm, v) for v in face.verts]  # type: typing.List[Node]
+
+    @property
+    def name(self):
+        return '["{}"]'.format('", "'.join((n.id for n in self._nodes)))
+
+    @property
+    def vertices(self):
+        return len(self._nodes)
 
     @classmethod
     def ensure_data_layers(cls, bm: BMesh):
@@ -91,9 +100,20 @@ class Proxy_ActiveNode(PropertyGroup, metaclass=bm_props.RNAProxyMeta, proxify=N
 
 class Proxy_ActiveBeam(PropertyGroup, metaclass=bm_props.RNAProxyMeta, proxify=Beam):
     def _name_get(self):
-        return str(Beam.get_edit_active(self.id_data)[0])
+        return Beam.get_edit_active(self.id_data)[0].name
 
     name = StringProperty(name='Name', get=_name_get)
+
+
+class Proxy_ActiveSurface(PropertyGroup, metaclass=bm_props.RNAProxyMeta, proxify=Surface):
+    def _name_get(self):
+        return Surface.get_edit_active(self.id_data)[0].name
+
+    def _vertices_get(self):
+        return Surface.get_edit_active(self.id_data)[0].vertices
+
+    name = StringProperty(name='Name', get=_name_get)
+    vertices = IntProperty(name='Vertex count', get=_vertices_get)
 
 
 # endregion BMesh element wrappers
@@ -195,8 +215,27 @@ class BeamsTable(PropsTableBase, PropertyGroup):
         return super().__getattribute__(key)
 
 
-class QuadsPropTable(PropertyGroup, PropsTableBase):
+class TrianglesTable(PropsTableBase, PropertyGroup):
+    proxy_active = PointerProperty(type=Proxy_ActiveSurface)  # type: typing.Optional[Surface]
+
+    def __getattribute__(self, key):
+        if key == 'proxy_active':
+            surf = Surface.get_edit_active(self.id_data)[0]  # type: Surface
+            if surf is None or surf.vertices != 3:
+                return None
+        return super().__getattribute__(key)
+
+
+class QuadsTable(PropertyGroup, PropsTableBase):
     ptable_id_layer_name = 'jbeam.quads.chain_id'
+    proxy_active = PointerProperty(type=Proxy_ActiveSurface)  # type: typing.Optional[Surface]
+
+    def __getattribute__(self, key):
+        if key == 'proxy_active':
+            surf = Surface.get_edit_active(self.id_data)[0]  # type: Surface
+            if surf is None or surf.vertices != 4:
+                return None
+        return super().__getattribute__(key)
 
 
 def _id_name_decorator(rna_prop):
@@ -291,8 +330,14 @@ class Slot(PropertyGroup):
 class PartGeometry(PropertyGroup):
     nodes = PointerProperty(type=NodesTable)  # type: NodesTable
     beams = PointerProperty(type=BeamsTable)  # type: BeamsTable
-    triangles = PointerProperty(type=PropsTable)
-    quads = PointerProperty(type=QuadsPropTable)
+    triangles = PointerProperty(type=TrianglesTable)  # type: TrianglesTable
+    quads = PointerProperty(type=QuadsTable)
+    proxy_active_surface = PointerProperty(type=Proxy_ActiveSurface)  # type: typing.Optional[Surface]
+
+    def __getattribute__(self, key):
+        if key == 'proxy_active_surface' and Surface.get_edit_active(self.id_data)[0] is None:
+            return None
+        return super().__getattribute__(key)
 
     @classmethod
     def register(cls):
@@ -398,12 +443,14 @@ class PartsConfig(PropertyGroup):
 classes = (
     Proxy_ActiveNode,
     Proxy_ActiveBeam,
+    Proxy_ActiveSurface,
     Counter,
     PropsTableBase.Prop,
     PropsTable,
     NodesTable,
     BeamsTable,
-    QuadsPropTable,
+    TrianglesTable,
+    QuadsTable,
     Slot,
     PartGeometry,
     Part,

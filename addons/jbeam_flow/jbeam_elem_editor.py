@@ -59,7 +59,6 @@ class JbeamNodeEditPanel(bpy.types.Panel):
     def draw(self, context: bpy.types.Context):
         edit_mesh = context.edit_object.data  # type: bpy.types.Mesh
         p_node = edit_mesh.jbeam_pgeometry.nodes.proxy_active
-        p_node = edit_mesh.jbeam_pgeometry.nodes.proxy_active
 
         if p_node is None:
             self.layout.label("No active node.")
@@ -121,33 +120,33 @@ class JbeamSurfaceEditPanel(bpy.types.Panel):
                and context.tool_settings.mesh_select_mode[2]
 
     def draw(self, context: bpy.types.Context):
-        obj = context.object
-        bm = bmesh.from_edit_mesh(obj.data)
-        active_element = bm.select_history.active
-        if active_element is None or not isinstance(active_element, bmesh.types.BMFace):
-            self.layout.row().label("No active face")
+        layout = self.layout
+        edit_mesh = context.edit_object.data  # type: bpy.types.Mesh
+        p_surf = edit_mesh.jbeam_pgeometry.proxy_active_surface
+
+        if p_surf is None:
+            layout.label("No active face")
             return
 
-        with Switch(len(active_element.verts)) as case:
+        with Switch(p_surf.vertices) as case:
             if case(3):
-                self.layout.label("Triangle")
+                layout.label("Triangle")
             elif case(4):
-                self.layout.label("Quad")
+                layout.label("Quad")
             else:
-                self.layout.label("Polygon", icon='ERROR')
+                # todo: explain to user why error icon is there
+                layout.label("Polygon", icon='ERROR')
 
-        props_lyr = bl_jbeam.Surface.props_src.get_layer(bm.edges.layers)
-        if props_lyr is None:
-            self.layout.row().label("No properties data layer")
-        else:
-            self.layout.label("Private properties:")
-            row = self.layout.row(align=True)
-            row.prop(context.window_manager.jbeam_flow_proxies, 'surface_private_props', text="")
-            op_props = row.operator(text_prop_editor.EditOperator.bl_idname, text="",
-                                    icon='TEXT')  # type: text_prop_editor.EditOperator
-            op_props.settings.full_data_path = repr(context.window_manager.jbeam_flow_proxies)
-            op_props.settings.attr = 'surface_private_props'
-            op_props.settings.apply_text = "Apply to active surface"
+        layout.prop(p_surf, 'name')
+
+        layout.label("Private properties:")
+        row = layout.row(align=True)
+        row.prop(p_surf, 'props_src', text="")
+        op_props = row.operator(text_prop_editor.EditOperator.bl_idname, text="",
+                                icon='TEXT')  # type: text_prop_editor.EditOperator
+        op_props.settings.full_data_path = repr(p_surf)
+        op_props.settings.attr = 'props_src'
+        op_props.settings.apply_text = "Apply to active surface"
 
 
 classes = (

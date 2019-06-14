@@ -378,7 +378,7 @@ class QuadsOpMixin(PropSetBase):
 
     @staticmethod
     def get_datalayer(bm: bmesh.types.BMesh):
-        return bl_jbeam.QuadsPropTable.get_id_layer(bm.faces)
+        return bl_jbeam.QuadsTable.get_id_layer(bm.faces)
 
     @staticmethod
     def get_bm_elements(bm):
