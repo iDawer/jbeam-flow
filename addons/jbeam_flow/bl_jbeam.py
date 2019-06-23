@@ -1,14 +1,17 @@
 import collections
+import inspect
 import typing
 from contextlib import contextmanager
-from typing import Union
+from typing import Type, Union
 
 import bpy
+import bpy_types
 from bmesh.types import BMesh, BMVertSeq, BMEdgeSeq, BMFaceSeq, BMLayerItem, BMVert, BMEdge, BMFace
 from bpy.props import IntProperty, StringProperty, BoolProperty, CollectionProperty, PointerProperty
 from bpy.types import PropertyGroup, Mesh, Object
 
 from . import bm_props, jbeam
+from .bm_props import ABCProperty
 
 
 # region BMesh element wrappers
@@ -100,15 +103,53 @@ class Surface(Element):
         return isinstance(bm_elem, BMFace)
 
 
-class Proxy_ActiveNode(PropertyGroup, metaclass=bm_props.RNAProxyMeta, proxify=Node):
+def _define_getset(name, prop_def, proxify: Type[Element]):
+    ret_def = prop_def[0], dict(prop_def[1])
+    ret_def[1]['get'] = lambda self: getattr(proxify.get_edit_active(self.id_data)[0], name)
+    ret_def[1]['set'] = lambda self, val: setattr(proxify.get_edit_active(self.id_data)[0], name, val)
+    return ret_def
+
+
+def _prop_to_rna_prop(wrapper, pname):
+    def getter(self):
+        print(pname)
+        return getattr(wrapper.get_edit_active(self.id_data)[0], pname)
+
+    rna_prop = wrapper._rna_info.get(pname)
+    if rna_prop:
+        rna_prop[1]['get'] = getter
+        return rna_prop
+
+
+class RNAProxyMeta(bpy_types.RNAMetaPropGroup):
+    """Makes proxy descriptors for properties of active ElemWrapper"""
+
+    def __new__(mcs, name, bases, namespace, proxify=None):
+        if not issubclass(proxify, Element):
+            raise TypeError("'proxify' must be subtype of ElemWrapper")
+
+        cls = super().__new__(mcs, name, bases, namespace)
+        for name, descr in inspect.getmembers(proxify):
+            if isinstance(descr, ABCProperty):
+                setattr(cls, name, _define_getset(name, descr.prop_definition, proxify))
+            elif isinstance(descr, property):
+                setattr(cls, name, _prop_to_rna_prop(proxify, name))
+
+        return cls
+
+    def __init__(cls, *args, **kwds):
+        pass
+
+
+class Proxy_ActiveNode(PropertyGroup, metaclass=RNAProxyMeta, proxify=Node):
     pass
 
 
-class Proxy_ActiveBeam(PropertyGroup, metaclass=bm_props.RNAProxyMeta, proxify=Beam):
+class Proxy_ActiveBeam(PropertyGroup, metaclass=RNAProxyMeta, proxify=Beam):
     pass
 
 
-class Proxy_ActiveSurface(PropertyGroup, metaclass=bm_props.RNAProxyMeta, proxify=Surface):
+class Proxy_ActiveSurface(PropertyGroup, metaclass=RNAProxyMeta, proxify=Surface):
     pass
 
 # endregion BMesh element wrappers

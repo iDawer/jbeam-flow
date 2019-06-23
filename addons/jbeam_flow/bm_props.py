@@ -1,10 +1,7 @@
-import inspect
-import types
 import typing
 
 import bmesh
 import bpy
-import bpy_types
 from bmesh import types as bmtypes
 
 # Typing hints, for annotations use only.
@@ -195,44 +192,6 @@ class NoEditMeshError(Error):
 class ElementTypeError(Error):
     """Raised when type of active mesh element is wrong"""
     pass
-
-
-def _define_getset(name, prop_def, proxify: Type[ElemWrapper]):
-    ret_def = prop_def[0], dict(prop_def[1])
-    ret_def[1]['get'] = lambda self: getattr(proxify.get_edit_active(self.id_data)[0], name)
-    ret_def[1]['set'] = lambda self, val: setattr(proxify.get_edit_active(self.id_data)[0], name, val)
-    return ret_def
-
-
-def _prop_to_rna_prop(wrapper, pname):
-    def getter(self):
-        print(pname)
-        return getattr(wrapper.get_edit_active(self.id_data)[0], pname)
-
-    rna_prop = wrapper._rna_info.get(pname)
-    if rna_prop:
-        rna_prop[1]['get'] = getter
-        return rna_prop
-
-
-class RNAProxyMeta(bpy_types.RNAMetaPropGroup):
-    """Makes proxy descriptors for properties of active ElemWrapper"""
-
-    def __new__(mcs, name, bases, namespace, proxify=None):
-        if not issubclass(proxify, ElemWrapper):
-            raise TypeError("'proxify' must be subtype of ElemWrapper")
-
-        cls = super().__new__(mcs, name, bases, namespace)
-        for name, descr in inspect.getmembers(proxify):
-            if isinstance(descr, ABCProperty):
-                setattr(cls, name, _define_getset(name, descr.prop_definition, proxify))
-            elif isinstance(descr, property):
-                setattr(cls, name, _prop_to_rna_prop(proxify, name))
-
-        return cls
-
-    def __init__(cls, *args, **kwds):
-        pass
 
 
 classes = ()
