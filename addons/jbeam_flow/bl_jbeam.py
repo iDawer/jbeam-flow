@@ -112,7 +112,6 @@ def _define_getset(name, prop_def, proxify: Type[Element]):
 
 def _prop_to_rna_prop(wrapper, pname):
     def getter(self):
-        print(pname)
         return getattr(wrapper.get_edit_active(self.id_data)[0], pname)
 
     rna_prop = wrapper._rna_info.get(pname)
@@ -157,7 +156,7 @@ class Proxy_ActiveSurface(PropertyGroup, metaclass=RNAProxyMeta, proxify=Surface
 
 # region Helpers
 
-class NullablePtrPropGroup:
+class NullablePtrMixin:
     """Emulates PointerProperty with None values.
     _nullablePtrs is dict with (property_name, null_checker_function) pairs
     """
@@ -188,7 +187,7 @@ class Counter(PropertyGroup):
 # endregion Helpers
 
 
-class PropsTableBase(jbeam.Table):
+class PropsTableBase(jbeam.Table, NullablePtrMixin):
     """
     Represents properties inheritance chaining.
     Note: __init__ never called by Blender, use 'init' contextmanager instead
@@ -234,44 +233,32 @@ class PropsTable(PropertyGroup, PropsTableBase):
 
 
 class NodesTable(PropsTableBase, PropertyGroup):
+    _nullablePtrs = {'proxy_active': lambda self: Node.get_edit_active(self.id_data)[0] is None}
     proxy_active = PointerProperty(type=Proxy_ActiveNode)  # type: typing.Optional[Node]
-
-    def __getattribute__(self, key):
-        if key == 'proxy_active' and Node.get_edit_active(self.id_data)[0] is None:
-            return None
-        return super().__getattribute__(key)
 
 
 class BeamsTable(PropsTableBase, PropertyGroup):
+    _nullablePtrs = {'proxy_active': lambda self: Beam.get_edit_active(self.id_data)[0] is None}
     proxy_active = PointerProperty(type=Proxy_ActiveBeam)  # type: typing.Optional[Beam]
-
-    def __getattribute__(self, key):
-        if key == 'proxy_active' and Beam.get_edit_active(self.id_data)[0] is None:
-            return None
-        return super().__getattribute__(key)
 
 
 class TrianglesTable(PropsTableBase, PropertyGroup):
-    proxy_active = PointerProperty(type=Proxy_ActiveSurface)  # type: typing.Optional[Surface]
+    def is_no_active_tri(self):
+        surf = Surface.get_edit_active(self.id_data)[0]
+        return surf is None or surf.vertices != 3
 
-    def __getattribute__(self, key):
-        if key == 'proxy_active':
-            surf = Surface.get_edit_active(self.id_data)[0]  # type: Surface
-            if surf is None or surf.vertices != 3:
-                return None
-        return super().__getattribute__(key)
+    _nullablePtrs = {'proxy_active': is_no_active_tri}
+    proxy_active = PointerProperty(type=Proxy_ActiveSurface)  # type: typing.Optional[Surface]
 
 
 class QuadsTable(PropertyGroup, PropsTableBase):
+    def is_no_active_quad(self):
+        surf = Surface.get_edit_active(self.id_data)[0]
+        return surf is None or surf.vertices != 4
+
+    _nullablePtrs = {'proxy_active': is_no_active_quad}
     ptable_id_layer_name = 'jbeam.quads.chain_id'
     proxy_active = PointerProperty(type=Proxy_ActiveSurface)  # type: typing.Optional[Surface]
-
-    def __getattribute__(self, key):
-        if key == 'proxy_active':
-            surf = Surface.get_edit_active(self.id_data)[0]  # type: Surface
-            if surf is None or surf.vertices != 4:
-                return None
-        return super().__getattribute__(key)
 
 
 def _id_name_decorator(rna_prop):
@@ -363,17 +350,13 @@ class Slot(PropertyGroup):
         del Object.jbeam_slot
 
 
-class PartGeometry(PropertyGroup):
+class PartGeometry(NullablePtrMixin, PropertyGroup):
+    _nullablePtrs = {'proxy_active_surface': lambda self: Surface.get_edit_active(self.id_data)[0] is None}
     nodes = PointerProperty(type=NodesTable)  # type: NodesTable
     beams = PointerProperty(type=BeamsTable)  # type: BeamsTable
     triangles = PointerProperty(type=TrianglesTable)  # type: TrianglesTable
     quads = PointerProperty(type=QuadsTable)
     proxy_active_surface = PointerProperty(type=Proxy_ActiveSurface)  # type: typing.Optional[Surface]
-
-    def __getattribute__(self, key):
-        if key == 'proxy_active_surface' and Surface.get_edit_active(self.id_data)[0] is None:
-            return None
-        return super().__getattribute__(key)
 
     @classmethod
     def register(cls):
