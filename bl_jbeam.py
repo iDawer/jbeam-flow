@@ -1,25 +1,32 @@
 import collections
+import inspect
 import typing
 from contextlib import contextmanager
-from typing import Union
+from typing import Type, Union
 
 import bpy
+import bpy_types
 from bmesh.types import BMesh, BMVertSeq, BMEdgeSeq, BMFaceSeq, BMLayerItem, BMVert, BMEdge, BMFace
-from bpy.props import IntProperty, StringProperty, CollectionProperty, PointerProperty
+from bpy.props import IntProperty, StringProperty, BoolProperty, CollectionProperty, PointerProperty
 from bpy.types import PropertyGroup, Mesh, Object
 
 from . import bm_props, jbeam
+from .bm_props import ABCProperty
 
 
 # region BMesh element wrappers
 class Element(bm_props.ElemWrapper):
     """ Base class for jbeam elements (node, beam, etc.) which are represented as bmesh elements. """
+
+    _rna_info = {}
     # todo: property access (ChainMap?)
-    props_src = bm_props.String('jbeam.private_props')
+    props_src = bm_props.String('jbeam.private_props', StringProperty(name="Private properties"))
 
 
 class Node(Element):
-    id = bm_props.String('jbeam.node.id')
+    id = bm_props.String('jbeam.node.id', StringProperty(
+        name="Node id", options={'TEXTEDIT_UPDATE'}, description="Name of the node. '~' at start means it is "
+                                                                 "dummy copy from parent part"))
 
     def __init__(self, bm: BMesh, vert: BMVert):
         super().__init__(bm, vert)
@@ -36,9 +43,11 @@ class Node(Element):
 
 
 class Beam(Element):
-    is_ghost = bm_props.Boolean('jbeam.beam.is_ghost')
-    """True when beam is ghost, default False. 
-    Ghost beams are not exported. Useful for triangles with edges which are not defined as beams."""
+    _rna_info = {'name': StringProperty(name='Name', description='Nodes of selected beam')}
+
+    is_ghost = bm_props.Boolean('jbeam.beam.is_ghost', BoolProperty(
+        name="Ghost", description="Ghost beams will not export. "
+                                  "Useful for triangles with edges which are not defined as beams."))
 
     def __init__(self, bm: BMesh, edge: BMEdge):
         super().__init__(bm, edge)
@@ -49,6 +58,10 @@ class Beam(Element):
     @property
     def nodes(self):
         return self._nodes
+
+    @property
+    def name(self) -> str:
+        return str(self)
 
     def __str__(self) -> str:
         return '["{0.id}", "{1.id}"]'.format(*self._nodes)
@@ -66,9 +79,20 @@ class Beam(Element):
 class Surface(Element):
     """Collision surface: triangle or quad."""
 
+    _rna_info = {'name': StringProperty(name='Name', description='Nodes of selected surface')}
+
     def __init__(self, bm: BMesh, face: BMFace):
         super().__init__(bm, face)
         self.layers = bm.faces.layers
+        self._nodes = [Node(bm, v) for v in face.verts]  # type: typing.List[Node]
+
+    @property
+    def name(self) -> str:
+        return '["{}"]'.format('", "'.join((n.id for n in self._nodes)))
+
+    @property
+    def vertices(self) -> int:
+        return len(self._nodes)
 
     @classmethod
     def ensure_data_layers(cls, bm: BMesh):
@@ -78,8 +102,21 @@ class Surface(Element):
     def is_valid_type(bm_elem: bm_props.BMElem) -> bool:
         return isinstance(bm_elem, BMFace)
 
-
 # endregion BMesh element wrappers
+
+
+# region Helpers
+
+class NullablePtrMixin:
+    """Emulates PointerProperty with None values.
+    _nullablePtrs is dict with (property_name, null_checker_function) pairs
+    """
+    _nullablePtrs = {}
+
+    def __getattribute__(self, name):
+        if name != '_nullablePtrs' and name in self._nullablePtrs and self._nullablePtrs[name](self):
+            return None
+        return super().__getattribute__(name)
 
 
 class Counter(PropertyGroup):
@@ -98,7 +135,71 @@ class Counter(PropertyGroup):
         return super().__getitem__(item)
 
 
-class PropsTableBase(jbeam.Table):
+def _define_getset(name, prop_def, proxify: Type[Element]):
+    ret_def = prop_def[0], dict(prop_def[1])
+    ret_def[1]['get'] = lambda self: getattr(proxify.get_edit_active(self.id_data)[0], name)
+    ret_def[1]['set'] = lambda self, val: setattr(proxify.get_edit_active(self.id_data)[0], name, val)
+    return ret_def
+
+
+def _prop_to_rna_prop(wrapper, pname):
+    def getter(self):
+        return getattr(wrapper.get_edit_active(self.id_data)[0], pname)
+
+    rna_prop = wrapper._rna_info.get(pname)
+    if rna_prop:
+        rna_prop[1]['get'] = getter
+        return rna_prop
+
+
+class RNAProxyMeta(bpy_types.RNAMetaPropGroup):
+    """Makes proxy descriptors for properties of active :class:`Element`.
+    This allows exposing of :class:`Element` properties through RNA class (Blender's data).
+
+    Data flow for ID data to display:
+        bpy.data... -> RNA class -> RNA property -> UILayout.prop(..)
+    Data flow for editing geometry to display:
+        bpy.data... -> BMesh -> :class:`Element` -> :class:`bm_props.ABCProperty` ->
+        RNA proxy class (built with :class:`RNAProxyMeta` metaclass) -> RNA property -> UILayout.prop(..)
+
+    """
+
+    def __new__(mcs, name, bases, namespace, proxify=None):
+        if not issubclass(proxify, Element):
+            raise TypeError("'proxify' must be subtype of ElemWrapper")
+
+        cls = super().__new__(mcs, name, bases, namespace)
+        for name, descr in inspect.getmembers(proxify):
+            if isinstance(descr, ABCProperty):
+                setattr(cls, name, _define_getset(name, descr.prop_definition, proxify))
+            elif isinstance(descr, property):
+                setattr(cls, name, _prop_to_rna_prop(proxify, name))
+
+        return cls
+
+    def __init__(cls, *args, **kwds):
+        pass
+
+
+# endregion Helpers
+
+# region RNA proxy
+
+class Proxy_ActiveNode(PropertyGroup, metaclass=RNAProxyMeta, proxify=Node):
+    pass
+
+
+class Proxy_ActiveBeam(PropertyGroup, metaclass=RNAProxyMeta, proxify=Beam):
+    pass
+
+
+class Proxy_ActiveSurface(PropertyGroup, metaclass=RNAProxyMeta, proxify=Surface):
+    pass
+
+# endregion RNA proxy
+
+
+class PropsTableBase(jbeam.Table, NullablePtrMixin):
     """
     Represents properties inheritance chaining.
     Note: __init__ never called by Blender, use 'init' contextmanager instead
@@ -143,45 +244,33 @@ class PropsTable(PropertyGroup, PropsTableBase):
     pass
 
 
-class QuadsPropTable(PropertyGroup, PropsTableBase):
+class NodesTable(PropsTableBase, PropertyGroup):
+    _nullablePtrs = {'proxy_active': lambda self: Node.get_edit_active(self.id_data)[0] is None}
+    proxy_active = PointerProperty(type=Proxy_ActiveNode)  # type: typing.Optional[Node]
+
+
+class BeamsTable(PropsTableBase, PropertyGroup):
+    _nullablePtrs = {'proxy_active': lambda self: Beam.get_edit_active(self.id_data)[0] is None}
+    proxy_active = PointerProperty(type=Proxy_ActiveBeam)  # type: typing.Optional[Beam]
+
+
+class TrianglesTable(PropsTableBase, PropertyGroup):
+    def is_no_active_tri(self):
+        surf = Surface.get_edit_active(self.id_data)[0]
+        return surf is None or surf.vertices != 3
+
+    _nullablePtrs = {'proxy_active': is_no_active_tri}
+    proxy_active = PointerProperty(type=Proxy_ActiveSurface)  # type: typing.Optional[Surface]
+
+
+class QuadsTable(PropertyGroup, PropsTableBase):
+    def is_no_active_quad(self):
+        surf = Surface.get_edit_active(self.id_data)[0]
+        return surf is None or surf.vertices != 4
+
+    _nullablePtrs = {'proxy_active': is_no_active_quad}
     ptable_id_layer_name = 'jbeam.quads.chain_id'
-
-
-class _NodesTable_unused:  # (PropertyGroup, PropsTableBase):
-    """ Optimise custom data accecss. """
-
-    # not used actually, need for shut up IDE complaining
-    def __init__(self):
-        super().__init__()
-        self._node_id_lyr = None  # type: BMLayerItem
-        self._node_prop_lyr = None  # type: BMLayerItem
-
-    @contextmanager
-    def init(self, vert_seq: BMVertSeq):
-        # see PropsTableBase.init for details
-        with super().init(vert_seq):
-            self._node_id_lyr = vert_seq.layers.string.new(Node.id.layer_name)
-            self._node_prop_lyr = vert_seq.layers.string.new(Node.props_src.layer_name)
-            try:
-                yield self
-            finally:
-                self._node_id_lyr = None
-                self._node_prop_lyr = None
-
-    def new_node(self, bm: BMesh, vert: BMVert):
-        if not (self._node_prop_lyr and self._node_id_lyr):
-            raise ValueError("NodesTable.new method allowed only under 'with NodesTable.init()' block")
-
-        # raise NotImplementedError()
-        return Node(bm, vert)
-
-    @property
-    def node_id_lyr(self):
-        return self._node_id_lyr
-
-    @property
-    def node_prop_lyr(self):
-        return self._node_prop_lyr
+    proxy_active = PointerProperty(type=Proxy_ActiveSurface)  # type: typing.Optional[Surface]
 
 
 def _id_name_decorator(rna_prop):
@@ -273,11 +362,13 @@ class Slot(PropertyGroup):
         del Object.jbeam_slot
 
 
-class PartGeometry(PropertyGroup):
-    nodes = PointerProperty(type=PropsTable)
-    beams = PointerProperty(type=PropsTable)
-    triangles = PointerProperty(type=PropsTable)
-    quads = PointerProperty(type=QuadsPropTable)
+class PartGeometry(NullablePtrMixin, PropertyGroup):
+    _nullablePtrs = {'proxy_active_surface': lambda self: Surface.get_edit_active(self.id_data)[0] is None}
+    nodes = PointerProperty(type=NodesTable)  # type: NodesTable
+    beams = PointerProperty(type=BeamsTable)  # type: BeamsTable
+    triangles = PointerProperty(type=TrianglesTable)  # type: TrianglesTable
+    quads = PointerProperty(type=QuadsTable)
+    proxy_active_surface = PointerProperty(type=Proxy_ActiveSurface)  # type: typing.Optional[Surface]
 
     @classmethod
     def register(cls):
@@ -381,10 +472,16 @@ class PartsConfig(PropertyGroup):
 
 
 classes = (
+    Proxy_ActiveNode,
+    Proxy_ActiveBeam,
+    Proxy_ActiveSurface,
     Counter,
     PropsTableBase.Prop,
     PropsTable,
-    QuadsPropTable,
+    NodesTable,
+    BeamsTable,
+    TrianglesTable,
+    QuadsTable,
     Slot,
     PartGeometry,
     Part,

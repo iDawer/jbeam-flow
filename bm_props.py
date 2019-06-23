@@ -1,4 +1,3 @@
-import types
 import typing
 
 import bmesh
@@ -37,10 +36,24 @@ class ElemWrapper:
         """ Initialise custom data layers if need. """
         raise NotImplementedError()
 
+    @classmethod
+    def get_edit_active(cls, edit_mesh: bpy.types.Mesh):
+        if not edit_mesh.is_editmode:
+            return None, "Mesh is not in Edit mode."
+        bm = bmesh.from_edit_mesh(edit_mesh)
+        elem = bm.select_history.active
+        if not cls.is_valid_type(elem):
+            return None, "No active {}".format(cls.__name__)
+        jb_elem = cls(bm, elem)
+        jb_elem._bmesh = bm
+        jb_elem.ensure_data_layers(bm)
+        return jb_elem, None
+
 
 class ABCProperty:
-    def __init__(self, layer_name: str):
+    def __init__(self, layer_name: str, prop_definition=None):
         self.layer_name = layer_name
+        self.prop_definition = prop_definition
 
     def __get__(self, instance: ElemWrapper, owner):
         raise NotImplementedError()
@@ -58,9 +71,10 @@ class ABCProperty:
 
 
 class String(ABCProperty):
-    def __init__(self, layer_name: str):
+    def __init__(self, layer_name: str, prop_definition=None):
         """ :rtype: str or String """  # 'typing' module does not support des
-        super().__init__(layer_name)
+        prop_definition = prop_definition or bpy.props.StringProperty()
+        super().__init__(layer_name, prop_definition)
 
     def __get__(self, instance: ElemWrapper, owner):
         try:
@@ -87,9 +101,10 @@ class String(ABCProperty):
 
 
 class Boolean(ABCProperty):
-    def __init__(self, layer_name: str):
+    def __init__(self, layer_name: str, prop_definition=None):
         """ :rtype: bool or Boolean """  # 'typing' module does not support des
-        super().__init__(layer_name)
+        prop_definition = prop_definition or bpy.props.BoolProperty()
+        super().__init__(layer_name, prop_definition)
 
     def __get__(self, instance: ElemWrapper, owner):
         try:

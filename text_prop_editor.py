@@ -16,7 +16,7 @@ class PropEditorSettings(bpy.types.PropertyGroup):
             prop = eval(self.full_data_path)  # type: bpy.types.bpy_struct
         except:
             return False
-        return str(prop.as_pointer()) == self.pointer
+        return isinstance(prop, bpy.types.bpy_struct) and str(prop.as_pointer()) == self.pointer
 
     def copy_to(self, other):
         """ Shallow copy

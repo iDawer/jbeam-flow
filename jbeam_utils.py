@@ -367,7 +367,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
         bl_jbeam.Surface.ensure_data_layers(bm)
         quads_ctx = ctx.array().values()
         if quads_ctx:
-            with me.jbeam_pgeometry.quads.init(bm.faces) as ptable:  # type: bl_jbeam.QuadsPropTable
+            with me.jbeam_pgeometry.quads.init(bm.faces) as ptable:  # type: bl_jbeam.QuadsTable
                 for prop, inl_prop_src in self.table(quads_ctx, ptable):
                     surface = self.surface(prop['id1:', 'id2:', 'id3:', 'id4:'], inl_prop_src, bm)
                     if surface:
