@@ -14,6 +14,8 @@ from . import bm_props, jbeam
 # region BMesh element wrappers
 class Element(bm_props.ElemWrapper):
     """ Base class for jbeam elements (node, beam, etc.) which are represented as bmesh elements. """
+
+    _rna_info = {}
     # todo: property access (ChainMap?)
     props_src = bm_props.String('jbeam.private_props', StringProperty(name="Private properties"))
 
@@ -38,6 +40,8 @@ class Node(Element):
 
 
 class Beam(Element):
+    _rna_info = {'name': StringProperty(name='Name', description='Nodes of selected beam')}
+
     is_ghost = bm_props.Boolean('jbeam.beam.is_ghost', BoolProperty(
         name="Ghost", description="Ghost beams will not export. "
                                   "Useful for triangles with edges which are not defined as beams."))
@@ -53,7 +57,7 @@ class Beam(Element):
         return self._nodes
 
     @property
-    def name(self):
+    def name(self) -> str:
         return str(self)
 
     def __str__(self) -> str:
@@ -72,17 +76,19 @@ class Beam(Element):
 class Surface(Element):
     """Collision surface: triangle or quad."""
 
+    _rna_info = {'name': StringProperty(name='Name', description='Nodes of selected surface')}
+
     def __init__(self, bm: BMesh, face: BMFace):
         super().__init__(bm, face)
         self.layers = bm.faces.layers
         self._nodes = [Node(bm, v) for v in face.verts]  # type: typing.List[Node]
 
     @property
-    def name(self):
+    def name(self) -> str:
         return '["{}"]'.format('", "'.join((n.id for n in self._nodes)))
 
     @property
-    def vertices(self):
+    def vertices(self) -> int:
         return len(self._nodes)
 
     @classmethod
@@ -99,22 +105,11 @@ class Proxy_ActiveNode(PropertyGroup, metaclass=bm_props.RNAProxyMeta, proxify=N
 
 
 class Proxy_ActiveBeam(PropertyGroup, metaclass=bm_props.RNAProxyMeta, proxify=Beam):
-    def _name_get(self):
-        return Beam.get_edit_active(self.id_data)[0].name
-
-    name = StringProperty(name='Name', get=_name_get)
+    pass
 
 
 class Proxy_ActiveSurface(PropertyGroup, metaclass=bm_props.RNAProxyMeta, proxify=Surface):
-    def _name_get(self):
-        return Surface.get_edit_active(self.id_data)[0].name
-
-    def _vertices_get(self):
-        return Surface.get_edit_active(self.id_data)[0].vertices
-
-    name = StringProperty(name='Name', get=_name_get)
-    vertices = IntProperty(name='Vertex count', get=_vertices_get)
-
+    pass
 
 # endregion BMesh element wrappers
 

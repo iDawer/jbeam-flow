@@ -204,6 +204,17 @@ def _define_getset(name, prop_def, proxify: Type[ElemWrapper]):
     return ret_def
 
 
+def _prop_to_rna_prop(wrapper, pname):
+    def getter(self):
+        print(pname)
+        return getattr(wrapper.get_edit_active(self.id_data)[0], pname)
+
+    rna_prop = wrapper._rna_info.get(pname)
+    if rna_prop:
+        rna_prop[1]['get'] = getter
+        return rna_prop
+
+
 class RNAProxyMeta(bpy_types.RNAMetaPropGroup):
     """Makes proxy descriptors for properties of active ElemWrapper"""
 
@@ -212,8 +223,12 @@ class RNAProxyMeta(bpy_types.RNAMetaPropGroup):
             raise TypeError("'proxify' must be subtype of ElemWrapper")
 
         cls = super().__new__(mcs, name, bases, namespace)
-        for name, descr in inspect.getmembers(proxify, lambda desc: isinstance(desc, ABCProperty)):
-            setattr(cls, name, _define_getset(name, descr.prop_definition, proxify))
+        for name, descr in inspect.getmembers(proxify):
+            if isinstance(descr, ABCProperty):
+                setattr(cls, name, _define_getset(name, descr.prop_definition, proxify))
+            elif isinstance(descr, property):
+                setattr(cls, name, _prop_to_rna_prop(proxify, name))
+
         return cls
 
     def __init__(cls, *args, **kwds):
