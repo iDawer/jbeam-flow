@@ -11,6 +11,8 @@ from .jbeam.misc import Switch
 
 
 class ProxyGroup(bpy.types.PropertyGroup):
+    """Unused, obsolete. See :class:`bl_jbeam.RNAProxyMeta`"""
+
     node_id = bm_props.make_rna_proxy(
         bl_jbeam.Node,
         bl_jbeam.Node.id,

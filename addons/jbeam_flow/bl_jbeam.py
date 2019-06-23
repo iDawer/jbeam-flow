@@ -102,55 +102,6 @@ class Surface(Element):
     def is_valid_type(bm_elem: bm_props.BMElem) -> bool:
         return isinstance(bm_elem, BMFace)
 
-
-def _define_getset(name, prop_def, proxify: Type[Element]):
-    ret_def = prop_def[0], dict(prop_def[1])
-    ret_def[1]['get'] = lambda self: getattr(proxify.get_edit_active(self.id_data)[0], name)
-    ret_def[1]['set'] = lambda self, val: setattr(proxify.get_edit_active(self.id_data)[0], name, val)
-    return ret_def
-
-
-def _prop_to_rna_prop(wrapper, pname):
-    def getter(self):
-        return getattr(wrapper.get_edit_active(self.id_data)[0], pname)
-
-    rna_prop = wrapper._rna_info.get(pname)
-    if rna_prop:
-        rna_prop[1]['get'] = getter
-        return rna_prop
-
-
-class RNAProxyMeta(bpy_types.RNAMetaPropGroup):
-    """Makes proxy descriptors for properties of active ElemWrapper"""
-
-    def __new__(mcs, name, bases, namespace, proxify=None):
-        if not issubclass(proxify, Element):
-            raise TypeError("'proxify' must be subtype of ElemWrapper")
-
-        cls = super().__new__(mcs, name, bases, namespace)
-        for name, descr in inspect.getmembers(proxify):
-            if isinstance(descr, ABCProperty):
-                setattr(cls, name, _define_getset(name, descr.prop_definition, proxify))
-            elif isinstance(descr, property):
-                setattr(cls, name, _prop_to_rna_prop(proxify, name))
-
-        return cls
-
-    def __init__(cls, *args, **kwds):
-        pass
-
-
-class Proxy_ActiveNode(PropertyGroup, metaclass=RNAProxyMeta, proxify=Node):
-    pass
-
-
-class Proxy_ActiveBeam(PropertyGroup, metaclass=RNAProxyMeta, proxify=Beam):
-    pass
-
-
-class Proxy_ActiveSurface(PropertyGroup, metaclass=RNAProxyMeta, proxify=Surface):
-    pass
-
 # endregion BMesh element wrappers
 
 
@@ -184,7 +135,68 @@ class Counter(PropertyGroup):
         return super().__getitem__(item)
 
 
+def _define_getset(name, prop_def, proxify: Type[Element]):
+    ret_def = prop_def[0], dict(prop_def[1])
+    ret_def[1]['get'] = lambda self: getattr(proxify.get_edit_active(self.id_data)[0], name)
+    ret_def[1]['set'] = lambda self, val: setattr(proxify.get_edit_active(self.id_data)[0], name, val)
+    return ret_def
+
+
+def _prop_to_rna_prop(wrapper, pname):
+    def getter(self):
+        return getattr(wrapper.get_edit_active(self.id_data)[0], pname)
+
+    rna_prop = wrapper._rna_info.get(pname)
+    if rna_prop:
+        rna_prop[1]['get'] = getter
+        return rna_prop
+
+
+class RNAProxyMeta(bpy_types.RNAMetaPropGroup):
+    """Makes proxy descriptors for properties of active :class:`Element`.
+    This allows exposing of :class:`Element` properties through RNA class (Blender's data).
+
+    Data flow for ID data to display:
+        bpy.data... -> RNA class -> RNA property -> UILayout.prop(..)
+    Data flow for editing geometry to display:
+        bpy.data... -> BMesh -> :class:`Element` -> :class:`bm_props.ABCProperty` ->
+        RNA proxy class (built with :class:`RNAProxyMeta` metaclass) -> RNA property -> UILayout.prop(..)
+
+    """
+
+    def __new__(mcs, name, bases, namespace, proxify=None):
+        if not issubclass(proxify, Element):
+            raise TypeError("'proxify' must be subtype of ElemWrapper")
+
+        cls = super().__new__(mcs, name, bases, namespace)
+        for name, descr in inspect.getmembers(proxify):
+            if isinstance(descr, ABCProperty):
+                setattr(cls, name, _define_getset(name, descr.prop_definition, proxify))
+            elif isinstance(descr, property):
+                setattr(cls, name, _prop_to_rna_prop(proxify, name))
+
+        return cls
+
+    def __init__(cls, *args, **kwds):
+        pass
+
+
 # endregion Helpers
+
+# region RNA proxy
+
+class Proxy_ActiveNode(PropertyGroup, metaclass=RNAProxyMeta, proxify=Node):
+    pass
+
+
+class Proxy_ActiveBeam(PropertyGroup, metaclass=RNAProxyMeta, proxify=Beam):
+    pass
+
+
+class Proxy_ActiveSurface(PropertyGroup, metaclass=RNAProxyMeta, proxify=Surface):
+    pass
+
+# endregion RNA proxy
 
 
 class PropsTableBase(jbeam.Table, NullablePtrMixin):
