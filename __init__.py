@@ -49,7 +49,6 @@ class reloadable:
 with reloadable(__name__, locals()) as loaded:
     import bpy
     from . import (
-        jb,
         bm_props,
         jbeam,
         bl_jbeam,
@@ -57,7 +56,6 @@ with reloadable(__name__, locals()) as loaded:
         text_prop_editor,
         op_import,
         op_fill_slots,
-        op_sync_to_jbeam,
         op_move_dummies,
         op_rename_node,
         display_nodes,

@@ -2,15 +2,11 @@ import io
 from collections import OrderedDict, defaultdict
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
-import antlr4
 import bmesh
 import bpy
-from antlr4.TokenStreamRewriter import TokenStreamRewriter
 from antlr4.tree.Tree import TerminalNodeImpl
 
 from . import bl_jbeam, jbeam
-from .jb import jbeamLexer, jbeamParser, jbeamVisitor
-from .jb.utils import preprocess
 from .jbeam.ext_json import ExtJSONParser
 from .jbeam.misc import (
     Triangle,
@@ -21,18 +17,6 @@ _ValueContext = ExtJSONParser.ValueContext
 _ValueArrayContext = ExtJSONParser.ValueArrayContext
 _ValueObjectContext = ExtJSONParser.ValueObjectContext
 _ValueStringContext = ExtJSONParser.ValueStringContext
-
-
-def to_tree(jbeam_data: str):
-    data_stream = antlr4.InputStream(jbeam_data)
-
-    lexer = jbeamLexer(data_stream)
-    stream = antlr4.CommonTokenStream(lexer)
-    stream = preprocess(stream)
-    parser = jbeamParser(stream)
-    tree = parser.jbeam()
-
-    return tree
 
 
 class VehicleBuilder:
@@ -397,78 +381,6 @@ class PartObjectsBuilder(jbeam.EvalBase):
         stype = ctx.accept(self)
         bl_jbeam.Part(part).slot_type = stype
         return '${slotType}'
-
-
-def update_id_object(id_object: bpy.types.ID, props: dict):
-    for k in props:
-        id_object[k] = props[k]
-
-
-class NodeCollector(jbeamVisitor):
-    def __init__(self, part_name: str):
-        super().__init__()
-        self.part_name = part_name
-        self.nodes = {}
-        self.node_to_items_map = {}
-        self.beams = {}  # key is unordered frozenset((id1, id2)) == frozenset((id2, id1))
-        self.coltris = {}  # key is misc.Triangle type
-
-    def visitPart(self, ctx: jbeamParser.PartContext):
-        if ctx.name.string_item == self.part_name:
-            return self.visitChildren(ctx)
-
-    def visitNode(self, node_ctx: jbeamParser.NodeContext):
-        self.nodes[node_ctx.id1.string_item] = node_ctx
-        node_ctx.x = float(node_ctx.posX.text)
-        node_ctx.y = float(node_ctx.posY.text)
-        node_ctx.z = float(node_ctx.posZ.text)
-
-    def visitBeam(self, beam_ctx: jbeamParser.BeamContext):
-        id1, id2 = beam_ctx.id1.string_item, beam_ctx.id2.string_item
-        self._link_to_node(id1, beam_ctx)
-        self._link_to_node(id2, beam_ctx)
-        key = frozenset((id1, id2))
-        # if duplicates found, use first
-        if key not in self.beams.keys():
-            self.beams[key] = beam_ctx
-
-    def _link_to_node(self, key: str, item: antlr4.ParserRuleContext):
-        items = self.node_to_items_map.setdefault(key, [])
-        items.append(item)
-
-    def visitColtri(self, ctx: jbeamParser.ColtriContext):
-        id1 = ctx.id1.string_item
-        id2 = ctx.id2.string_item
-        id3 = ctx.id3.string_item
-        self._link_to_node(id1, ctx)
-        self._link_to_node(id2, ctx)
-        self._link_to_node(id3, ctx)
-        tri_key = Triangle((id1, id2, id3))
-        if tri_key not in self.coltris.keys():
-            self.coltris[tri_key] = ctx
-
-
-jbeam_parse_tree_cache = {}
-
-
-def get_parse_tree(data: str, name: str):
-    # try already cached
-    tree = jbeam_parse_tree_cache.get(name)
-    if tree is not None:
-        return tree
-
-    data_stream = antlr4.InputStream(data)
-    lexer = jbeamLexer(data_stream)
-    stream = antlr4.CommonTokenStream(lexer)
-    parser = jbeamParser(stream)
-    tree = parser.jbeam()
-    jbeam_parse_tree_cache[name] = tree
-    return tree
-
-
-class Rewriter(TokenStreamRewriter):
-    def delete_subtree(self, subtree):
-        self.delete(self.DEFAULT_PROGRAM_NAME, subtree.start.tokenIndex, subtree.stop.tokenIndex)
 
 
 classes = ()
