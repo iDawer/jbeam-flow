@@ -167,7 +167,7 @@ class PartObjectsBuilder(jbeam.EvalBase):
                     result = self.generic_section(value_ctx)
             else:
                 result = self.generic_section(value_ctx)
-            data_pairs[s_name] = self.get_src_text_replaced(section_ctx, value_ctx, result) + ',\n'
+            data_pairs[s_name] = '    {},\n'.format(self.get_src_text_replaced(section_ctx, value_ctx, result))
 
         data_buf.writelines(data_pairs.values())
 
@@ -381,6 +381,34 @@ class PartObjectsBuilder(jbeam.EvalBase):
         stype = ctx.accept(self)
         bl_jbeam.Part(part).slot_type = stype
         return '${slotType}'
+
+
+class JbeamExporter:
+    @staticmethod
+    def process(jbeam_name: str, context: bpy.types.Context, io_out: io.StringIO):
+        jb_group = context.blend_data.groups.get(jbeam_name)  # type: bpy.types.Group
+        io_out.write('{\n')
+        if jb_group:
+            for part_obj in jb_group.objects:  # type: bpy.types.Object
+                part = bl_jbeam.Part(part_obj)
+                JbeamExporter.part(part, io_out)
+        io_out.write('}\n')
+
+    @staticmethod
+    def part(part: bl_jbeam.Part, io_out: io.StringIO):
+        data = {
+            '${slotType}': '"{}"'.format(part.slot_type),
+            '${slots}': '{}',
+            '${nodes}': '{}',
+            '${beams}': '{}',
+            '${triangles}': '{}',
+            '${quads}': '{}'
+        }
+
+        str_data = part.data  # type: str
+        for key, val in data.items():
+            str_data = str_data.replace(key, val)
+        io_out.write('"{0}": {{\n{1}}},\n'.format(part.name, str_data))
 
 
 classes = ()
