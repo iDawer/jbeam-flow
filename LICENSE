@@ -1,0 +1,15 @@
+The JBeam Flow is provided under:
+
+    SPDX-License-Identifier: GPL-2.0-or-later
+
+This program is free software; you can redistribute it and/or modify it under the terms
+of the GNU General Public License as published by the Free Software Foundation;
+either version 2 of the License, or (at your option) any later version.
+
+Please read this file for the full GNU General Public License version 2:
+
+    LICENSE-GPL-2.0
+
+Included libraries that use other licenses:
+
+    'anytree' is licensed under Apache License Version 2.0. https://pypi.org/project/anytree/
