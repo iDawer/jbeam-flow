@@ -410,5 +410,13 @@ class JbeamExporter:
             str_data = str_data.replace(key, val)
         io_out.write('"{0}": {{\n{1}}},\n'.format(part.name, str_data))
 
+    @staticmethod
+    def slots(part: bl_jbeam.Part) -> str:
+        part_obj = part.id_data
+        _, slots = bl_jbeam.Part.get_slots(part_obj)
+        for slot in slots:
+
+            pass
+
 
 classes = ()
